@@ -138,9 +138,9 @@ class style
 		
 		$this->vars = &$this->_tpldata['.'][0];
 		
-		$this->tpldef = $core->v('xs_def_template');
-		$this->auto_compile = $core->v('xs_auto_compile');
-		$this->xs_check_switches = $core->v('xs_check_switches');
+		$this->tpldef = $core->v('site_template');
+		$this->auto_compile = $core->v('auto_compile');
+		$this->xs_check_switches = $core->v('check_switches');
 		$this->cache_search = array('.', '\\', '/', '_tpl');
 		$this->cache_replace = w('_ . . .php');
 		
@@ -357,7 +357,7 @@ class style
 			
 			if ($xs_include)
 			{
-				if ($core->v('xs_warn_includes'))
+				if (!is_remote())
 				{
 					die('Template->make_filename(): Error - included template file not found: ' . $filename);
 				}
@@ -370,11 +370,10 @@ class style
 		}
 		
 		// checking if we should recompile cache
-		$v_auto_recompile = $core->v('xs_auto_recompile');
-		if (!empty($this->files_cache[$handle]) && !empty($v_auto_recompile))
+		if (!empty($this->files_cache[$handle]) && $core->v('auto_recompile'))
 		{
 			$cache_time = @filemtime($this->files_cache[$handle]);
-			if (@filemtime($this->files[$handle]) > $cache_time || $core->v('xs_template_time') > $cache_time)
+			if (@filemtime($this->files[$handle]) > $cache_time || $core->v('template_time') > $cache_time)
 			{
 				// file was changed. don't use cache file (will be recompled if configuration allowes it)
 				$this->files_cache[$handle] = '';
@@ -1504,11 +1503,11 @@ class style
 			
 			// Adding predefined variables
 			$this->vars += array(
-				'LANG' => $core->v('default_lang'),
+				'LANG' => $core->v('site_lang'),
 				'TEMPLATE' => $tpl,
 				'TEMPLATE_NAME' => $this->tpl,
-				'S_SERVER' => $core->v('address'),
-				'S_STYLE' => $core->v('address') . 'style/',
+				'S_SERVER' => $core->v('site_address'),
+				'S_STYLE' => $core->v('site_address') . 'style/',
 				'S_LIB' => LIBD,
 				'S_VISUAL' => LIBD . 'visual/',
 				'_SELF' => _page(),

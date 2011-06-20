@@ -357,7 +357,7 @@ abstract class xmd extends project
 			}
 		}
 		
-		return netsock($core->v('address') . $a, $arg_str, 80, false, $core->v('internal_useragent'));
+		return netsock($core->v('site_address') . $a, $arg_str, 80, false, $core->v('internal_useragent'));
 	}
 	
 	final public function error($str, $prefix = true)

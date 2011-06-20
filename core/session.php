@@ -440,7 +440,7 @@ class bio extends session
 	{
 		global $style, $core;
 		
-		$this->data['bio_lang'] = $core->v('default_lang');
+		$this->data['bio_lang'] = $core->v('site_lang');
 		$this->date_format = $this->v('bio_dateformat');
 		$this->timezone = $this->v('bio_timezone') * 3600;
 		$this->dst = $this->v('bio_dst') * 3600;
@@ -461,7 +461,7 @@ class bio extends session
 		{
 			global $core;
 			
-			$d = $core->v('default_lang');
+			$d = $core->v('site_lang');
 		}
 		
 		$filepath = './base/lang/' . $d . '/' . $f . '.php';
@@ -864,7 +864,7 @@ class core
 			exit('SITE DISABLED');
 		}
 		
-		$address = $this->v('address');
+		$address = $this->v('site_address');
 		$host_addr = array_key(explode('/', array_key(explode('://', $address), 1)), 0);
 		
 		if ($host_addr != get_host())
@@ -885,7 +885,7 @@ class core
 					$sub = (f($sub)) ? $sub . '.' : ($remote ? 'www.' : '');
 					
 					$address = str_replace($host_addr, $sub . $row, $address);
-					$this->v('address', $address, true);
+					$this->v('site_address', $address, true);
 					break;
 				}
 			}
@@ -893,7 +893,7 @@ class core
 		
 		if (strpos($address, 'www.') !== false && strpos(get_host(), 'www.') === false && strpos($address, get_host()))
  		{
-			$a = $this->v('address') . str_replace(str_replace('www.', '', $address), '', _page());
+			$a = $this->v('site_address') . str_replace(str_replace('www.', '', $address), '', _page());
 			redirect($a, false);
 		}
 		

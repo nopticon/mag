@@ -96,7 +96,7 @@ class emailer
 
 		if (trim($template_lang) == '')
 		{
-			$template_lang = $core->v('default_lang');
+			$template_lang = $core->v('site_lang');
 		}
 
 		if (empty($this->tpl_msg[$template_lang . $template_file]))
@@ -105,7 +105,7 @@ class emailer
 
 			if (!@file_exists(@realpath($tpl_file)))
 			{
-				$tpl_file = './base/lang/' . $core->v('default_lang') . '/email/' . $template_file . '.txt';
+				$tpl_file = './base/lang/' . $core->v('site_lang') . '/email/' . $template_file . '.txt';
 
 				if (!@file_exists($tpl_file))
 				{
@@ -190,7 +190,7 @@ class emailer
 		$bcc = (isset($this->addresses['bcc']) && count($this->addresses['bcc'])) ? implode(', ', $this->addresses['bcc']) : '';
 
 		// Build header
-		$this->extra_headers = (($this->reply_to != '') ? "Reply-to: $this->reply_to\n" : '') . (($this->from != '') ? "From: $this->from\n" : "From: " . $core->v('default_email') . "\n") . "Return-Path: " . $core->v('default_email') . "\nMessage-ID: <" . md5(uniqid(time())) . "@" . get_host() . ">\nMIME-Version: 1.0\nContent-type: text/" . $this->eformat . "; charset=" . $this->encoding . "\nContent-transfer-encoding: 8bit\nDate: " . date('r', time()) . "\nX-Priority: 2\nX-MSMail-Priority: High\n" . $this->extra_headers . (($cc != '') ? "Cc: $cc\n" : '')  . (($bcc != '') ? "Bcc: $bcc\n" : ''); 
+		$this->extra_headers = (($this->reply_to != '') ? "Reply-to: $this->reply_to\n" : '') . (($this->from != '') ? "From: $this->from\n" : "From: " . $core->v('site_email') . "\n") . "Return-Path: " . $core->v('site_email') . "\nMessage-ID: <" . md5(uniqid(time())) . "@" . get_host() . ">\nMIME-Version: 1.0\nContent-type: text/" . $this->eformat . "; charset=" . $this->encoding . "\nContent-transfer-encoding: 8bit\nDate: " . date('r', time()) . "\nX-Priority: 2\nX-MSMail-Priority: High\n" . $this->extra_headers . (($cc != '') ? "Cc: $cc\n" : '')  . (($bcc != '') ? "Bcc: $bcc\n" : ''); 
 
 		// Send message ... removed $this->encode() from subject for time being
 		$empty_to_header = ($to == '') ? true : false;
@@ -257,7 +257,7 @@ class emailer
 			return;
 		}
 		
-		$result = @mail($to, $this->subject, preg_replace("#(?<!\r)\n#s", "\n", $this->msg), $this->extra_headers, "-f{$core->v('default_email')}");
+		$result = @mail($to, $this->subject, preg_replace("#(?<!\r)\n#s", "\n", $this->msg), $this->extra_headers, "-f{$core->v('site_email')}");
 		
 		// Did it work?
 		if (!$result)

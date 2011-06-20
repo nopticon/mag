@@ -48,7 +48,7 @@ foreach (array('core', 'dd/' . DD, 'styles', 'session') as $w)
 	@require_once($f_core);
 }
 
-foreach (w((!defined('NDB') ? 'db ' : '') . 'style user core') as $w) $$w = new $w();
+foreach (w((!defined('NDB') ? 'db ' : '') . 'style bio core') as $w) $$w = new $w();
 
 if (!defined('XCORE')) _xfs();
 

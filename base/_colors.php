@@ -34,7 +34,7 @@ class __colors extends xmd
 			$v = $this->__(w('url'));
 			if (!f($v['url']))
 			{
-				$v['url'] = $core->v('address');
+				$v['url'] = $core->v('site_address');
 			}
 			
 			if (f($v['url']))

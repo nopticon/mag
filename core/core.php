@@ -1051,7 +1051,7 @@ function get_file($f)
 	
 	if (!@file_exists($f))
 	{
-		return false;
+		return w();
 	}
 	
 	return array_map('trim', @file($f));
@@ -1265,7 +1265,7 @@ function _link($mod = '', $attr = false, $ts = true)
 {
 	global $core;
 	
-	$url = get_protocol() . array_key(explode('://', $core->v('address')), 1);
+	$url = get_protocol() . array_key(explode('://', $core->v('site_address')), 1);
 	
 	if ($mod == 'alias' && $attr !== false && is_remote())
 	{
@@ -1713,9 +1713,7 @@ function v_server($a)
 
 function get_protocol($ssl = false)
 {
-	//global $core;
-	
-	return ('http' . (($ssl !== false/* || $core->v('force_ssl')*/ || v_server('SERVER_PORT') === 443) ? 's' : '') . '://');
+	return ('http' . (($ssl !== false || v_server('SERVER_PORT') === 443) ? 's' : '') . '://');
 }
 
 function get_host()
