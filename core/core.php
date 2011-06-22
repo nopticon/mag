@@ -204,6 +204,28 @@ function enable_rewrite()
 	return $rewrite;
 }
 
+function _tbrowser($tpl = '')
+	{
+		if (!f($tpl))
+		{
+			$a = _browser();
+			$_a = array($a['type'] . '-' . $a['platform'] . '-' . $a['browser'] . '-' . $a['version'], $a['type'] . '-' . $a['platform'] . '-' . $a['browser'], $a['type'] . '-' . $a['platform'], $a['type']);
+			
+			foreach ($a as $row)
+			{
+				if (@file_exists('./style/' . $row))
+				{
+					$tpl = $row;
+					break;
+				}
+			}
+		}
+		
+		if (!f($tpl)) $tpl = 'desktop';
+		
+		return $tpl;
+	}
+
 function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno = 0)
 {
 	sql_close();
@@ -220,7 +242,7 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 			exit('USER_ERROR: ' . $errmsg);
 			break;
 		default:
-			$error_path = './style/default/http-error/%s.htm';
+			$error_path = './style/' . _tbrowser() . '/http-error/%s.htm';
 			
 			switch ($errno)
 			{
@@ -2549,7 +2571,7 @@ function _xfs($mod = false, $wdir = false, $warg = false)
 	
 	// Session start
 	$bio->start(true);
-	$bio->setup('default');
+	$bio->setup();
 	
 	$module->m($mod);
 	if (!$module->auth_access() && $module->auth())
@@ -2633,7 +2655,7 @@ function _xfs($mod = false, $wdir = false, $warg = false)
 			if (_browser($browser) && _browser($browser, $version))
 			{
 				v_style(array(
-					'visual' => LIBD . 'visual')
+					'visual' => LIBD . LIB_VISUAL)
 				);
 				$module->_template('browsers');
 				$browser_upgrade = true;

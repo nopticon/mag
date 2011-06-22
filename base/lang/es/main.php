@@ -104,6 +104,9 @@ $lang = array(
 	'TOPICS_PAGES_PREV' => '&lt;&lt; <strong>Anteriores %d temas</strong>',
 	'TOPICS_PAGES_NEXT' => '<strong>Siguientes %d temas</strong> &gt;&gt;',
 	'PAGES_ON' => 'P&aacute;gina <strong>%d</strong> de <strong>%d</strong>',
+	
+	'TOPICS_SHINE' => 'Discusiones destacadas',
+	
 	'TOPIC_FEATURED_ADD' => 'Agregar tema de portada',
 	'TOPIC_FEATURED_REM' => 'Quitar tema de portada',
 	'TOPIC_POINTS_ADD' => 'Activar Arkanes',
@@ -126,6 +129,11 @@ $lang = array(
 	'SAID' => 'dijo',
 	'REPORT' => 'reporta',
 	'SUBMIT' => 'Enviar',
+	
+	// Status
+	'STATUS_LEGEND' => '&iquest;Qu&eacute; est&aacute; pasando?',
+	
+	'TODAY_BIRTHDAY' => 'Felicitaciones de cumplea&ntilde;os',
 	
 	// Browser upgrade
 	'BROWSER_UPGRADE_TITLE' => 'Actualiza tu navegador de internet',

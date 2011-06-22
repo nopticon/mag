@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class __suggest extends xmd
+class __create extends xmd
 {
 	public function __construct()
 	{

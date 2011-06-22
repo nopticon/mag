@@ -29,7 +29,7 @@ class __ext extends xmd
 	
 	public function home()
 	{
-		global $core, $user;
+		global $core, $bio;
 		
 		$v = $this->__(w('f e'));
 		
@@ -38,14 +38,14 @@ class __ext extends xmd
 			_fatal();
 		}
 		
-		$location = './style/' . $core->v('xs_def_template') . '/' . $v['e'] . '/';
-		$filename = _filename($v['f'], $v['e']);
+		$location = './style/' . _tbrowser() . '/' . $v['e'] . '/';
 		
 		if (!@is_dir($location))
 		{
 			_fatal();
 		}
 		
+		$filename = _filename($v['f'], $v['e']);
 		if ($v['e'] == 'css' && $v['f'] != 'default')
 		{
 			$v['field'] = (!is_numb($v['f'])) ? 'alias' : 'id';
@@ -125,7 +125,7 @@ class __ext extends xmd
 		}
 		
 		v_style(array(
-			'SPATH' => LIBD . 'visual')
+			'SPATH' => LIBD . LIB_VISUAL)
 		);
 		sql_close();
 		

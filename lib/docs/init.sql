@@ -137,28 +137,6 @@ CREATE TABLE _reference_likes (
 	like_time INT(11) NOT NULL
 ) ENGINE = InnoDB;
 
-ALTER TABLE _sessions
-	CHANGE session_user_id session_bio_id MEDIUMINT(8) NOT NULL DEFAULT '0';
-
-UPDATE _config SET config_value = '15' WHERE config_name = 'topics_per_page';
-
-DROP TABLE _members_auth;
-
-CREATE TABLE IF NOT EXISTS _bio_auth_fields (
-  field_id int(11) NOT NULL auto_increment,
-  field_alias varchar(50) NOT NULL,
-  field_name varchar(50) NOT NULL,
-  field_global tinyint(1) NOT NULL,
-  PRIMARY KEY (field_id)
-) ENGINE=InnoDB;
-
-CREATE TABLE _reference_likes (
-	like_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	like_ref INT(11) NOT NULL,
-	like_uid INT(11) NOT NULL,
-	like_time INT(11) NOT NULL
-) ENGINE = InnoDB;
-
 CREATE TABLE _pages (
 	page_id INT( 11 ) NOT NULL ,
 	page_alias VARCHAR( 100 ) NOT NULL ,
@@ -169,7 +147,56 @@ CREATE TABLE _pages (
 	page_time INT( 11 ) NOT NULL
 ) ENGINE = InnoDB;
 
+CREATE TABLE _board_highlight (
+	highlight_id MEDIUMINT( 5 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+	highlight_alias VARCHAR( 25 ) NOT NULL,
+	highlight_name VARCHAR( 25 ) NOT NULL,
+	highlight_class VARCHAR( 25 ) NOT NULL
+) ENGINE = InnoDB;
+
+CREATE TABLE _board_disallow (
+	disallow_id INT( 11 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+	disallow_topic INT( 11 ) NOT NULL,
+	disallow_bio INT( 11 ) NOT NULL,
+	disallow_time INT( 11 ) NOT NULL
+) ENGINE = InnoDB;
+
+ALTER TABLE _sessions
+	CHANGE session_user_id session_bio_id MEDIUMINT(8) NOT NULL DEFAULT '0';
+
+RENAME TABLE _forums TO _board_forums;
+ALTER TABLE _board_forums ENGINE = INNODB;
+
+RENAME TABLE _forum_categories TO _board_cat;
+ALTER TABLE _forum_categories ENGINE = INNODB;
+
+RENAME TABLE _forum_posts TO _board_posts;
+ALTER TABLE _board_posts ENGINE = INNODB;
+
+RENAME TABLE _forum_posts_rev TO _board_posts_history;
+ALTER TABLE _board_posts_history ENGINE = INNODB;
+
+RENAME TABLE _forum_topics TO _board_topics;
+ALTER TABLE _board_topics ENGINE = INNODB;
+
+RENAME TABLE _forum_topics_fav TO _board_topics_star;
+ALTER TABLE _board_topics_star ENGINE = INNODB;
+
+RENAME TABLE _forum_topics_nopoints TO _board_topics_score;
+ALTER TABLE _board_topics_score ENGINE = INNODB;
+
+ALTER TABLE _board_topics
+	ADD topic_alias VARCHAR( 255 ) NOT NULL AFTER topic_ub,
+	ADD topic_highlight TINYINT( 1 ) NOT NULL AFTER topic_show,
+	CHANGE forum_id topic_forum SMALLINT( 8 ) UNSIGNED NOT NULL DEFAULT '0',
+	CHANGE topic_important topic_shine TINYINT( 1 ) NOT NULL DEFAULT '0',
+	CHANGE topic_featured topic_show TINYINT( 1 ) NOT NULL DEFAULT '0';
+
+DROP TABLE _members_auth;
+
 UPDATE _config SET config_value = '15' WHERE config_name = 'topics_per_page';
+UPDATE _config SET config_value = 'desktop' WHERE config_name = 'site_template';
+
 UPDATE _config SET config_name = 'site_timezone' WHERE config_name = 'board_timezone';
 UPDATE _config SET config_name = 'site_startdate' WHERE config_name = 'board_startdate';
 UPDATE _config SET config_name = 'site_dateformat' WHERE config_name = 'default_dateformat';
@@ -194,3 +221,10 @@ DELETE FROM _config
 	'sc_stats_down', 'sc_kick', 'default_pagetitle', 'default_email', 'board_disable', 'prune_enable', 'forum_for_mod', 'forum_for_radio',
 	'forum_for_colab', 'forum_for_all', 'cookie_secure', 'flood_interval', 'xs_warn_includes', 'max_login_attempts', 'login_reset_time',
 	'xs_use_cache', 'aws', 'a_picnik_key');
+
+INSERT INTO _board_highlight (highlight_id, highlight_alias, highlight_name, highlight_class) VALUES (NULL, 'none', 'Ninguno', '');
+INSERT INTO _board_highlight (highlight_id, highlight_alias, highlight_name, highlight_class) VALUES (NULL, 'official', 'Oficial', 'rk');
+INSERT INTO _board_highlight (highlight_id, highlight_alias, highlight_name, highlight_class) VALUES (NULL, 'sponsor', 'Patrocinador', 'sponsor');
+
+UPDATE _board_topics SET topic_highlight = 0;
+

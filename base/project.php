@@ -26,6 +26,7 @@ define('LIB_BASE', 'm');
 define('LIB_EVENT', 'e');
 define('LIB_AVATAR', 'd');
 define('LIB_NEWS', 'n');
+define('LIB_RADIO', 'r');
 define('LIB_VISUAL', 'v');
 
 abstract class project
@@ -547,15 +548,22 @@ function _prepare_extra($message)
 	return $message;
 }
 
+function _a($v)
+{
+	if (!isset($v['bio_alias'])) return _link();
+	
+	return _link($v['bio_alias']);
+}
+
 function _avatar($v)
 {
 	if (!f($v['bio_avatar']))
 	{
-		return _lib(w(LIB_AVATAR . ' default'), 'nobody', 'jpg');
+		return _lib('d', 'no', 'jpg');
 	}
 	
-	$path = array($v['bio_alias']{0}, $v['bio_alias']{1}, $v['bio_alias'] . '_' . $v['bio_avatar_up']);
-	return _lib(LIB_AVATAR, _implode('/', $path), $v['bio_avatar']);
+	$path = array($v['bio_alias']{0}, $v['bio_alias']{1}, $v['bio_alias']);
+	return _lib(LIB_AVATAR, _implode('/', $path), $v['bio_avatar']) . '#' . $v['bio_avatar_up'];
 }
 
 function _rainbow_create($uid)

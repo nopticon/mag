@@ -447,6 +447,7 @@ class bio extends session
 		
 		// Load global language
 		$this->load_lang('main');
+		$tpl = _tbrowser($tpl);
 		
 		// Load UI template
 		$style->set_template('./style' . ((!empty($tpl)) ? '/' . $tpl : ''));

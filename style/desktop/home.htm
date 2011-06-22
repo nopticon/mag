@@ -7,15 +7,39 @@ _.config.store('u_home', '{U_HOME}');
 <section class="reference">
 <!-- ENDIF -->
 
+<!-- BEGIN status_post -->
+<section class="main status">
+<form action="{U_HOME_STATUS:UPDATE}" method="post">
+	
+	<h1>{L_STATUS_LEGEND}</h1>
+	<textarea name="status" class="area"></textarea>
+	<input name="submit" type="submit" class="post" value="{L_SEND}" />
+	
+</form>
+</section>
+<!-- END status_post -->
+
 <!-- BEGIN birthday -->
-<div>
-<ul>
-<!-- BEGIN row -->
-<li>{row.NAME}</li>
-<!-- END row -->
-</ul>
-</div>
+<section class="main">
+	<h1>{L_TODAY_BIRTHDAY}</h1>
+	<ul>
+	<!-- BEGIN row -->
+	<li><a href="{row.A}">{row.NAME}</a> {row.AVATAR}</li>
+	<!-- END row -->
+	</ul>
+</section>
 <!-- END birthday -->
+
+<!-- BEGIN board_topics -->
+<section class="main">
+	<h1>{L_TOPICS_SHINE}</h1>
+	<ul>
+	<!-- BEGIN row -->
+	<li><a<!-- IF row.TOPIC_CLASS != '' --> class="t_{row.TOPIC_CLASS}"<!-- ENDIF --> href="{row.A}">{row.TOPIC_TITLE}</a></li>
+	<!-- END row -->
+	</ul>
+</section>
+<!-- END board_topics -->
 
 <!-- BEGIN hide -->
 <!-- BEGIN ref -->

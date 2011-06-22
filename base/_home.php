@@ -39,10 +39,16 @@ class __home extends xmd implements i_home
 	{
 		global $core, $bio;
 		
-		// Friends birthday
 		$page = 15;
 		$today = _htimestamp('md');
 		
+		// Personal status
+		//if ($bio->v('bio_active'))
+		{
+			_style('status_post');
+		}
+		
+		// Friends birthday
 		if ($bio->v('auth_member'))
 		{
 			$sql = "SELECT bio_id, bio_alias, bio_name
@@ -72,12 +78,51 @@ class __home extends xmd implements i_home
 			if (!$i) _style('birthday');
 			
 			_style('birthday.row', array(
-				'NAME' => $row['bio_name'])
+				'A' => _a($row),
+				'NAME' => $row['bio_name'],
+				'AVATAR' => _avatar($row))
 			);
+		}
+		
+		// Board topics
+		if ($bio->v('auth_member'))
+		{
+			$sql = 'SELECT t.topic_id, t.topic_alias, t.topic_title, h.highlight_class
+				FROM _board_topics t
+				INNER JOIN _board_forums f ON f.forum_id = t.topic_forum
+				LEFT JOIN _board_highlight h ON t.topic_highlight = h.highlight_id
+				RIGHT JOIN _board_disallow d ON t.topic_id = d.disallow_topic AND d.disallow_bio = ?
+				WHERE t.topic_show = ?
+				ORDER BY t.topic_shine DESC, t.topic_time DESC
+				LIMIT ??';
+			$topics = _rowset(sql_filter($sql, $bio->v('bio_id'), 1, 10));
+		}
+		else
+		{
+			$sql = 'SELECT t.topic_id, t.topic_alias, t.topic_title, h.highlight_class
+				FROM _board_topics t
+				INNER JOIN _board_forums f ON f.forum_id = t.topic_forum
+				LEFT JOIN _board_highlight h ON t.topic_highlight = h.highlight_id
+				WHERE t.topic_show = ?
+				ORDER BY t.topic_shine DESC, t.topic_time DESC
+				LIMIT ??';
+			$topics = _rowset(sql_filter($sql, 1, 10));
+		}
+		
+		foreach ($topics as $i => $row)
+		{
+			if (!$i) _style('board_topics');
+			
+			_style('board_topics.row', _vs(array(
+				'ID' => $row['topic_id'],
+				'TITLE' => $row['topic_title'],
+				'CLASS' => $row['highlight_class']
+			), 'TOPIC'));
 		}
 		
 		//
 		// News column
+		/*
 		$v = $this->__(array('t' => 0, 's' => 0, 'm' => 0, 'w'));
 		
 		$ref_type = '';
@@ -132,21 +177,19 @@ class __home extends xmd implements i_home
 			
 			_style('ref.type.row', _vs($row));
 		}
+		*/
 		
-		//
 		// Shortcut column
-		//
 		
 		if ($bio->v('auth_member'))
 		{
 			//
 			// Private messages
 			$sql = 'SELECT *
-				FROM _bio_messages m
-				LEFT JOIN _bio b ON m.message_from_uid = b.bio_id 
-				WHERE m.message_to_uid = ?
-					AND m.message_unread = ?
-				ORDER BY m.message_time DESC';
+				FROM _bio_messages
+				INNER JOIN _bio ON message_from_uid = bio_id 
+				WHERE message_to_uid = ?
+				ORDER BY message_time DESC';
 			// TODO: Finish query, private_messages
 			$private = _rowset(sql_filter($sql, $bio->v('bio_id'), 1));
 			
@@ -186,41 +229,6 @@ class __home extends xmd implements i_home
 		//
 		// Banners
 		$this->announce('home');
-		
-		//
-		// Board topics
-		$topics = w();
-		if ($bio->v('auth_member'))
-		{
-			$sql = 'SELECT *
-				FROM _topics
-				WHERE ';
-			// TODO: Finish query, topics
-			$topics = _rowset(sql_filter($sql));
-		}
-		else
-		{
-			/*
-			$sql = 'SELECT *
-				FROM _topics
-				WHERE ';
-			*/
-			// TODO: Finish query, topics
-			//$topics = _rowset(sql_filter($sql));
-		}
-		
-		foreach ($topics as $i => $row)
-		{
-			if (!$i) _style('board_topics');
-			
-			_style('board_topics.row', _vs(array(
-				'ID' => $row['topic_id'],
-				'TITLE' => $row['topic_title']
-			), 'TOPIC'));
-		}
-		
-		//
-		// Users birthday
 		
 		/*
 		fan_id

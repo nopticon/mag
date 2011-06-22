@@ -1509,7 +1509,7 @@ class style
 				'S_SERVER' => $core->v('site_address'),
 				'S_STYLE' => $core->v('site_address') . 'style/',
 				'S_LIB' => LIBD,
-				'S_VISUAL' => LIBD . 'visual/',
+				'S_VISUAL' => LIBD . LIB_VISUAL . '/',
 				'_SELF' => _page(),
 				'SCRIPT_TYPE' => ' type="text/javascript"',
 				'CDATA_BEGIN' => '//<![CDATA[' . "\n",
