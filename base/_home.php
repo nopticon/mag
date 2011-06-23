@@ -23,6 +23,7 @@ interface i_home
 	public function home();
 	public function like();
 	public function status();
+	public function friend();
 }
 
 class __home extends xmd implements i_home
@@ -156,8 +157,8 @@ class __home extends xmd implements i_home
 				if (!$i) _style('friend_request');
 				
 				_style('friend_request.row', array(
-					'U_APPROVE' => _link('home', array('x1' => 'approve', 'a' => $row['bio_alias'])),
-					'U_DENY' => _link('home', array('x1' => 'deny', 'a' => $row['bio_alias'])),
+					'U_APPROVE' => _link('home', array('x1' => 'friend', 'x2' => 'approve', 'a' => $row['bio_alias'])),
+					'U_DENY' => _link('home', array('x1' => 'friend', 'x2' => 'deny', 'a' => $row['bio_alias'])),
 					'A' => _a($row),
 					'BIO_NAME' => $row['bio_name']
 				));
@@ -166,72 +167,6 @@ class __home extends xmd implements i_home
 		
 		// Banners
 		$this->announce('home');
-		
-		//
-		// News column
-		/*
-		$v = $this->__(array('t' => 0, 's' => 0, 'm' => 0, 'w'));
-		
-		$ref_type = '';
-		if ($v['t'])
-		{
-			$ref_type = sql_filter(' WHERE ref_type = ?', $v['t']);
-		}
-		
-		$sql = 'SELECT COUNT(ref_id) AS total
-			FROM _reference
-			??';
-		$total = _field(sql_filter($sql, $ref_type), 'total');
-		
-		$sql = 'SELECT *
-			FROM _reference r
-			??
-			LEFT JOIN _reference_likes k
-				ON r.ref_id = k.like_ref
-			ORDER BY ref_important DESC, ref_time DESC
-			LIMIT ??, ??';
-		$ref = _rowset(sql_filter($sql, $ref_type, $v['s'], $page));
-		
-		if (!count($ref) && $total)
-		{
-			redirect(_link());
-		}
-		
-		foreach ($ref as $i => $row)
-		{
-			if (!$i)
-			{
-				_style('ref', _pagination(_link('home', array('t' => $v['t'])), 's:%s', $total, $page, $v['s']));
-			}
-			
-			$row['ref_time'] = _format_date($row['ref_time'], 'F j');
-			$row['ref_link'] = _link(array('m' => $row['ref_id']));
-			
-			_style('ref.row', _vs($row));
-		}
-		
-		if (!$type = $core->cache_load('reference_type'))
-		{
-			$sql = 'SELECT type_id, type_name
-				FROM _reference_type
-				ORDER BY type_order';
-			$type = $core->cache_store(_rowset($sql));
-		}
-		
-		foreach ($type as $i => $row)
-		{
-			if (!$i) _style('ref.type');
-			
-			_style('ref.type.row', _vs($row));
-		}
-		*/
-		
-		/*
-		fan_id
-		fan_of
-		fan_uid
-		fan_time
-		*/
 		
 		return;
 	}
@@ -339,6 +274,93 @@ class __home extends xmd implements i_home
 		}
 		
 		return $this->e('~OK');
+	}
+	
+	public function friend()
+	{
+		$this->method();
+	}
+	
+	protected function _friend_approve()
+	{
+		global $bio;
+		
+		if (!$bio->v('auth_member'))
+		{
+			_login();
+		}
+		
+		$v = $this->__(w('a'));
+		
+		$sql = 'SELECT bio_id
+			FROM _bio
+			WHERE bio_alias = ?';
+		if (!$bio_id = _field(sql_filter($sql, $v['a']), 'bio_id', 0))
+		{
+			_fatal();
+		}
+		
+		$sql = 'SELECT friend_id, friend_pending
+			FROM _bio_friends
+			WHERE friend_assoc = ?
+				AND friend_bio = ?';
+		if (!$friend = _fieldrow(sql_filter($sql, $bio_id, $bio->v('bio_id'))))
+		{
+			_fatal();
+		}
+		
+		if (!$friend['friend_pending'])
+		{
+			_fatal();
+		}
+		
+		$sql = 'UPDATE _bio_friends SET friend_pending = ?
+			WHERE friend_id = ?';
+		_sql(sql_filter($sql, 0, $friend['friend_id']));
+		
+		// TODO: Email notification about new friend.
+		
+		return;
+	}
+	
+	protected function _friend_deny()
+	{
+		global $bio;
+		
+		if (!$bio->v('auth_member'))
+		{
+			_login();
+		}
+		
+		$v = $this->__(w('a'));
+		
+		$sql = 'SELECT bio_id
+			FROM _bio
+			WHERE bio_alias = ?';
+		if (!$bio_id = _field(sql_filter($sql, $v['a']), 'bio_id', 0))
+		{
+			_fatal();
+		}
+		
+		$sql = 'SELECT friend_id, friend_pending
+			FROM _bio_friends
+			WHERE friend_assoc = ?
+				AND friend_bio = ?';
+		if (!$friend = _fieldrow(sql_filter($sql, $bio_id, $bio->v('bio_id'))))
+		{
+			_fatal();
+		}
+		
+		if (!$friend['friend_pending'])
+		{
+			_fatal();
+		}
+		
+		$sql = 'DELETE FROM _bio_friends
+			WHERE friend_id = ?';
+		_sql(sql_filter($sql, $friend['friend_id']));
+		
+		return;
 	}
 }
 

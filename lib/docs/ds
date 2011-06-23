@@ -109,6 +109,24 @@ friend_active
 friend_time
 friend_message
 
+-- bio_messages
+message_id
+message_type
+message_left
+message_right
+message_removed
+message_assoc
+message_bio
+message_time
+message_content
+message_ip
+
+-- bio_messages_type
+
+type_id
+type_alias
+type_name
+
 -- bio_group
 
 group_id
