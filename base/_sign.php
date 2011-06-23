@@ -410,7 +410,7 @@ class __sign extends xmd implements i_sign
 	{
 		global $bio;
 		
-		$v = $this->__(array('page', 'address', 'key'));
+		$v = $this->__(w('page address key'));
 		
 		if ($bio->v('auth_member'))
 		{
@@ -458,24 +458,24 @@ class __sign extends xmd implements i_sign
 			
 			$this->_stop('RECOVERY_LEGEND');
 		}
-		
+
 		if (!f($v['key']))
 		{
 			$this->_error('LOGIN_ERROR');
 		}
-		
+
 		$v['register'] = false;
-		$v['field'] = (email_format($v['address']) !== false) ? 'address' : 'nickname';
+		$v['field'] = (email_format($v['address']) !== false) ? 'address' : 'name';
 		
-		$sql = 'SELECT bio_id, bio_key
+		$sql = 'SELECT bio_id, bio_key, bio_fails
 			FROM _bio
 			WHERE bio_?? = ?
-				AND bio_id <> ?
+				AND bio_active = ?
 				AND bio_id NOT IN (
-					SELECT ban_assoc
+					SELECT ban_bio
 					FROM _bio_ban
 				)';
-		if ($userdata = _fieldrow(sql_filter($sql, $v['field'], $v['address'], U_GUEST)))
+		if ($userdata = _fieldrow(sql_filter($sql, $v['field'], $v['address'], 1)))
 		{
 			if ($userdata['bio_key'] === _password($v['key']))
 			{

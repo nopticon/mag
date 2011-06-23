@@ -19,10 +19,19 @@ CREATE TABLE IF NOT EXISTS _bio_friends (
 	friend_id INT(11) NOT NULL AUTO_INCREMENT,
 	friend_assoc INT(11) NOT NULL,
 	friend_bio INT(11) NOT NULL,
-	friend_active INT(11) NOT NULL,
+	friend_pending TINYINT(1) NOT NULL,
 	friend_time INT(11) NOT NULL,
 	friend_message VARCHAR(255) NOT NULL,
-	PRIMARY KEY (`friend_id`)
+	PRIMARY KEY (friend_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS _bio_block (
+	block_id INT(11) NOT NULL AUTO_INCREMENT,
+	block_assoc INT(11) NOT NULL,
+	block_bio INT(11) NOT NULL,
+	block_time INT(11) NOT NULL,
+	block_message TEXT NOT NULL,
+	PRIMARY KEY (block_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS _bio_group (
@@ -98,7 +107,6 @@ CREATE TABLE _bio (
 	bio_lang VARCHAR(2) NOT NULL DEFAULT '',
 	bio_country INT(11) NOT NULL DEFAULT '0',
 	bio_avatar VARCHAR(100) NOT NULL DEFAULT '0',
-	
 	bio_actkey VARCHAR(25) NOT NULL DEFAULT '0',
 	bio_recovery INT(11) NOT NULL DEFAULT '0',
 	bio_fails MEDIUMINT(5) NOT NULL DEFAULT '0'
@@ -165,25 +173,24 @@ ALTER TABLE _sessions
 	CHANGE session_user_id session_bio_id MEDIUMINT(8) NOT NULL DEFAULT '0';
 
 RENAME TABLE _forums TO _board_forums;
-ALTER TABLE _board_forums ENGINE = INNODB;
-
 RENAME TABLE _forum_categories TO _board_cat;
-ALTER TABLE _forum_categories ENGINE = INNODB;
-
 RENAME TABLE _forum_posts TO _board_posts;
-ALTER TABLE _board_posts ENGINE = INNODB;
-
 RENAME TABLE _forum_posts_rev TO _board_posts_history;
-ALTER TABLE _board_posts_history ENGINE = INNODB;
-
 RENAME TABLE _forum_topics TO _board_topics;
-ALTER TABLE _board_topics ENGINE = INNODB;
-
 RENAME TABLE _forum_topics_fav TO _board_topics_star;
-ALTER TABLE _board_topics_star ENGINE = INNODB;
-
 RENAME TABLE _forum_topics_nopoints TO _board_topics_score;
+RENAME TABLE _disallow TO _bio_forbid;
+RENAME TABLE _mmg_upr TO _promotions_data;
+RENAME TABLE _banlist TO _bio_ban;
+
+ALTER TABLE _board_forums ENGINE = INNODB;
+ALTER TABLE _forum_categories ENGINE = INNODB;
+ALTER TABLE _board_posts ENGINE = INNODB;
+ALTER TABLE _board_posts_history ENGINE = INNODB;
+ALTER TABLE _board_topics ENGINE = INNODB;
+ALTER TABLE _board_topics_star ENGINE = INNODB;
 ALTER TABLE _board_topics_score ENGINE = INNODB;
+ALTER TABLE _bio_forbid ENGINE = INNODB;
 
 ALTER TABLE _board_topics
 	ADD topic_alias VARCHAR( 255 ) NOT NULL AFTER topic_ub,
@@ -191,6 +198,8 @@ ALTER TABLE _board_topics
 	CHANGE forum_id topic_forum SMALLINT( 8 ) UNSIGNED NOT NULL DEFAULT '0',
 	CHANGE topic_important topic_shine TINYINT( 1 ) NOT NULL DEFAULT '0',
 	CHANGE topic_featured topic_show TINYINT( 1 ) NOT NULL DEFAULT '0';
+
+ALTER TABLE _bio_ban CHANGE ban_userid ban_bio MEDIUMINT( 8 ) NOT NULL DEFAULT '0';
 
 DROP TABLE _members_auth;
 
@@ -228,3 +237,21 @@ INSERT INTO _board_highlight (highlight_id, highlight_alias, highlight_name, hig
 
 UPDATE _board_topics SET topic_highlight = 0;
 
+TRUNCATE TABLE _bio_forbid;
+TRUNCATE TABLE _sessions;
+
+DROP TABLE _art;
+DROP TABLE _art_fav;
+DROP TABLE _art_posts;
+
+DROP TABLE _chat_auth;
+DROP TABLE _chat_cat;
+DROP TABLE _chat_ch;
+DROP TABLE _chat_msg;
+DROP TABLE _chat_sessions;
+
+DROP TABLE _groups;
+DROP TABLE _html;
+DROP TABLE _html_exclude;
+DROP TABLE _links;
+DROP TABLE _site_history;

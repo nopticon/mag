@@ -186,6 +186,15 @@ function _pre($a, $d = false)
 	}
 }
 
+function email_format($email)
+{
+	if (preg_match('/^[a-z0-9&\'\.\-_\+]+@[a-z0-9\-]+\.([a-z0-9\-]+\.)*?[a-z]+$/is', $email))
+	{
+		return true;
+	}
+	return false;
+}
+
 function enable_rewrite()
 {
 	global $core;

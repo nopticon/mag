@@ -120,6 +120,53 @@ class __home extends xmd implements i_home
 			), 'TOPIC'));
 		}
 		
+		if ($bio->v('auth_member'))
+		{
+			// Messages
+			$sql = 'SELECT *
+				FROM _bio_messages
+				INNER JOIN _bio ON message_from = bio_id
+				INNER JOIN _bio_messages_type ON message_type = type_id
+				WHERE message_to = ?
+					AND message_active = ?
+				ORDER BY message_time DESC';
+			$messages = _rowset(sql_filter($sql, $bio->v('bio_id'), 1));
+			
+			foreach ($messages as $i => $row)
+			{
+				if (!$i) _style('messages');
+				
+				_style('messages.row', array(
+					'U_MESSAGE' => _link(),
+					'' => ''
+				));
+			}
+			
+			// Friend requests
+			$sql = 'SELECT b.bio_alias, b.bio_name
+				FROM _bio_friends
+				INNER JOIN _bio ON friend_assoc = bio_id
+				WHERE friend_bio = ?
+					AND friend_pending = ?
+				ORDER BY friend_time DESC';
+			$requests = _rowset(sql_filter($sql, $bio->v('bio_id'), 1));
+			
+			foreach ($requests as $i => $row)
+			{
+				if (!$i) _style('friend_request');
+				
+				_style('friend_request.row', array(
+					'U_APPROVE' => _link('home', array('x1' => 'approve', 'a' => $row['bio_alias'])),
+					'U_DENY' => _link('home', array('x1' => 'deny', 'a' => $row['bio_alias'])),
+					'A' => _a($row),
+					'BIO_NAME' => $row['bio_name']
+				));
+			}
+		}
+		
+		// Banners
+		$this->announce('home');
+		
 		//
 		// News column
 		/*
@@ -178,57 +225,6 @@ class __home extends xmd implements i_home
 			_style('ref.type.row', _vs($row));
 		}
 		*/
-		
-		// Shortcut column
-		
-		if ($bio->v('auth_member'))
-		{
-			//
-			// Private messages
-			$sql = 'SELECT *
-				FROM _bio_messages
-				INNER JOIN _bio ON message_from_uid = bio_id 
-				WHERE message_to_uid = ?
-				ORDER BY message_time DESC';
-			// TODO: Finish query, private_messages
-			$private = _rowset(sql_filter($sql, $bio->v('bio_id'), 1));
-			
-			foreach ($private as $i => $row)
-			{
-				if (!$i) _style('private');
-				
-				_style('private.row', array(
-					'U_MESSAGE' => _link('my', array('messages', 'm' => $row['message_id'])),
-					'SUBJECT' => $row['message_subject'],
-					'NICKNAME' => $row['bio_name'])
-				);
-			}
-			
-			//
-			// Public messages
-			$sql = 'SELECT *
-				FROM _bio_messages m, _bio b
-				WHERE m.message_to = ?
-					AND m.message_unread = ?
-					AND m.message_from = b.bio_id
-				ORDER BY m.message_time DESC';
-			// TODO: Finish query, public_messages
-			$public = _rowset(sql_filter($sql));
-			
-			foreach ($public as $i => $row)
-			{
-				if (!$i) _style('public');
-				
-				_style('public.row', array(
-					'MESSAGE_CONTENT' => _message($row['message_content']),
-					'NICKNAME' => $row['bio_name'])
-				);
-			}
-		}
-		
-		//
-		// Banners
-		$this->announce('home');
 		
 		/*
 		fan_id

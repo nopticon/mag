@@ -106,6 +106,7 @@ $lang = array(
 	'PAGES_ON' => 'P&aacute;gina <strong>%d</strong> de <strong>%d</strong>',
 	
 	'TOPICS_SHINE' => 'Discusiones destacadas',
+	'FRIEND_REQUESTS' => 'Nuevos amigos',
 	
 	'TOPIC_FEATURED_ADD' => 'Agregar tema de portada',
 	'TOPIC_FEATURED_REM' => 'Quitar tema de portada',
