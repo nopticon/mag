@@ -18,26 +18,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class session
+class bio
 {
-	protected $cookie_data = array();
+	protected $cookie = array();
 	protected $data = array();
 	protected $auth_bio = array();
+	protected $lang = array();
 	
-	public $session_id = '';
-	public $browser = '';
-	public $ip = '';
-	public $page = '';
-	public $time = 0;
+	protected $session_id = '';
+	protected $browser = '';
+	protected $ip = '';
+	protected $page = '';
+	protected $time = 0;
+	
+	protected $date_format, $timezone, $dst;
+	
+	function __construct()
+	{
+		$this->page = _page();
+		$this->time = time();
+		$this->browser = v_server('HTTP_USER_AGENT');
+		$this->ip = htmlspecialchars(v_server('REMOTE_ADDR'));
+		
+		return;
+	}
 	
 	function start($update_page = true)
 	{
 		global $core;
-		
-		$this->time = time();
-		$this->browser = v_server('HTTP_USER_AGENT');
-		$this->page = _page();
-		$this->ip = htmlspecialchars(v_server('REMOTE_ADDR'));
 		
 		if (array_strpos($this->page, w('ext')) !== false)
 		{
@@ -55,10 +63,10 @@ class session
 		if (!empty($this->session_id))
 		{
 			// Did the session exist in the database?
-			$sql = "SELECT b.*, s.*
-				FROM _sessions s, _bio b
-				WHERE s.session_id = ?
-					AND b.bio_id = s.session_bio_id";
+			$sql = 'SELECT *
+				FROM _sessions s
+				INNER JOIN _bio b ON b.bio_id = s.session_bio_id
+				WHERE s.session_id = ?';
 			if ($this->data = _fieldrow(sql_filter($sql, $this->session_id)))
 			{
 				$s_ip = implode('.', array_slice(explode('.', $this->data['session_ip']), 0, 4));
@@ -66,7 +74,7 @@ class session
 				
 				if ($u_ip == $s_ip && $this->data['session_browser'] == $this->browser)
 				{
-					// Only update session DB a minute or so after last update or if page changes
+					// Only update session a minute or so after last update or if page changes
 					if ($this->time - $this->data['session_time'] > 60 || $this->data['session_page'] != $this->page)
 					{
 						$sql_update = array('session_time' => $this->time);
@@ -100,6 +108,11 @@ class session
 		
 		// If we reach here then no valid session exists. So we'll create a new one
 		return $this->session_create(false, $update_page);
+	}
+
+	function browser()
+	{
+		return $this->browser;
 	}
 	
 	/**
@@ -422,19 +435,6 @@ class session
 		$this->data = $a;
 		return true;
 	}
-}
-
-/**
-* Base user class
-*
-* This is the overarching class which contains (through session extend)
-* all methods utilised for user functionality during a session.
-*/
-class bio extends session
-{
-	public $lang = array();	
-	public $auth;
-	public $date_format, $timezone, $dst;
 	
 	function setup($tpl = '')
 	{

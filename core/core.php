@@ -2188,7 +2188,7 @@ function _browser($a_browser = false, $a_version = false, $name = false, $d_name
 		'windows' => w('windows win32')
 	);
 	
-	$user_browser = strtolower($bio->browser);
+	$user_browser = strtolower($bio->browser());
 	$this_version = $this_browser = $this_platform = '';
 	
 	if ($a_browser == '*') {

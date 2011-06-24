@@ -21,10 +21,10 @@ if (!defined('XFS')) exit;
 interface i_sign
 {
 	public function home();
-	public function up();
-	public function ed();
 	public function in();
 	public function out();
+	public function up();
+	public function ed();
 }
 
 class __sign extends xmd implements i_sign
@@ -40,6 +40,149 @@ class __sign extends xmd implements i_sign
 	public function home()
 	{
 		_fatal();
+	}
+	
+	public function in()
+	{
+		$this->method();
+	}
+	
+	/*
+	Si email y clave existe > login
+	Si email no clave > recuperacion clave
+	Si no email, no clave > crear cuenta
+	*/
+	
+	protected function _in_home()
+	{
+		global $bio;
+		
+		$v = $this->__(w('page address key'));
+		
+		if ($bio->v('auth_member'))
+		{
+			redirect($v['page']);
+		}
+		
+		if (!f($v['address']))
+		{
+			$this->_error('LOGIN_ERROR');
+		}
+		
+		if (_button('recovery'))
+		{
+			$sql = 'SELECT bio_id, bio_name, bio_address, bio_recovery
+				FROM _bio
+				WHERE bio_address = ?
+					AND bio_id <> ?
+					AND bio_id NOT IN (
+						SELECT ban_userid
+						FROM _banlist
+					)';
+			if ($recovery = _fieldrow(sql_filter($sql, $v['address'], U_GUEST)))
+			{
+				$new_key = _rainbow_create($recovery['bio_id']);
+				
+				require_once(XFS . 'core/emailer.php');
+				$emailer = new emailer();
+				
+				$emailer->from($core->v('email_info'));
+				$emailer->use_template('bio_recovery');
+				$emailer->email_address($recovery['bio_address']);
+				
+				$emailer->assign_vars(array(
+					'USERNAME' => $this->fields['username'],
+					'U_RECOVERY' => _link('my', array('recovery', 'k' => $new_key)),
+					'U_PROFILE' => _link('m', $recovery['bio_nickname']))
+				);
+				$emailer->send();
+				$emailer->reset();
+				
+				$sql = 'UPDATE _bio SET bio_recovery = bio_recovery + 1
+					WHERE bio_id = ?';
+				_sql(sql_filter($sql, $recovery['bio_id']));
+			}
+			
+			$this->_stop('RECOVERY_LEGEND');
+		}
+
+		if (!f($v['key']))
+		{
+			$this->_error('LOGIN_ERROR');
+		}
+
+		$v['register'] = false;
+		$v['field'] = (email_format($v['address']) !== false) ? 'address' : 'name';
+		
+		$sql = 'SELECT bio_id, bio_key, bio_fails
+			FROM _bio
+			WHERE bio_?? = ?
+				AND bio_active = ?
+				AND bio_id NOT IN (
+					SELECT ban_bio
+					FROM _bio_ban
+				)';
+		if ($userdata = _fieldrow(sql_filter($sql, $v['field'], $v['address'], 1)))
+		{
+			if ($userdata['bio_key'] === _password($v['key']))
+			{
+				if ($userdata['bio_fails'])
+				{
+					$sql = 'UPDATE _bio SET bio_fails = 0
+						WHERE bio_id = ?';
+					_sql(sql_filter($sql, $userdata['bio_id']));
+				}
+				
+				$bio->session_create($userdata['bio_id']);
+				redirect($v['page']);
+			}
+			
+			if ($userdata['bio_fails'] == $core->v('account_failcount'))
+			{
+				// TODO: Captcha system if failcount reached
+				// TODO: Notification about blocked account
+				_fatal(508);
+			}
+			
+			$sql = 'UPDATE _bio SET bio_fails = bio_fails + 1
+				WHERE bio_id = ?';
+			_sql(sql_filter($sql, $userdata['bio_id']));
+			
+			sleep(5);
+			$this->_error('LOGIN_ERROR');
+		}
+		else
+		{
+			$v['register'] = true;
+		}
+		
+		if ($v['register'])
+		{
+			$this->_up_home();
+		}
+		
+		return;
+	}
+	
+	public function out()
+	{
+		$this->method();
+	}
+	
+	protected function _out_home()
+	{
+		global $bio;
+		
+		if ($bio->v('auth_member'))
+		{
+			$bio->session_kill();
+			
+			$bio->v('auth_member', false);
+			$bio->v('session_page', '');
+			$bio->v('session_time', time());
+		}
+		
+		redirect(_link());
 	}
 	
 	public function up()
@@ -393,149 +536,6 @@ class __sign extends xmd implements i_sign
 		
 		redirect(_link('my', 'page'));
 		return;
-	}
-	
-	public function in()
-	{
-		$this->method();
-	}
-	
-	/*
-	Si email y clave existe > login
-	Si email no clave > recuperacion clave
-	Si no email, no clave > crear cuenta
-	*/
-	
-	protected function _in_home()
-	{
-		global $bio;
-		
-		$v = $this->__(w('page address key'));
-		
-		if ($bio->v('auth_member'))
-		{
-			redirect($v['page']);
-		}
-		
-		if (!f($v['address']))
-		{
-			$this->_error('LOGIN_ERROR');
-		}
-		
-		if (_button('recovery'))
-		{
-			$sql = 'SELECT bio_id, bio_name, bio_address, bio_recovery
-				FROM _bio
-				WHERE bio_address = ?
-					AND bio_id <> ?
-					AND bio_id NOT IN (
-						SELECT ban_userid
-						FROM _banlist
-					)';
-			if ($recovery = _fieldrow(sql_filter($sql, $v['address'], U_GUEST)))
-			{
-				$new_key = _rainbow_create($recovery['bio_id']);
-				
-				require_once(XFS . 'core/emailer.php');
-				$emailer = new emailer();
-				
-				$emailer->from($core->v('email_info'));
-				$emailer->use_template('bio_recovery');
-				$emailer->email_address($recovery['bio_address']);
-				
-				$emailer->assign_vars(array(
-					'USERNAME' => $this->fields['username'],
-					'U_RECOVERY' => _link('my', array('recovery', 'k' => $new_key)),
-					'U_PROFILE' => _link('m', $recovery['bio_nickname']))
-				);
-				$emailer->send();
-				$emailer->reset();
-				
-				$sql = 'UPDATE _bio SET bio_recovery = bio_recovery + 1
-					WHERE bio_id = ?';
-				_sql(sql_filter($sql, $recovery['bio_id']));
-			}
-			
-			$this->_stop('RECOVERY_LEGEND');
-		}
-
-		if (!f($v['key']))
-		{
-			$this->_error('LOGIN_ERROR');
-		}
-
-		$v['register'] = false;
-		$v['field'] = (email_format($v['address']) !== false) ? 'address' : 'name';
-		
-		$sql = 'SELECT bio_id, bio_key, bio_fails
-			FROM _bio
-			WHERE bio_?? = ?
-				AND bio_active = ?
-				AND bio_id NOT IN (
-					SELECT ban_bio
-					FROM _bio_ban
-				)';
-		if ($userdata = _fieldrow(sql_filter($sql, $v['field'], $v['address'], 1)))
-		{
-			if ($userdata['bio_key'] === _password($v['key']))
-			{
-				if ($userdata['bio_fails'])
-				{
-					$sql = 'UPDATE _bio SET bio_fails = 0
-						WHERE bio_id = ?';
-					_sql(sql_filter($sql, $userdata['bio_id']));
-				}
-				
-				$bio->session_create($userdata['bio_id']);
-				redirect($v['page']);
-			}
-			
-			if ($userdata['bio_fails'] == $core->v('account_failcount'))
-			{
-				// TODO: Captcha system if failcount reached
-				// TODO: Notification about blocked account
-				_fatal(508);
-			}
-			
-			$sql = 'UPDATE _bio SET bio_fails = bio_fails + 1
-				WHERE bio_id = ?';
-			_sql(sql_filter($sql, $userdata['bio_id']));
-			
-			sleep(5);
-			$this->_error('LOGIN_ERROR');
-		}
-		else
-		{
-			$v['register'] = true;
-		}
-		
-		if ($v['register'])
-		{
-			$this->_up_home();
-		}
-		
-		return;
-	}
-	
-	public function out()
-	{
-		$this->method();
-	}
-	
-	protected function _out_home()
-	{
-		global $bio;
-		
-		if ($bio->v('auth_member'))
-		{
-			$bio->session_kill();
-			
-			$bio->v('auth_member', false);
-			$bio->v('session_page', '');
-			$bio->v('session_time', time());
-		}
-		
-		redirect(_link());
 	}
 	
 	/*

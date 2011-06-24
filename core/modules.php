@@ -58,6 +58,11 @@ abstract class xmd extends project
 		return;
 	}
 	
+	final public function default_method()
+	{
+		return $this->method();
+	}
+		
 	final public function auth($v = -1)
 	{
 		return $this->m($v, '_auth');
