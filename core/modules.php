@@ -518,12 +518,14 @@ abstract class xmd extends project
 	
 	final public function get_navigation()
 	{
+		global $bio;
+		
 		$format = '<a href="%s">%s</a>';
 		$a = w();
 		
 		foreach ($this->nav as $k => $v)
 		{
-			$a[] = (f($v)) ? sprintf($format, $v, _lang($k)) : _lang($k);
+			$a[] = (f($v)) ? sprintf($format, $v, $bio->_lang($k)) : $bio->_lang($k);
 		}
 		
 		return _implode(' &rsaquo; ', $a);

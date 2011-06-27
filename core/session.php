@@ -21,20 +21,16 @@ if (!defined('XFS')) exit;
 class bio
 {
 	protected $cookie = array();
-	protected $data = array();
-	protected $auth_bio = array();
+	protected $base = array();
+	protected $auth = array();
 	protected $lang = array();
 	
-	protected $session_id = '';
-	protected $browser = '';
-	protected $ip = '';
-	protected $page = '';
-	protected $time = 0;
-	
-	protected $date_format, $timezone, $dst;
+	protected $page, $time, $browser, $ip;
+	protected $session, $date_format, $timezone, $dst;
 	
 	function __construct()
 	{
+		$this->session = '';
 		$this->page = _page();
 		$this->time = time();
 		$this->browser = v_server('HTTP_USER_AGENT');
@@ -52,30 +48,29 @@ class bio
 			$update_page = false;
 		}
 		
-		$this->cookie_data = w();
+		$this->cookie = w();
 		if (isset($_COOKIE[$core->v('cookie_name') . '_sid']) || isset($_COOKIE[$core->v('cookie_name') . '_u']))
 		{
-			$this->cookie_data['u'] = request_var($core->v('cookie_name') . '_u', 0);
-			$this->session_id = request_var($core->v('cookie_name') . '_sid', '');
+			$this->cookie['u'] = request_var($core->v('cookie_name') . '_u', 0);
+			$this->session = request_var($core->v('cookie_name') . '_sid', '');
 		}
 		
 		// Is session_id is set
-		if (!empty($this->session_id))
+		if (!empty($this->session))
 		{
-			// Did the session exist in the database?
 			$sql = 'SELECT *
 				FROM _sessions s
 				INNER JOIN _bio b ON b.bio_id = s.session_bio_id
 				WHERE s.session_id = ?';
-			if ($this->data = _fieldrow(sql_filter($sql, $this->session_id)))
+			if ($this->base = _fieldrow(sql_filter($sql, $this->session)))
 			{
-				$s_ip = implode('.', array_slice(explode('.', $this->data['session_ip']), 0, 4));
+				$s_ip = implode('.', array_slice(explode('.', $this->base['session_ip']), 0, 4));
 				$u_ip = implode('.', array_slice(explode('.', $this->ip), 0, 4));
 				
-				if ($u_ip == $s_ip && $this->data['session_browser'] == $this->browser)
+				if ($u_ip == $s_ip && $this->base['session_browser'] == $this->browser)
 				{
 					// Only update session a minute or so after last update or if page changes
-					if ($this->time - $this->data['session_time'] > 60 || $this->data['session_page'] != $this->page)
+					if ($this->time - $this->base['session_time'] > 60 || $this->base['session_page'] != $this->page)
 					{
 						$sql_update = array('session_time' => $this->time);
 						if ($update_page)
@@ -84,21 +79,16 @@ class bio
 						}
 						
 						$sql = 'UPDATE _sessions SET ' . _build_array('UPDATE', $sql_update) . sql_filter('
-							WHERE session_id = ?', $this->session_id);
+							WHERE session_id = ?', $this->session);
 						_sql($sql);
 					}
 					
 					if ($update_page)
 					{
-						$this->data['session_page'] = $this->page;
+						$this->base['session_page'] = $this->page;
 					}
 					
-					// Ultimately to be removed
-					$this->data['is_member'] = ($this->data['bio_id'] != U_GUEST) ? true : false;
-					$this->data['is_founder'] = ($this->data['bio_id'] != U_GUEST && $this->data['bio_level'] == U_FOUNDER) ? true : false;
-					$this->data['is_bot'] = false;
-					
-					if ($this->data['is_member'])
+					if ($this->v('auth_bio'))
 					{
 						return true;
 					}
@@ -106,15 +96,10 @@ class bio
 			}
 		}
 		
-		// If we reach here then no valid session exists. So we'll create a new one
+		// Create new session if no valid exists.
 		return $this->session_create(false, $update_page);
 	}
 
-	function browser()
-	{
-		return $this->browser;
-	}
-	
 	/**
 	* Create a new session
 	*
@@ -128,9 +113,9 @@ class bio
 	{
 		global $core;
 		
-		$this->data = w();
+		$this->base = w();
 		
-		// Garbage collection ... remove old sessions updating user information
+		// Garbage collection. Remove old sessions updating user information
 		// if necessary. It means (potentially) 11 queries but only infrequently
 		if ($this->time > $core->v('session_last_gc') + $core->v('session_gc'))
 		{
@@ -140,57 +125,47 @@ class bio
 		// If we've been passed a bio_id we'll grab data based on that
 		if ($bio_id !== false)
 		{
-			$this->cookie_data['u'] = $bio_id;
+			$this->cookie['u'] = $bio_id;
 			
 			$sql = 'SELECT *
 				FROM _bio
 				WHERE bio_id = ?
 					AND bio_level <> ?';
-			$this->data = _fieldrow(sql_filter($sql, $this->cookie_data['u'], 2));
+			$this->base = _fieldrow(sql_filter($sql, $this->cookie_data['u'], 2));
 		}
 		
 		// If no data was returned one or more of the following occured:
 		// User does not exist
 		// User is inactive
 		// User is bot
-		if (!count($this->data) || !is_array($this->data))
+		if (!count($this->base) || !is_array($this->base))
 		{
-			$this->cookie_data['u'] = U_GUEST;
+			$this->cookie['u'] = U_GUEST;
 			
 			$sql = 'SELECT *
 				FROM _bio
 				WHERE bio_id = ?';
-			$this->data = _fieldrow(sql_filter($sql, $this->cookie_data['u']));
+			$this->base = _fieldrow(sql_filter($sql, $this->cookie_data['u']));
 		}
 		
-		$this->data['session_last_visit'] = $this->time;
+		$this->base['session_last_visit'] = $this->time;
 		
-		if ($this->data['bio_id'] != U_GUEST)
+		if ($this->base['bio_id'] != U_GUEST)
 		{
 			$sql = 'SELECT session_time, session_id
 				FROM _sessions
 				WHERE session_bio_id = ?
 				ORDER BY session_time DESC
 				LIMIT 1';
-			if ($sdata = _fieldrow(sql_filter($sql, $this->data['bio_id'])))
+			if ($sbase = _fieldrow(sql_filter($sql, $this->data['bio_id'])))
 			{
-				$this->data = array_merge($sdata, $this->data);
-				unset($sdata);
-				$this->session_id = $this->data['session_id'];
+				$this->base = array_merge($sbase, $this->base);
+				unset($sbase);
+				$this->session = $this->base['session_id'];
   		}
 			
-			$this->data['session_last_visit'] = (isset($this->data['session_time']) && $this->data['session_time']) ? $this->data['session_time'] : (($this->data['bio_lastvisit']) ? $this->data['bio_lastvisit'] : $this->time);
+			$this->base['session_last_visit'] = (isset($this->base['session_time']) && $this->base['session_time']) ? $this->base['session_time'] : (($this->base['bio_lastvisit']) ? $this->base['bio_lastvisit'] : $this->time);
 		}
-		
-		// At this stage we should have a filled data array, defined cookie u and k data.
-		// data array should contain recent session info if we're a real user and a recent
-		// session exists in which case session_id will also be set
-		
-		//
-		// Do away with ultimately?
-		$this->data['is_member'] = ($this->data['bio_id'] != U_GUEST) ? true : false;
-		$this->data['is_founder'] = ($this->data['bio_id'] != U_GUEST && $this->data['bio_level'] == U_FOUNDER) ? true : false;
-		$this->data['is_bot'] = false;
 		
 		// Create or update the session
 		$sql_ary = array(
@@ -205,26 +180,26 @@ class bio
 		if ($update_page)
 		{
 			$sql_ary['session_page'] = (string) $this->page;
-			$this->data['session_page'] = $sql_ary['session_page'];
+			$this->base['session_page'] = $sql_ary['session_page'];
 		}
 		
 		$sql = 'UPDATE _sessions SET ' . _build_array('UPDATE', $sql_ary) . sql_filter('
-			WHERE session_id = ?', $this->session_id);
+			WHERE session_id = ?', $this->session);
 		_sql($sql);
 		
-		if (!$this->session_id || !_affectedrows())
+		if (!$this->session || !_affectedrows())
 		{
-			$this->session_id = $this->data['session_id'] = md5(unique_id());
+			$this->session = $this->base['session_id'] = md5(unique_id());
 			
-			$sql_ary['session_id'] = (string) $this->session_id;
+			$sql_ary['session_id'] = (string) $this->session;
 			
 			$sql = 'INSERT INTO _sessions' . _build_array('INSERT', $sql_ary);
 			_sql($sql);
 		}
 		
 		$cookie_expire = $this->time + 31536000;
-		$this->set_cookie('u', $this->cookie_data['u'], $cookie_expire);
-		$this->set_cookie('sid', $this->session_id, 0);
+		$this->set_cookie('u', $this->cookie['u'], $cookie_expire);
+		$this->set_cookie('sid', $this->session, 0);
 		
 		unset($cookie_expire);
 		
@@ -243,7 +218,7 @@ class bio
 		$sql = 'DELETE FROM _sessions
 			WHERE session_id = ?
 				AND session_bio_id = ?';
-		_sql(sql_filter($sql, $this->session_id, $this->data['bio_id']));
+		_sql(sql_filter($sql, $this->session, $this->data['bio_id']));
 		
 		if ($this->data['bio_id'] != U_GUEST)
 		{
@@ -343,6 +318,11 @@ class bio
 		return true;
 	}
 	
+	function browser()
+	{
+		return $this->browser;
+	}
+	
 	function v($d = false, $v = false)
 	{
 		if ($d === false)
@@ -360,28 +340,10 @@ class bio
 		
 		$mode = array_key(explode('_', $d), 0);
 		$key = str_replace($mode . '_', '', $d);
-		
-		/*if (!f($key))
-		{
-			
-		}*/
-		
 		$response = false;
 		
 		switch ($mode)
 		{
-			case 'founder':
-				$response = ($this->data['bio_id'] != U_GUEST && $this->data['bio_level'] == U_FOUNDER);
-				break;
-			case 'identity':
-				$response = ($this->data['bio_id'] != U_GUEST);
-				break;
-			case 'nameless':
-				$response = ($this->data['bio_id'] == U_GUEST);
-				break;
-			case 'robot':
-				
-				break;
 			case 'auth':
 				$bio_id = $this->v('bio_id');
 				
@@ -394,6 +356,41 @@ class bio
 						ORDER BY f.field_name';
 					$this->auth_bio[$bio_id] = _rowset(sql_filter($sql, $bio_id), 'field_alias', 'auth_value');
 				}
+				
+				/*
+				 * 
+				 * //
+		// Do away with ultimately?
+		$this->data['is_member'] = ($this->data['bio_id'] != U_GUEST) ? true : false;
+		$this->data['is_founder'] = ($this->data['bio_id'] != U_GUEST && $this->data['bio_level'] == U_FOUNDER) ? true : false;
+		$this->data['is_bot'] = false;
+				 * 
+									
+					// Ultimately to be removed
+					$this->data['is_member'] = ($this->data['bio_id'] != U_GUEST) ? true : false;
+					$this->data['is_founder'] = ($this->data['bio_id'] != U_GUEST && $this->data['bio_level'] == U_FOUNDER) ? true : false;
+					$this->data['is_bot'] = false;
+					
+					if ($this->data['is_member'])
+					{
+						return true;
+					}
+				 */
+				
+				/*
+				case 'founder':
+					$response = ($this->data['bio_id'] != U_GUEST && $this->data['bio_level'] == U_FOUNDER);
+					break;
+				case 'identity':
+					$response = ($this->data['bio_id'] != U_GUEST);
+					break;
+				case 'nameless':
+					$response = ($this->data['bio_id'] == U_GUEST);
+					break;
+				case 'robot':
+					
+					break;
+				*/
 				
 				$response = (isset($this->auth_bio[$bio_id][$key])) ? true : false;
 				break;
@@ -472,7 +469,39 @@ class bio
 		}
 		
 		$this->lang += $lang;
-		return $lang;
+		return true;
+	}
+	
+	function _lang_check()
+	{
+		return (sizeof($this->lang));
+	}
+	
+	function _lang()
+	{
+		$f = func_get_args();
+		if ($this->is_lang($f[0]))
+		{
+			return array_construct($this->lang, array_map('strtoupper', $f));
+		}
+		
+		return $f[0];
+	}
+	
+	function _lang_set($k, $v)
+	{
+		$this->lang[strtoupper($k)] = $v;
+		return true;
+	}
+	
+	function is_lang($k)
+	{
+		if (is_array($k))
+		{
+			return false;
+		}
+		
+		return isset($this->lang[strtoupper($k)]);
 	}
 	
 	function time_diff($timestamp, $detailed = false, $n = 0)
@@ -551,7 +580,7 @@ class bio
 			}
 			else
 			{
-				return _lang('AGO_LESS_MIN');
+				return $this->_lang('AGO_LESS_MIN');
 			}
 		}
 		

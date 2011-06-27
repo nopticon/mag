@@ -349,6 +349,8 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 
 function msg_handler($errno, $msg_text, $errfile, $errline)
 {
+	global $bio;
+	
 	switch ($errno)
 	{
 		case E_NOTICE:
@@ -359,7 +361,7 @@ function msg_handler($errno, $msg_text, $errfile, $errline)
 			_fatal(506, '', '', $msg_text, $errno);
 			break;
 		case E_USER_NOTICE:
-			_fatal(503, '', '', _lang($msg_text), $errno);
+			_fatal(503, '', '', $bio->_lang($msg_text), $errno);
 			break;
 		default:
 			_fatal(505, $errfile, $errline, $msg_text, $errno);
@@ -924,39 +926,6 @@ function entity_decode($s, $compat = true)
 	return html_entity_decode($s);
 }
 
-function _lang()
-{
-	global $bio;
-	
-	$f = func_get_args();
-	if (is_lang($f[0]))
-	{
-		return array_construct($bio->lang, array_map('strtoupper', $f));
-	}
-	
-	return $f[0];
-}
-
-function _lang_set($k, $v)
-{
-	global $bio;
-	
-	$bio->lang[strtoupper($k)] = $v;
-	return true;
-}
-
-function is_lang($k)
-{
-	global $bio;
-	
-	if (is_array($k))
-	{
-		return false;
-	}
-	
-	return isset($bio->lang[strtoupper($k)]);
-}
-
 function w($a = '', $d = false)
 {
 	if (!f($a) || !is_string($a)) return array();
@@ -1034,6 +1003,8 @@ function _sf_read()
 
 function _sf_option($in, $v, $dv = false)
 {
+	global $bio;
+	
 	$d = false;
 	$dvv = ($dv === false);
 	$code = _sf_fh();
@@ -1054,7 +1025,7 @@ function _sf_option($in, $v, $dv = false)
 			$d = $k1;
 		}
 		
-		$code .= ' <span id="option_' . $k1 . '" class="sf_option_' . $in2 . ' sf_option' . $active . '">' . _lang($k) . '</span>';
+		$code .= ' <span id="option_' . $k1 . '" class="sf_option_' . $in2 . ' sf_option' . $active . '">' . $bio->_lang($k) . '</span>';
 	}
 	$code = '<div class="m_fix">' . $code . '</div>';
 	
@@ -1434,7 +1405,7 @@ function _postbox($ref = '', $prefix = 'postbox')
 	_style($prefix);
 	_style($prefix . '.' . $u_block, array(
 		'V_REF' => $ref,
-		'V_OUT' => sprintf(_lang('LOGIN_TO_POST'), _link('signup')))
+		'V_OUT' => sprintf($bio->_lang('LOGIN_TO_POST'), _link('signup')))
 	);
 	
 	return;
@@ -1509,14 +1480,14 @@ function _pagination($url_format_smp, $url_apnd, $total_items, $per_page, $offse
 		}
 	}
 	
-	$prev = ($on_page > 1) ? sprintf($tag['a'], sprintf($url_format, (($on_page - 2) * $per_page)), sprintf(_lang('PAGES_PREV'), $per_page)) : '';
-	$next = ($on_page < $total_pages) ? sprintf($tag['a'], sprintf($url_format, ($on_page * $per_page)), sprintf(_lang('PAGES_NEXT'), $per_page)) : '';
+	$prev = ($on_page > 1) ? sprintf($tag['a'], sprintf($url_format, (($on_page - 2) * $per_page)), sprintf($bio->_lang('PAGES_PREV'), $per_page)) : '';
+	$next = ($on_page < $total_pages) ? sprintf($tag['a'], sprintf($url_format, ($on_page * $per_page)), sprintf($bio->_lang('PAGES_NEXT'), $per_page)) : '';
 	
 	$rest = array(
 		'NUMS' => $pages,
 		'PREV' => $prev,
 		'NEXT' => $next,
-		'ON' => sprintf(_lang('PAGES_ON'), $on_page, max($total_pages, 1))
+		'ON' => sprintf($bio->_lang('PAGES_ON'), $on_page, max($total_pages, 1))
 	);
 	return $rest;
 }
@@ -1576,7 +1547,7 @@ function _login($message = false, $error = false)
 	{
 		$bio->start();
 	}
-	if (!f($bio->lang))
+	if (!$bio->_lang_check())
 	{
 		$bio->setup();
 	}
@@ -1593,11 +1564,11 @@ function _login($message = false, $error = false)
 	
 	if ($error === false)
 	{
-		$error = ($message !== false) ? _lang($message) : false;
+		$error = ($message !== false) ? $bio->_lang($message) : false;
 	}
 	else
 	{
-		$error = _lang($error);
+		$error = $bio->_lang($error);
 	}
 	
 	if ($error !== false && f($error))
@@ -2393,7 +2364,7 @@ function _layout($template, $page_title = false, $v_custom = false)
 		
 		foreach ($page_title as $k => $v)
 		{
-			$page_title[$k] = _lang($v);
+			$page_title[$k] = $bio->_lang($v);
 		}
 		$page_title = implode(' . ', $page_title);
 	}
@@ -2643,7 +2614,7 @@ function _xfs($mod = false, $wdir = false, $warg = false)
 	//
 	// Output template
 	$page_smodule = 'CONTROL_' . $mod;
-	if (is_lang($page_smodule))
+	if ($bio->is_lang($page_smodule))
 	{
 		$module->page_title($page_smodule);
 	}

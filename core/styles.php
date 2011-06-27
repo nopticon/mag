@@ -1537,9 +1537,9 @@ class style
 		switch ($prefix)
 		{
 			case 'L_':
-				if (is_lang($value))
+				if ($bio->is_lang($value))
 				{
-					return _lang($value);
+					return $bio->_lang($value);
 				}
 				return $value;
 				break;
