@@ -127,7 +127,7 @@ abstract class project
 		
 		if ($forum['forum_access'] != BOARD_AUTH_GUEST)
 		{
-			if (!$bio->v('auth_bio'))
+			if (!$bio->v('is_bio'))
 			{
 				return false;
 			}

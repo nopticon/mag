@@ -106,8 +106,8 @@ CREATE TABLE _bio (
 	bio_dateformat VARCHAR(14) NOT NULL DEFAULT '',
 	bio_lang VARCHAR(2) NOT NULL DEFAULT '',
 	bio_country INT(11) NOT NULL DEFAULT '0',
-	bio_avatar VARCHAR(100) NOT NULL DEFAULT '0',
-	bio_actkey VARCHAR(25) NOT NULL DEFAULT '0',
+	bio_avatar VARCHAR(100) NOT NULL DEFAULT '',
+	bio_actkey VARCHAR(25) NOT NULL DEFAULT '',
 	bio_recovery INT(11) NOT NULL DEFAULT '0',
 	bio_fails MEDIUMINT(5) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB;
@@ -115,15 +115,28 @@ CREATE TABLE _bio (
 CREATE TABLE IF NOT EXISTS _bio_auth (
 	auth_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	auth_bio INT(11) NOT NULL DEFAULT '0',
-	auth_field INT(11) NOT NULL DEFAULT '0',
-	auth_value MEDIUMINT(5) NOT NULL DEFAULT '0'
+	auth_profile INT(11) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS _bio_auth_fields (
-  field_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  field_alias VARCHAR(50) NOT NULL,
-  field_name VARCHAR(50) NOT NULL,
-  field_global TINYINT(1) NOT NULL
+CREATE TABLE IF NOT EXISTS _bio_auth_profile (
+	profile_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	profile_active INT(11) NOT NULL DEFAULT '0',
+	profile_alias VARCHAR(50) NOT NULL DEFAULT '',
+	profile_name VARCHAR(50) NOT NULL DEFAULT '',
+	profile_time INT(11) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS _bio_auth_field (
+	field_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	field_alias VARCHAR(50) NOT NULL DEFAULT '',
+	field_name VARCHAR(50) NOT NULL DEFAULT ''
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS _bio_auth_property (
+	property_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	property_profile INT(11) NOT NULL DEFAULT '0',
+	property_field INT(11) NOT NULL DEFAULT '0',
+	property_data VARCHAR(100) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB;
 
 CREATE TABLE _reference (

@@ -76,15 +76,29 @@ bio_tags
 -- bio_auth
 
 auth_id
-auth_assoc
-auth_field
+auth_bio
+auth_profile
 
--- bio_auth_fields
+-- bio_auth_profile
+
+profile_id
+profile_active
+profile_alias
+profile_name
+profile_time
+
+-- bio_auth_field
 
 field_id
 field_alias
 field_name
-field_global
+
+-- bio_auth_property
+
+property_id
+property_field
+property_auth
+property_data
 
 -- bio_block
 

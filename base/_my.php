@@ -140,7 +140,7 @@ class __my extends xmd implements i_my
 		// Show notifications
 		$notify = w();
 		
-		if ($bio->v('auth_bio'))
+		if ($bio->v('is_bio'))
 		{
 			$sql = 'SELECT a.area_alias, n.notify_assoc
 				FROM _bio_notify n, _bio_notify_area a

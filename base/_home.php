@@ -43,6 +43,8 @@ class __home extends xmd implements i_home
 		$page = 15;
 		$today = _htimestamp('md');
 		
+		_pre($bio->v('is_bio'), true);
+		
 		// Personal status
 		//if ($bio->v('bio_active'))
 		{

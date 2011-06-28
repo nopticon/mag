@@ -39,6 +39,38 @@ class bio
 		return;
 	}
 	
+	function select($value, $session = false)
+	{
+		if ($session)
+		{
+			$sql = 'SELECT *
+				FROM _sessions s
+				INNER JOIN _bio b ON b.bio_id = s.session_bio_id
+				WHERE s.session_id = ?';
+		}
+		else
+		{
+			$sql = 'SELECT *
+				FROM _bio
+				WHERE bio_id = ?';
+		}
+		
+		$result = _fieldrow(sql_filter($sql, $value));
+		
+		if (isset($result['bio_key'])) unset($result['bio_key']);
+		
+		$sql = 'SELECT *
+			FROM _bio_auth_property
+			LEFT JOIN _bio_auth ON property_profile = auth_profile
+			INNER JOIN _bio_auth_profile ON property_profile = profile_id
+			INNER JOIN _bio_auth_field ON property_field = field_id
+			WHERE auth_bio = ?
+			ORDER BY field_alias';
+		$result['bio_auth'] = _rowset(sql_filter($sql, $result['bio_id']));
+		
+		return $result;
+	}
+	
 	function start($update_page = true)
 	{
 		global $core;
@@ -58,11 +90,7 @@ class bio
 		// Is session_id is set
 		if (!empty($this->session))
 		{
-			$sql = 'SELECT *
-				FROM _sessions s
-				INNER JOIN _bio b ON b.bio_id = s.session_bio_id
-				WHERE s.session_id = ?';
-			if ($this->base = _fieldrow(sql_filter($sql, $this->session)))
+			if ($this->base = $this->select($this->session, true))
 			{
 				$s_ip = implode('.', array_slice(explode('.', $this->base['session_ip']), 0, 4));
 				$u_ip = implode('.', array_slice(explode('.', $this->ip), 0, 4));
@@ -88,7 +116,7 @@ class bio
 						$this->base['session_page'] = $this->page;
 					}
 					
-					if ($this->v('auth_bio'))
+					if ($this->v('is_bio'))
 					{
 						return true;
 					}
@@ -126,12 +154,7 @@ class bio
 		if ($bio_id !== false)
 		{
 			$this->cookie['u'] = $bio_id;
-			
-			$sql = 'SELECT *
-				FROM _bio
-				WHERE bio_id = ?
-					AND bio_level <> ?';
-			$this->base = _fieldrow(sql_filter($sql, $this->cookie_data['u'], 2));
+			$this->base = $this->select($this->cookie['u']);
 		}
 		
 		// If no data was returned one or more of the following occured:
@@ -140,28 +163,24 @@ class bio
 		// User is bot
 		if (!count($this->base) || !is_array($this->base))
 		{
-			$this->cookie['u'] = U_GUEST;
-			
-			$sql = 'SELECT *
-				FROM _bio
-				WHERE bio_id = ?';
-			$this->base = _fieldrow(sql_filter($sql, $this->cookie_data['u']));
+			$this->cookie['u'] = 1;
+			$this->base = $this->select($this->cookie['u']);
 		}
 		
 		$this->base['session_last_visit'] = $this->time;
 		
-		if ($this->base['bio_id'] != U_GUEST)
+		if ($this->base['bio_id'] != 1)
 		{
 			$sql = 'SELECT session_time, session_id
 				FROM _sessions
 				WHERE session_bio_id = ?
 				ORDER BY session_time DESC
 				LIMIT 1';
-			if ($sbase = _fieldrow(sql_filter($sql, $this->data['bio_id'])))
+			if ($sbase = _fieldrow(sql_filter($sql, $this->base['bio_id'])))
 			{
 				$this->base = array_merge($sbase, $this->base);
-				unset($sbase);
 				$this->session = $this->base['session_id'];
+				unset($sbase);
   		}
 			
 			$this->base['session_last_visit'] = (isset($this->base['session_time']) && $this->base['session_time']) ? $this->base['session_time'] : (($this->base['bio_lastvisit']) ? $this->base['bio_lastvisit'] : $this->time);
@@ -169,9 +188,9 @@ class bio
 		
 		// Create or update the session
 		$sql_ary = array(
-			'session_bio_id' => (int) $this->data['bio_id'],
+			'session_bio_id' => (int) $this->base['bio_id'],
 			'session_start' => (int) $this->time,
-			'session_last_visit' => (int) $this->data['session_last_visit'],
+			'session_last_visit' => (int) $this->base['session_last_visit'],
 			'session_time' => (int) $this->time,
 			'session_browser' => (string) $this->browser,
 			'session_ip' => (string) $this->ip
@@ -197,42 +216,28 @@ class bio
 			_sql($sql);
 		}
 		
-		$cookie_expire = $this->time + 31536000;
-		$this->set_cookie('u', $this->cookie['u'], $cookie_expire);
+		$this->set_cookie('u', $this->cookie['u'], ($this->time + 31536000));
 		$this->set_cookie('sid', $this->session, 0);
-		
-		unset($cookie_expire);
 		
 		return true;
 	}
 	
-	/**
-	* Kills a session
-	*
-	* This method does what it says on the tin. It will delete a pre-existing session.
-	* It resets cookie information and update the users information from the relevant
-	* session data. It will then grab guest user information.
-	*/
 	function session_kill()
 	{
 		$sql = 'DELETE FROM _sessions
 			WHERE session_id = ?
 				AND session_bio_id = ?';
-		_sql(sql_filter($sql, $this->session, $this->data['bio_id']));
+		_sql(sql_filter($sql, $this->session, $this->base['bio_id']));
 		
-		if ($this->data['bio_id'] != U_GUEST)
+		if ($this->base['bio_id'] != U_GUEST)
 		{
 			// Delete existing session, update last visit info first!
 			$sql = 'UPDATE _bio
 				SET bio_lastvisit = ?
 				WHERE bio_id = ?';
-			_sql(sql_filter($sql, $this->data['session_time'], $this->data['bio_id']));
+			_sql(sql_filter($sql, $this->base['session_time'], $this->base['bio_id']));
 			
-			// Reset the data array
-			$sql = 'SELECT *
-				FROM _bio
-				WHERE bio_id = ?';
-			$this->data = _fieldrow(sql_filter($sql, U_GUEST));
+			$this->base = $this->select(1);
 		}
 		
 		$cookie_expire = $this->time - 31536000;
@@ -240,7 +245,7 @@ class bio
 		$this->set_cookie('sid', '', $cookie_expire);
 		unset($cookie_expire);
 		
-		$this->session_id = '';
+		$this->session = '';
 		
 		return true;
 	}
@@ -291,10 +296,10 @@ class bio
 			_sql(sql_filter($sql, $del_bio_id, ($this->time - $core->v('session_length'))));
 		}
 		
+		// Less than 5 sessions, update gc timer ... else we want gc
+		// called again to delete other sessions
 		if ($del_sessions < 5)
 		{
-			// Less than 5 sessions, update gc timer ... else we want gc
-			// called again to delete other sessions
 			$core->v('session_last_gc', $this->time);
 		}
 
@@ -327,15 +332,12 @@ class bio
 	{
 		if ($d === false)
 		{
-			$r = $this->data;
-			
-			if (!$this->data)
+			if (!$this->base)
 			{
 				return false;
 			}
 			
-			unset($r['bio_key']);
-			return $r;
+			return $this->base;
 		}
 		
 		$mode = array_key(explode('_', $d), 0);
@@ -344,6 +346,21 @@ class bio
 		
 		switch ($mode)
 		{
+			case 'is':
+				$bio_id = $this->v('bio_id');
+				
+				switch ($key)
+				{
+					case 'bio':
+						if (!isset($this->auth_bio[$bio_id][$d]))
+						{
+							$this->auth_bio[$bio_id][$d] = ($this->base['bio_id'] > 1 && $this->base['bio_active']);
+						}
+						break;
+					default:
+						break;
+				}
+				break;
 			case 'auth':
 				$bio_id = $this->v('bio_id');
 				
@@ -361,17 +378,17 @@ class bio
 				 * 
 				 * //
 		// Do away with ultimately?
-		$this->data['is_member'] = ($this->data['bio_id'] != U_GUEST) ? true : false;
-		$this->data['is_founder'] = ($this->data['bio_id'] != U_GUEST && $this->data['bio_level'] == U_FOUNDER) ? true : false;
-		$this->data['is_bot'] = false;
+		$this->base['is_member'] = ($this->base['bio_id'] != U_GUEST) ? true : false;
+		$this->base['is_founder'] = ($this->base['bio_id'] != U_GUEST && $this->base['bio_level'] == U_FOUNDER) ? true : false;
+		$this->base['is_bot'] = false;
 				 * 
 									
 					// Ultimately to be removed
-					$this->data['is_member'] = ($this->data['bio_id'] != U_GUEST) ? true : false;
-					$this->data['is_founder'] = ($this->data['bio_id'] != U_GUEST && $this->data['bio_level'] == U_FOUNDER) ? true : false;
-					$this->data['is_bot'] = false;
+					$this->base['is_member'] = ($this->base['bio_id'] != U_GUEST) ? true : false;
+					$this->base['is_founder'] = ($this->base['bio_id'] != U_GUEST && $this->base['bio_level'] == U_FOUNDER) ? true : false;
+					$this->base['is_bot'] = false;
 					
-					if ($this->data['is_member'])
+					if ($this->base['is_member'])
 					{
 						return true;
 					}
@@ -379,13 +396,13 @@ class bio
 				
 				/*
 				case 'founder':
-					$response = ($this->data['bio_id'] != U_GUEST && $this->data['bio_level'] == U_FOUNDER);
+					$response = ($this->base['bio_id'] != U_GUEST && $this->base['bio_level'] == U_FOUNDER);
 					break;
 				case 'identity':
-					$response = ($this->data['bio_id'] != U_GUEST);
+					$response = ($this->base['bio_id'] != U_GUEST);
 					break;
 				case 'nameless':
-					$response = ($this->data['bio_id'] == U_GUEST);
+					$response = ($this->base['bio_id'] == U_GUEST);
 					break;
 				case 'robot':
 					
@@ -398,7 +415,7 @@ class bio
 				switch ($key)
 				{
 					case 'age':
-						if (!isset($this->data[$d]))
+						if (!isset($this->base[$d]))
 						{
 							// TODO: Calculate age based on birthday
 						}
@@ -407,10 +424,10 @@ class bio
 				
 				if ($v !== false)
 				{
-					$this->data[$d] = $v;
+					$this->base[$d] = $v;
 				}
 				
-				$response = (isset($this->data[$d])) ? $this->data[$d] : false;
+				$response = (isset($this->base[$d])) ? $this->base[$d] : false;
 				break;
 			case 'session':
 				if ($v !== false)
@@ -429,7 +446,7 @@ class bio
 	
 	public function replace($a)
 	{
-		$this->data = $a;
+		$this->base = $a;
 		return true;
 	}
 	
@@ -437,7 +454,7 @@ class bio
 	{
 		global $style, $core;
 		
-		$this->data['bio_lang'] = $core->v('site_lang');
+		$this->base['bio_lang'] = $core->v('site_lang');
 		$this->date_format = $this->v('bio_dateformat');
 		$this->timezone = $this->v('bio_timezone') * 3600;
 		$this->dst = $this->v('bio_dst') * 3600;
@@ -649,7 +666,7 @@ class bio
 		if (!$fields = $core->cache_load('auth_fields'))
 		{
 			$sql = 'SELECT *
-				FROM _bio_auth_fields
+				FROM _bio_auth_field
 				ORDER BY field_alias';
 			$fields = $core->cache_store(_rowset($sql, 'field_id'));
 		}
@@ -743,11 +760,6 @@ class bio
 			{
 				if ($name === $row['field_alias'])
 				{
-					if ($row['field_global'])
-					{
-						$response = true;
-					}
-					
 					$field_found = true;
 					break;
 				}
@@ -759,10 +771,9 @@ class bio
 				
 				$sql_insert = array(
 					'alias' => $name,
-					'name' => $name,
-					'global' => (int) $global
+					'name' => $name
 				);
-				$sql = 'INSERT INTO _bio_auth_fields' . _build_array('INSERT', prefix('field', $sql_insert));
+				$sql = 'INSERT INTO _bio_auth_field' . _build_array('INSERT', prefix('field', $sql_insert));
 				_sql($sql);
 				
 				$core->cache_unload();
