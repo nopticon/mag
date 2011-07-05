@@ -21,20 +21,25 @@ if (!defined('XFS')) exit;
 class bio
 {
 	protected $cookie = array();
+	protected $queue = array();
 	protected $base = array();
 	protected $auth = array();
 	protected $lang = array();
 	
-	protected $page, $time, $browser, $ip;
+	protected $page, $browser, $ip;
 	protected $session, $date_format, $timezone, $dst;
 	
 	function __construct()
 	{
 		$this->session = '';
 		$this->page = _page();
-		$this->time = time();
 		$this->browser = v_server('HTTP_USER_AGENT');
 		$this->ip = htmlspecialchars(v_server('REMOTE_ADDR'));
+		
+		foreach (w('write replace remove') as $row)
+		{
+			$this->queue[$row] = w();
+		}
 		
 		return;
 	}
@@ -71,13 +76,13 @@ class bio
 		return $result;
 	}
 	
-	function start($update_page = true)
+	function start($_update = true)
 	{
 		global $core;
 		
 		if (array_strpos($this->page, w('ext')) !== false)
 		{
-			$update_page = false;
+			$_update = false;
 		}
 		
 		$this->cookie = w();
@@ -87,45 +92,41 @@ class bio
 			$this->session = request_var($core->v('cookie_name') . '_sid', '');
 		}
 		
-		// Is session_id is set
-		if (!empty($this->session))
+		if (!empty($this->session) && ($this->base = $this->select($this->session, true)))
 		{
-			if ($this->base = $this->select($this->session, true))
+			$s_ip = implode('.', array_slice(explode('.', $this->base['session_ip']), 0, 4));
+			$b_ip = implode('.', array_slice(explode('.', $this->ip), 0, 4));
+			
+			if ($b_ip == $s_ip && $this->base['session_browser'] == $this->browser)
 			{
-				$s_ip = implode('.', array_slice(explode('.', $this->base['session_ip']), 0, 4));
-				$u_ip = implode('.', array_slice(explode('.', $this->ip), 0, 4));
-				
-				if ($u_ip == $s_ip && $this->base['session_browser'] == $this->browser)
+				// Only update session a minute or so after last update or if page changes
+				if (time() - $this->base['session_time'] > 60 || $this->base['session_page'] != $this->page)
 				{
-					// Only update session a minute or so after last update or if page changes
-					if ($this->time - $this->base['session_time'] > 60 || $this->base['session_page'] != $this->page)
+					$sql_update = array('session_time' => time());
+					if ($_update)
 					{
-						$sql_update = array('session_time' => $this->time);
-						if ($update_page)
-						{
-							$sql_update['session_page'] = $this->page;
-						}
-						
-						$sql = 'UPDATE _sessions SET ' . _build_array('UPDATE', $sql_update) . sql_filter('
-							WHERE session_id = ?', $this->session);
-						_sql($sql);
+						$sql_update['session_page'] = $this->page;
 					}
 					
-					if ($update_page)
-					{
-						$this->base['session_page'] = $this->page;
-					}
-					
-					if ($this->v('is_bio'))
-					{
-						return true;
-					}
+					$sql = 'UPDATE _sessions SET ' . _build_array('UPDATE', $sql_update) . sql_filter('
+						WHERE session_id = ?', $this->session);
+					_sql($sql);
+				}
+				
+				if ($_update)
+				{
+					$this->base['session_page'] = $this->page;
+				}
+				
+				if ($this->v('is_bio'))
+				{
+					return true;
 				}
 			}
 		}
 		
 		// Create new session if no valid exists.
-		return $this->session_create(false, $update_page);
+		return $this->session_create(false, $_update);
 	}
 
 	/**
@@ -137,7 +138,7 @@ class bio
 	* garbage collection, (search)bot checking, banned user comparison. Basically
 	* though this method will result in a new session for a specific user.
 	*/
-	function session_create($bio_id = false, $update_page = true)
+	function session_create($bio_id = false, $_update = true)
 	{
 		global $core;
 		
@@ -145,7 +146,7 @@ class bio
 		
 		// Garbage collection. Remove old sessions updating user information
 		// if necessary. It means (potentially) 11 queries but only infrequently
-		if ($this->time > $core->v('session_last_gc') + $core->v('session_gc'))
+		if (time() > $core->v('session_last_gc') + $core->v('session_gc'))
 		{
 			$this->session_gc();
 		}
@@ -167,7 +168,7 @@ class bio
 			$this->base = $this->select($this->cookie['u']);
 		}
 		
-		$this->base['session_last_visit'] = $this->time;
+		$this->base['session_last_visit'] = time();
 		
 		if ($this->base['bio_id'] != 1)
 		{
@@ -176,52 +177,61 @@ class bio
 				WHERE session_bio_id = ?
 				ORDER BY session_time DESC
 				LIMIT 1';
-			if ($sbase = _fieldrow(sql_filter($sql, $this->base['bio_id'])))
+			if ($result = _fieldrow(sql_filter($sql, $this->base['bio_id'])))
 			{
-				$this->base = array_merge($sbase, $this->base);
+				$this->base = array_merge($this->base, $result);
 				$this->session = $this->base['session_id'];
-				unset($sbase);
+				unset($result);
   		}
 			
-			$this->base['session_last_visit'] = (isset($this->base['session_time']) && $this->base['session_time']) ? $this->base['session_time'] : (($this->base['bio_lastvisit']) ? $this->base['bio_lastvisit'] : $this->time);
+			$this->base['session_last_visit'] = (isset($this->base['session_time']) && $this->base['session_time']) ? $this->base['session_time'] : (($this->base['bio_lastvisit']) ? $this->base['bio_lastvisit'] : time());
 		}
 		
 		// Create or update the session
 		$sql_ary = array(
-			'session_bio_id' => (int) $this->base['bio_id'],
-			'session_start' => (int) $this->time,
-			'session_last_visit' => (int) $this->base['session_last_visit'],
-			'session_time' => (int) $this->time,
+			'session_bio_id' => $this->base['bio_id'],
+			'session_start' => time(),
+			'session_last_visit' => $this->base['session_last_visit'],
+			'session_time' => time(),
 			'session_browser' => (string) $this->browser,
 			'session_ip' => (string) $this->ip
 		);
 		
-		if ($update_page)
+		if ($_update)
 		{
 			$sql_ary['session_page'] = (string) $this->page;
 			$this->base['session_page'] = $sql_ary['session_page'];
 		}
 		
-		$sql = 'UPDATE _sessions SET ' . _build_array('UPDATE', $sql_ary) . sql_filter('
-			WHERE session_id = ?', $this->session);
-		_sql($sql);
-		
-		if (!$this->session || !_affectedrows())
+		$run_update = false;
+		if ($this->session)
 		{
-			$this->session = $this->base['session_id'] = md5(unique_id());
+			$run_update = true;
 			
-			$sql_ary['session_id'] = (string) $this->session;
+			$sql = 'UPDATE _sessions SET ' . _build_array('UPDATE', $sql_ary) . sql_filter('
+				WHERE session_id = ?', $this->session);
+			_sql($sql);
+		}
+		
+		if (!$this->session || ($run_update && !_affectedrows()))
+		{
+			$this->session = $this->base['session_id'] = $sql_ary['session_id'] = (string) md5(unique_id());
 			
 			$sql = 'INSERT INTO _sessions' . _build_array('INSERT', $sql_ary);
 			_sql($sql);
 		}
 		
-		$this->set_cookie('u', $this->cookie['u'], ($this->time + 31536000));
+		$this->set_cookie('u', $this->cookie['u'], (time() + 31536000));
 		$this->set_cookie('sid', $this->session, 0);
 		
 		return true;
 	}
 	
+	/* 
+	 * session_kill
+	 * 
+	 * Delete existing session, update last visit info first!
+	 */
 	function session_kill()
 	{
 		$sql = 'DELETE FROM _sessions
@@ -229,9 +239,8 @@ class bio
 				AND session_bio_id = ?';
 		_sql(sql_filter($sql, $this->session, $this->base['bio_id']));
 		
-		if ($this->base['bio_id'] != U_GUEST)
+		if ($this->base['bio_id'] != 1)
 		{
-			// Delete existing session, update last visit info first!
 			$sql = 'UPDATE _bio
 				SET bio_lastvisit = ?
 				WHERE bio_id = ?';
@@ -240,7 +249,7 @@ class bio
 			$this->base = $this->select(1);
 		}
 		
-		$cookie_expire = $this->time - 31536000;
+		$cookie_expire = time() - 31536000;
 		$this->set_cookie('u', '', $cookie_expire);
 		$this->set_cookie('sid', '', $cookie_expire);
 		unset($cookie_expire);
@@ -255,9 +264,7 @@ class bio
 	*
 	* Effectively we are deleting any sessions older than an admin definable 
 	* limit. Due to the way in which we maintain session data we have to 
-	* ensure we update user data before those sessions are destroyed. 
-	* In addition this method removes autologin key information that is older 
-	* than an admin defined limit.
+	* ensure we update user data before those sessions are destroyed.
 	*/
 	function session_gc()
 	{
@@ -266,16 +273,16 @@ class bio
 		// Get expired sessions, only most recent for each user
 		$sql = 'SELECT session_bio_id, session_page, MAX(session_time) AS recent_time
 			FROM _sessions
-			WHERE session_time < ' . ($this->time - $core->v('session_length')) . '
+			WHERE session_time < ' . (time() - $core->v('session_length')) . '
 			GROUP BY session_bio_id, session_page
 			LIMIT 5';
 		$sessions = _rowset($sql);
 		
-		$del_bio_id = '';
+		$del_bio_id = array();
 		$del_sessions = 0;
 		foreach ($sessions as $row)
 		{
-			if ($row['session_bio_id'] != U_GUEST)
+			if ($row['session_bio_id'] != 1)
 			{
 				$sql = 'UPDATE _bio
 					SET bio_lastvisit = ?, bio_lastpage = ?
@@ -283,24 +290,24 @@ class bio
 				_sql(sql_filter($sql, $row['recent_time'], $row['session_page'], $row['session_bio_id']));
 			}
 			
-			$del_bio_id .= (($del_bio_id != '') ? ', ' : '') . (int) $row['session_bio_id'];
+			$del_bio_id[] = $row['session_bio_id'];
 			$del_sessions++;
 		}
 		
-		if ($del_bio_id != '')
+		if ($del_bio_id)
 		{
 			// Delete expired sessions
 			$sql = 'DELETE FROM _sessions
 				WHERE session_bio_id IN (??)
 					AND session_time < ?';
-			_sql(sql_filter($sql, $del_bio_id, ($this->time - $core->v('session_length'))));
+			_sql(sql_filter($sql, implode(',', $del_bio_id), (time() - $core->v('session_length'))));
 		}
 		
 		// Less than 5 sessions, update gc timer ... else we want gc
 		// called again to delete other sessions
 		if ($del_sessions < 5)
 		{
-			$core->v('session_last_gc', $this->time);
+			$core->v('session_last_gc', time());
 		}
 
 		return;
@@ -326,6 +333,108 @@ class bio
 	function browser()
 	{
 		return $this->browser;
+	}
+	
+	function auth_bio($bio)
+	{
+		return ($bio !== false) ? $bio : $this->v('bio_id');
+	}
+	
+	function auth_all($bio = false)
+	{
+		$sql = 'SELECT *
+			FROM _bio_auth a, _bio_auth_fields f
+			WGERE a.auth_bio = ?
+				AND a.auth_field = f.field_id
+			ORDER BY f.field_name';
+		$this->auth[$bio] = _rowset(sql_filter($sql, $bio_id), 'field_alias', 'auth_value');
+	}
+	
+	function auth_verify($key = false, $bio = false)
+	{
+		$bio = $this->auth_bio($bio);
+		
+		if ($key !== false)
+		{
+			return (isset($this->auth[$bio][$key]));
+		}
+		
+		return (isset($this->auth[$bio]));
+	}
+	
+	function auth_read($key, $bio = false)
+	{
+		$bio = $this->auth_bio($bio);
+		
+		if (!$this->auth_verify($key, $bio))
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	function auth_write($key, $value, $bio = false)
+	{
+		$bio = $this->auth_bio($bio);
+		
+		if ($this->auth_verify($key, $bio))
+		{
+			return false;
+		}
+		
+		$this->auth_queue('write', $key, $bio);
+		$this->auth[$bio][$key] = $value;
+		
+		return true;
+	}
+	
+	function auth_replace($key, $value, $bio = false)
+	{
+		$bio = $this->auth_bio($bio);
+		
+		
+		
+		$this->auth_queue('replace', $key, $bio);
+		$this->auth[$key][$bio] = $value;
+		
+		return true;
+	}
+	
+	function auth_remove($key, $bio = false)
+	{
+		$bio = $this->auth_bio($bio);
+		
+		if (!$this->auth_verify($key, $bio))
+		{
+			return false;
+		}
+		
+		$this->auth_queue('remove', $key, $bio);
+		unset($this->auth[$bio][$key]);
+		
+		return true;
+	}
+	
+	function auth_queue()
+	{
+		
+	}
+	
+	function auth_queue_process()
+	{
+		foreach ($this->queue as $i => $row)
+		{
+			switch ($i)
+			{
+				case 'create':
+					break;
+				case 'update':
+					break;
+				case 'remove':
+					break;
+			}
+		}
 	}
 	
 	function v($d = false, $v = false)
@@ -356,6 +465,8 @@ class bio
 						{
 							$this->auth_bio[$bio_id][$d] = ($this->base['bio_id'] > 1 && $this->base['bio_active']);
 						}
+						
+						return $this->auth_bio[$bio_id][$d];
 						break;
 					default:
 						break;
