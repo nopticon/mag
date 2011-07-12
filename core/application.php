@@ -16,12 +16,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-if (version_compare(PHP_VERSION, '5.0.0', '<')) exit('Sorry, this application runs on PHP 5 or greater!');
+if (!defined('XFS')) exit;
 
 $starttime = explode(' ', microtime());
 $starttime = $starttime[1] + $starttime[0];
 
-error_reporting(E_ALL);
+if ($_SERVER['SERVER_NAME'])
+{
+	error_reporting(E_ALL);
+}
 
 if (@ini_get('register_globals'))
 {
@@ -31,7 +34,6 @@ if (@ini_get('register_globals'))
 	}
 }
 
-if (!defined('XFS')) define('XFS', './');
 if (!defined('DD')) define('DD', 'mysql');
 if (!defined('CA')) define('CA', 'sha1');
 if (!defined('REQC')) define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
