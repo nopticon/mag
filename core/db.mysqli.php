@@ -18,17 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class db
+require_once(XFS . 'core/dd/dcom.php');
+
+class db extends dcom
 {
-	var $db_connect_id;
-	var $query_result;
-	var $row = array();
-	var $rowset = array();
-	var $num_queries = 0;
-	var $return_on_error = false;
-	var $history = array();
-	
-	function db($d = false)
+	public function __construct($d = false)
 	{
 		$di = connect_driver($d);
 		if (!f($di['server']) || !f($di['user']) || !f($di['name']))
@@ -37,26 +31,26 @@ class db
 		}
 		
 		ob_start();
-		$this->db_connect_id = @mysql_connect($di['server'], $di['user'], $di['ukey'], false, MYSQL_CLIENT_COMPRESS);
+		$this->m = new mysqli($di['server'], $di['user'], $di['ukey'], $di['name']);
 		ob_end_clean();
 		
-		if (!$this->db_connect_id)
+		if ($this->m->connect_error)
 		{
 			exit('330');
-		}
-		
-		if (!@mysql_select_db($di['name']))
-		{
-			exit('331');
 		}
 		unset($di);
 		
 		return true;
 	}
 	
+	public function __destruct()
+	{
+		return $this->sql_close();
+	}
+	
 	function sql_close()
 	{
-		if (!$this->db_connect_id)
+		if (!$this->m)
 		{
 			return false;
 		}
@@ -66,9 +60,9 @@ class db
 			@mysql_free_result($this->query_result);
 		}
 		
-		if (is_resource($this->db_connect_id))
+		if (is_resource($this->m))
 		{
-			return @mysql_close($this->db_connect_id);
+			return $this->m->close();
 		}
 		
 		return false;
@@ -92,6 +86,11 @@ class db
 		{
 			$this->num_queries++;
 			$this->history[] = $query;
+			
+			if (!$this->result = $this->m->query($query))
+			{
+				$this->sql_error($query);
+			}
 			
 			if (!$this->query_result = @mysql_query($query, $this->db_connect_id))
 			{
@@ -145,7 +144,6 @@ class db
 		return true;
 	}
 	
-	// Idea for this from Ikonboard
 	function sql_build_array($query, $assoc_ary = false, $update_field = false)
 	{
 		if (!is_array($assoc_ary))

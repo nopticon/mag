@@ -16,19 +16,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-//if (!defined('XFS')) exit;
+if (!defined('XFS')) exit;
 
-class db
+require_once(XFS . 'core/dd/dcom.php');
+
+class db extends dcom
 {
-	private $m;
-	private $result;
-	private $history = array();
-	private $row = array();
-	private $rowset = array();
-	private $total = 0;
-	private $return_on_error = false;
-	
-	public function __construct($d = false)
+	function db($d = false)
 	{
 		$di = connect_driver($d);
 		if (!f($di['server']) || !f($di['user']) || !f($di['name']))
@@ -37,26 +31,26 @@ class db
 		}
 		
 		ob_start();
-		$this->m = new mysqli($di['server'], $di['user'], $di['ukey'], $di['name']);
+		$this->db_connect_id = @mysql_connect($di['server'], $di['user'], $di['ukey'], false, MYSQL_CLIENT_COMPRESS);
 		ob_end_clean();
 		
-		if ($this->m->connect_error)
+		if (!$this->db_connect_id)
 		{
 			exit('330');
+		}
+		
+		if (!@mysql_select_db($di['name']))
+		{
+			exit('331');
 		}
 		unset($di);
 		
 		return true;
 	}
 	
-	public function __destruct()
-	{
-		return $this->sql_close();
-	}
-	
 	function sql_close()
 	{
-		if (!$this->m)
+		if (!$this->db_connect_id)
 		{
 			return false;
 		}
@@ -66,9 +60,9 @@ class db
 			@mysql_free_result($this->query_result);
 		}
 		
-		if (is_resource($this->m))
+		if (is_resource($this->db_connect_id))
 		{
-			return $this->m->close();
+			return @mysql_close($this->db_connect_id);
 		}
 		
 		return false;
@@ -92,11 +86,6 @@ class db
 		{
 			$this->num_queries++;
 			$this->history[] = $query;
-			
-			if (!$this->result = $this->m->query($query))
-			{
-				$this->sql_error($query);
-			}
 			
 			if (!$this->query_result = @mysql_query($query, $this->db_connect_id))
 			{

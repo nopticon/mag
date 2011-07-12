@@ -1,7 +1,5 @@
 <?php
 /*
-$Id: v 2.3 2009/11/13 09:23:00 $
-
 <NPT, a web development framework.>
 Copyright (C) <2009>  <NPT>
 
@@ -38,7 +36,7 @@ if (!defined('DD')) define('DD', 'mysql');
 if (!defined('CA')) define('CA', 'sha1');
 if (!defined('REQC')) define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
 
-foreach (array('core', 'dd/' . DD, 'styles', 'session') as $w)
+foreach (array('core', 'db.dcom', 'db.' . DD, 'styles', 'session') as $w)
 {
 	$f_core = XFS . 'core/' . $w . '.php';
 	if (!@file_exists($f_core))

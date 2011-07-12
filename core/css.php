@@ -16,9 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-//if (!defined('XFS')) exit;
+if (!defined('XFS')) exit;
 
-class phpcss
+class css_parse
 {
 	private $css = array();
 	
