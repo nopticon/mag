@@ -24,6 +24,7 @@ interface i_robot
 	public function birthday();
 	public function mfeed();
 	public function optimize();
+	public function contest();
 }
 
 class __robot extends xmd implements i_robot
@@ -140,6 +141,16 @@ class __robot extends xmd implements i_robot
 		$core->v('site_disable', 0);
 		
 		$this->e('1');
+	}
+	
+	public function contest()
+	{
+		return $this->method();
+	}
+	
+	protected function _contest_home()
+	{
+		return;
 	}
 }
 

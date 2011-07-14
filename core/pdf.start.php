@@ -23,7 +23,7 @@ class _pdf
 	public $cp;
 	private $document_top = 0;
 	
-	function __construct()
+	public function __construct()
 	{
 		require_once(XFS . 'core/pdf/pdf.extend.php');
 		require_once(XFS . 'core/pdf/pdf.core.php');
@@ -33,23 +33,23 @@ class _pdf
 		return;
 	}
 	
-	function new_page()
+	public function new_page()
 	{
 		$this->cp->ezNewPage();
 		$this->top(0, true);
 	}
 	
-	function page_width($a = 0)
+	public function page_width($a = 0)
 	{
 		return $this->cp->ez['pageWidth'] - $a;
 	}
 	
-	function page_height($a = 0)
+	public function page_height($a = 0)
 	{
 		return $this->cp->ez['pageHeight'] - $a;
 	}
 	
-	function top($n = false, $r = false)
+	public function top($n = false, $r = false)
 	{
 		if ($n !== false)
 		{
@@ -62,17 +62,17 @@ class _pdf
 		return $this->document_top;
 	}
 	
-	function right($width, $size, $text)
+	public function right($width, $size, $text)
 	{
 		return ($width - $this->cp->getTextWidth($size, $text));
 	}
 	
-	function center($width, $size, $text)
+	public function center($width, $size, $text)
 	{
 		return ($this->right($width, $size, $text) / 2);
 	}
 	
-	function _blocks($d, $fontsize, $y, $line_height)
+	public function _blocks($d, $fontsize, $y, $line_height)
 	{
 		$max = array(1);
 		foreach ($d as $row)
@@ -83,7 +83,7 @@ class _pdf
 		return max($max);
 	}
 	
-	function dynamic_table($table, $left, $top, $padding = 0, $cols = 2, $fontsize = 10, $border = 0, $debug = false)
+	public function dynamic_table($table, $left, $top, $padding = 0, $cols = 2, $fontsize = 10, $border = 0, $debug = false)
 	{
 		$td_def = array('text' => '', 'align' => '', 'words' => 0);
 		
@@ -208,7 +208,7 @@ class _pdf
 		return;
 	}
 	
-	function table($table, $left, $top, $padding, $fontsize = 10, $border = 0)
+	public function table($table, $left, $top, $padding, $fontsize = 10, $border = 0)
 	{
 		foreach ($table as $i => $tr)
 		{
@@ -318,7 +318,7 @@ class _pdf
 		return;
 	}
 	
-	function text($x, $y, $text, $fontsize = 10, $align = '', $width = 0)
+	public function text($x, $y, $text, $fontsize = 10, $align = '', $width = 0)
 	{
 		if (!$fontsize)
 		{
@@ -339,12 +339,12 @@ class _pdf
 		return $this->cp->addTextWrap($x, $this->cp->cy($y), $this->cp->getTextWidth($fontsize, $text) + 1, $fontsize, $text);
 	}
 	
-	function calculate_lines($width, $fontsize, $text, $line_limit)
+	public function calculate_lines($width, $fontsize, $text, $line_limit)
 	{
 		return $this->words($width, $fontsize, explode(' ', $text), $line_limit);
 	}
 	
-	function text_wrap($text, $fontsize, $width, $x, $y, $line_height = 0, $align = '', $line_limit = false)
+	public function text_wrap($text, $fontsize, $width, $x, $y, $line_height = 0, $align = '', $line_limit = false)
 	{
 		$line_height = (!$line_height) ? $fontsize + 2 : $line_height;
 		$text_lines = $this->calculate_lines($width, $fontsize, $text, $line_limit);
@@ -358,7 +358,7 @@ class _pdf
 		return count($text_lines);
 	}
 	
-	function words($width, $fontsize, $text, $maxline = false, $skip_short = true)
+	public function words($width, $fontsize, $text, $maxline = false, $skip_short = true)
 	{
 		$part = w();
 		$long = $words = $i = 0;

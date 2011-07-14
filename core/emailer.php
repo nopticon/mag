@@ -20,18 +20,27 @@ if (!defined('XFS')) exit;
 
 class emailer
 {
-	var $msg, $subject, $extra_headers;
-	var $addresses, $reply_to, $from, $htmle, $eformat;
-	var $tpl_msg = array();
-
-	function emailer()
+	private $msg;
+	private $subject;
+	private $extra_headers;
+	private $addresses;
+	private $reply_to;
+	private $from;
+	private $htmle;
+	private $eformat;
+	
+	private $tpl_msg = array();
+	
+	public function __construct()
 	{
 		$this->reset();
-		$this->reply_to = $this->from = '';
+		
+		$this->reply_to = '';
+		$this->from = '';
 	}
-
+	
 	// Resets all the data (address, template file, etc etc to default
-	function reset()
+	public function reset()
 	{
 		$this->addresses = array();
 		$this->vars = $this->msg = $this->extra_headers = '';
@@ -39,53 +48,53 @@ class emailer
 		$this->eformat = $this->format();
 	}
 	
-	function format($f = 'html')
+	public function format($f = 'html')
 	{
 		$this->eformat = $f;
 	}
 
 	// Sets an email address to send to
-	function email_address($address)
+	public function email_address($address)
 	{
 		$this->addresses['to'] = trim($address);
 	}
 
-	function cc($address)
+	public function cc($address)
 	{
 		$this->addresses['cc'][] = trim($address);
 	}
 
-	function bcc($address)
+	public function bcc($address)
 	{
 		$this->addresses['bcc'][] = trim($address);
 	}
 
-	function replyto($address)
+	public function replyto($address)
 	{
 		$this->reply_to = trim($address);
 	}
 
-	function from($address)
+	public function from($address)
 	{
 		$this->from = trim($address);
 	}
 
-	function set_subject($subject = '')
+	public function set_subject($subject = '')
 	{
 		$this->subject = trim(preg_replace('#[\n\r]+#s', '', $subject));
 	}
 	
-	function set_decode($v = false)
+	public function set_decode($v = false)
 	{
 		$this->htmle = $v;
 	}
 
-	function extra_headers($headers)
+	public function extra_headers($headers)
 	{
 		$this->extra_headers .= trim($headers) . "\n";
 	}
 
-	function use_template($template_file, $template_lang = '')
+	public function use_template($template_file, $template_lang = '')
 	{
 		global $core;
 
@@ -127,12 +136,12 @@ class emailer
 		return true;
 	}
 
-	function assign_vars($vars)
+	public function assign_vars($vars)
 	{
 		$this->vars = (empty($this->vars)) ? $vars : $this->vars . $vars;
 	}
 
-	function send()
+	public function send()
 	{
 		global $core, $bio;
 		
@@ -272,7 +281,7 @@ class emailer
 	// from php.net and modified. There is an alternative encoding method which 
 	// may produce lesd output but it's questionable as to its worth in this 
 	// scenario IMO
-	function encode($str)
+	private function encode($str)
 	{
 		if ($this->encoding == '')
 		{
@@ -300,7 +309,7 @@ class emailer
 	//
 	// Attach files via MIME.
 	//
-	function attachFile($filename, $mimetype = "application/octet-stream", $szFromAddress, $szFilenameToDisplay)
+	private function attachFile($filename, $mimetype = "application/octet-stream", $szFromAddress, $szFilenameToDisplay)
 	{
 		$mime_boundary = "--==================_846811060==_";
 
@@ -338,7 +347,7 @@ class emailer
 		// added -- to notify email client attachment is done
 	}
 
-	function getMimeHeaders($filename, $mime_filename = '')
+	private function getMimeHeaders($filename, $mime_filename = '')
 	{
 		$mime_boundary = "--==================_846811060==_";
 
@@ -358,7 +367,7 @@ class emailer
 	//
    // Split string by RFC 2045 semantics (76 chars per line, end with \r\n).
 	//
-	function myChunkSplit($str)
+	private function myChunkSplit($str)
 	{
 		$stmp = $str;
 		$len = strlen($stmp);
@@ -385,7 +394,7 @@ class emailer
 	//
    // Split the specified file up into a string and return it
 	//
-	function encode_file($sourcefile)
+	private function encode_file($sourcefile)
 	{
 		if (is_readable(@realpath($sourcefile)))
 		{

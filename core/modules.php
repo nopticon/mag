@@ -30,12 +30,15 @@ if (!class_exists('project'))
 
 abstract class xmd extends project
 {
+	private $_auth;
+	private $module;
+	private $template;
+	
 	public $arg = array();
 	public $error = array();
 	public $exclude = array();
 	public $level = array();
 	public $level_2 = array();
-	private $methods = array();
 	public $nav = array();
 	public $page_title_v = array();
 	public $je = array(
@@ -43,9 +46,7 @@ abstract class xmd extends project
 		'CN' => '~[201]'
 	);
 	
-	private $_auth;
-	private $module;
-	private $template;
+	private $methods = array();
 	
 	public function __construct()
 	{

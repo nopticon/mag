@@ -79,7 +79,7 @@ class __sign extends xmd implements i_sign
 						SELECT ban_userid
 						FROM _banlist
 					)';
-			if ($recovery = _fieldrow(sql_filter($sql, $v['address'], U_GUEST)))
+			if ($recovery = _fieldrow(sql_filter($sql, $v['address'], 1)))
 			{
 				$new_key = _rainbow_create($recovery['bio_id']);
 				

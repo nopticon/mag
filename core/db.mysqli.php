@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-require_once(XFS . 'core/dd/dcom.php');
+require_once(XFS . 'core/db.dcom.php');
 
 class db extends dcom
 {

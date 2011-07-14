@@ -28,7 +28,7 @@ class __cvm extends xmd
 		$this->_m();
 	}
 	
-	function home()
+	public function home()
 	{
 		global $core;
 		

@@ -25,18 +25,18 @@ class ftp
 {
 	private $conn_id;
 	
-	function ftp_connect($host, $port = 21, $timeout = 10)
+	public function ftp_connect($host, $port = 21, $timeout = 10)
 	{
 		$this->conn_id = @ftp_connect($host, $port, $timeout);
 		return $this->conn_id;
 	}
 	
-	function ftp_login($ftp_user, $ftp_pass)
+	public function ftp_login($ftp_user, $ftp_pass)
 	{
 		return @ftp_login($this->conn_id, $ftp_user, $ftp_pass);
 	}
 	
-	function ftp_quit()
+	public function ftp_quit()
 	{
 		if ($this->conn_id)
 		{
@@ -45,37 +45,37 @@ class ftp
 		return;
 	}
 	
-	function ftp_pwd()
+	public function ftp_pwd()
 	{
 		return @ftp_pwd($this->conn_id);
 	}
 	
-	function ftp_nlist($d = './')
+	public function ftp_nlist($d = './')
 	{
 		return @ftp_nlist($this->conn_id, $d);
 	}
 	
-	function ftp_chdir($ftp_dir)
+	public function ftp_chdir($ftp_dir)
 	{
 		return @ftp_chdir($this->conn_id, $ftp_dir);
 	}
 	
-	function ftp_mkdir($ftp_dir)
+	public function ftp_mkdir($ftp_dir)
 	{
 		return @ftp_mkdir($this->conn_id, $ftp_dir);
 	}
 	
-	function ftp_site($cmd)
+	public function ftp_site($cmd)
 	{
 		return @ftp_site($this->conn_id, $cmd);
 	}
 	
-	function ftp_cdup()
+	public function ftp_cdup()
 	{
 		return @ftp_cdup($this->conn_id);
 	}
 	
-	function ftp_put($remote_file, $local_file)
+	public function ftp_put($remote_file, $local_file)
 	{
 		if (!file_exists($local_file))
 		{
@@ -85,7 +85,7 @@ class ftp
 		return @ftp_put($this->conn_id, $remote_file, $local_file, FTP_BINARY);
 	}
 	
-	function ftp_rename($src, $dest)
+	public function ftp_rename($src, $dest)
 	{
 		return @ftp_rename($this->conn_id, $src, $dest);
 	}

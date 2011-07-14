@@ -39,7 +39,7 @@ class __newsletter extends xmd implements i_newsletter
 		$this->_m(w('create clear check report total modify'));
 	}
 	
-	function home()
+	public function home()
 	{
 		global $bio;
 		
@@ -167,12 +167,12 @@ class __newsletter extends xmd implements i_newsletter
 		return;
 	}
 	
-	function check()
+	public function check()
 	{
 		$this->method();
 	}
 	
-	function _check_home()
+	protected function _check_home()
 	{
 		global $user;
 		
@@ -210,12 +210,12 @@ class __newsletter extends xmd implements i_newsletter
 		$this->e($email);
 	}
 	
-	function create()
+	public function create()
 	{
 		$this->method();
 	}
 	
-	function _create_home()
+	protected function _create_home()
 	{
 		global $style;
 		
@@ -251,12 +251,12 @@ class __newsletter extends xmd implements i_newsletter
 		$this->as_vars($sv);
 	}
 	
-	function edit()
+	public function edit()
 	{
 		$this->method();
 	}
 	
-	function _edit_home()
+	protected function _edit_home()
 	{
 		global $user, $style;
 		
@@ -294,12 +294,12 @@ class __newsletter extends xmd implements i_newsletter
 		$this->as_vars($sv);
 	}
 	
-	function clear()
+	public function clear()
 	{
 		$this->method();
 	}
 	
-	function _clear_home()
+	protected function _clear_home()
 	{
 		global $user;
 		
@@ -336,12 +336,12 @@ class __newsletter extends xmd implements i_newsletter
 		$this->e($response);
 	}
 	
-	function report()
+	public function report()
 	{
 		$this->method();
 	}
 	
-	function _report_home()
+	protected function _report_home()
 	{
 		$report = $this->implode('', @file('./mass.txt'));
 		
@@ -356,12 +356,12 @@ class __newsletter extends xmd implements i_newsletter
 		$this->e($a);
 	}
 	
-	function total()
+	public function total()
 	{
 		$this->method();
 	}
 	
-	function _total_home()
+	protected function _total_home()
 	{
 		$v = $this->__(array('id' => 0));
 		

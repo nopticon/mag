@@ -149,8 +149,6 @@ class upload
 	private $picnik_url = 'http://www.picnik.com/service';
 	private $picnik_arg = array();
 	
-	//'../home/style/images/w.png'
-	
 	public function __construct()
 	{
 		$this->_default = array(

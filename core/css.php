@@ -22,6 +22,11 @@ class css_parse
 {
 	private $css = array();
 	
+	public function __construct()
+	{
+		return;
+	}
+	
 	//
 	// NOTE: Can not parse correctly CSS expressions, give it a try, maybe works in some of them...
 	//

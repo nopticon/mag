@@ -581,9 +581,8 @@ class __my extends xmd implements i_my
 			$sql = 'SELECT bio_alias, bio_name, bio_email, bio_lang
 				FROM _bio
 				WHERE bio_?? = ?
-					AND bio_active = ?
-					AND bio_level NOT IN (??)';
-			if (!$_bio = _fieldrow(sql_filter($sql, $v['field'], $v['address'], 1, _implode(',', w(U_INACTIVE . ' ' . U_FOUNDER)))))
+					AND bio_active = ?';
+			if (!$_bio = _fieldrow(sql_filter($sql, $v['field'], $v['address'], 1)))
 			{
 				$this->_error('#NO_SUCH_BIO');
 			}

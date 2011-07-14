@@ -70,7 +70,7 @@ class __ac extends xmd implements i_ac
 		foreach ($sessions as $row)
 		{
 			// Guest
-			if ($row['bio_id'] == U_GUEST)
+			if ($row['bio_id'] == 1)
 			{
 				if ($row['session_ip'] != $last_ip)
 				{
@@ -184,7 +184,7 @@ class __ac extends xmd implements i_ac
 		foreach ($online as $row)
 		{
 			// Guest
-			if ($row['bio_id'] == U_GUEST)
+			if ($row['bio_id'] == 1)
 			{
 				if ($row['session_ip'] != $last_ip)
 				{

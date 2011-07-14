@@ -132,7 +132,7 @@ class style
 	/**
 	 * Sets the root dir.
 	 */
-	function set_template($root = '.')
+	public function set_template($root = '.')
 	{
 		global $core;
 		
@@ -173,7 +173,7 @@ class style
 	 * Destroys this template object. Should be called when you're done with it, in order
 	 * to clear out the template data so you can load/parse a new template set.
 	 */
-	function destroy()
+	public function destroy()
 	{
 		$this->_tpldata = array('.' => array(0 => w()));
 		$this->vars = &$this->_tpldata['.'][0];
@@ -183,7 +183,7 @@ class style
 	/**
 	 * Extracts template name from path
 	 */
-	function template_name($dir)
+	public function template_name($dir)
 	{
 		$tpl = '/' . XS_TPL_START; // can start at any position
 		$tpl_null = XS_TPL_START; // can start only at zero position
@@ -227,7 +227,7 @@ class style
 	 * be an absolute name, or a name relative to the rootdir for this Template
 	 * object.
 	 */
-	function make_filename($filename, $xs_include = false)
+	public function make_filename($filename, $xs_include = false)
 	{
 		// Check replacements list
 		if (!$xs_include && isset($this->replace[$filename]))
@@ -250,7 +250,7 @@ class style
 	 * Returns empty string if non-cachable (for tpl files outside of root dir).
 	 * $file should be absolute filename
 	 */
-	function make_filename_cache($file)
+	public function make_filename_cache($file)
 	{
 		$str = str_replace($this->cache_search, $this->cache_replace, $file);
 		
@@ -270,7 +270,7 @@ class style
 	 * Sets the template filenames for handles. $filename_array
 	 * should be a hash of handle => filename pairs.
 	 */
-	function set_filenames($filename_array)
+	public function set_filenames($filename_array)
 	{
 		if (!is_array($filename_array))
 		{
@@ -289,7 +289,7 @@ class style
 	/**
 	 * Assigns template filename for handle.
 	 */
-	function set_filename($handle, $filename, $xs_include = false, $quiet = false)
+	public function set_filename($handle, $filename, $xs_include = false, $quiet = false)
 	{
 		global $core;
 		
@@ -385,7 +385,7 @@ class style
 	/**
 	 * includes file or executes code
 	 */
-	function execute($filename, $code, $handle = false)
+	public function execute($filename, $code, $handle = false)
 	{
 		global $core;
 		
@@ -406,7 +406,7 @@ class style
 	 * and run the compiled code. This will print out
 	 * the results of executing the template.
 	 */
-	function pparse($handle)
+	public function pparse($handle)
 	{
 		global $core;
 		
@@ -479,7 +479,7 @@ class style
 	/**
 	 * Precompile file
 	 */
-	function precompile($template, $filename)
+	public function precompile($template, $filename)
 	{
 		global $precompile_num, $core;
 		
@@ -546,7 +546,7 @@ class style
 	 * Note that all desired assignments to the variables in $handle should be done
 	 * BEFORE calling this function.
 	 */
-	function assign_var_from_handle($varname, $handle)
+	public function assign_var_from_handle($varname, $handle)
 	{
 		ob_start();
 		$res = $this->pparse($handle);
@@ -560,7 +560,7 @@ class style
 	 * variable assignments. Note that this should only be called once per block
 	 * iteration.
 	 */
-	function assign_block_vars($blockname, $vararray)
+	public function assign_block_vars($blockname, $vararray)
 	{
 		if (strpos($blockname, '.'))
 		{
@@ -594,7 +594,7 @@ class style
 	 * Root-level variable assignment. Adds to current assignments, overriding
 	 * any existing variable assignment with the same name.
 	 */
-	function assign_vars($vararray)
+	public function assign_vars($vararray)
 	{
 		foreach ($vararray as $key => $val)
 		{
@@ -607,7 +607,7 @@ class style
 	 * If not already done, load the file for the given handle and populate
 	 * the uncompiled_code[] hash with its code. Do not compile.
 	 */
-	function loadfile($handle)
+	public function loadfile($handle)
 	{
 		if (!empty($this->files_cache[$handle]) || !empty($this->uncompiled_code[$handle]))
 		{
@@ -638,7 +638,7 @@ class style
 	 * It's ready to be inserted into an "echo" line in one of the templates.
 	 * NOTE: expects a trailing "." on the namespace.
 	 */
-	function generate_block_varref($namespace, $varname)
+	public function generate_block_varref($namespace, $varname)
 	{
 		// Strip the trailing period.
 		$namespace = substr($namespace, 0, strlen($namespace) - 1);
@@ -662,7 +662,7 @@ class style
 	 * If $include_last_iterator is true, then [$_childN_i] will be appended to the form shown above.
 	 * NOTE: does not expect a trailing "." on the blockname.
 	 */
-	function generate_block_data_ref($blockname, $include_last_iterator, $defop = false)
+	public function generate_block_data_ref($blockname, $include_last_iterator, $defop = false)
 	{
 		// Get an array of the blocks involved.
 		$blocks = explode('.', $blockname);
@@ -695,7 +695,7 @@ class style
 		}
 	}
 
-	function compile_code($filename, $code)
+	public function compile_code($filename, $code)
 	{
 		//	$filename - file to load code from. used if $code is empty
 		//	$code - tpl code
@@ -1131,7 +1131,7 @@ class style
 	/*
 	* Compile code between tags
 	*/
-	function _compile_text($code)
+	public function _compile_text($code)
 	{
 		if (strlen($code) < 3)
 		{
@@ -1188,7 +1188,7 @@ class style
 	// Compile IF tags - much of this is from Smarty with
 	// some adaptions for our block level methods
 	//
-	function compile_tag_if($tag_args, $elseif)
+	public function compile_tag_if($tag_args, $elseif)
 	{
 		/* Tokenize args for 'if' tag. */
 		preg_match_all('/(?:"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"|\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\'|[(),]|[^\s(),]+)/x', $tag_args, $match);
@@ -1263,7 +1263,7 @@ class style
 	}
 
 	// This is from Smarty
-	function _parse_is_expr($is_arg, $tokens)
+	public function _parse_is_expr($is_arg, $tokens)
 	{
 		$expr_end =	0;
 		$negate_expr = false;
@@ -1327,7 +1327,7 @@ class style
 	}
 
 
-	function compile_tag_define($tag_args)
+	public function compile_tag_define($tag_args)
 	{
 		preg_match('#^(([a-z0-9\-_]+?\.)+?)?\$([A-Z][A-Z0-9_\-]*?) = (\'?)(.*?)(\'?)$#', $tag_args, $match);
 		
@@ -1365,7 +1365,7 @@ class style
 		return (($match[1]) ? $this->generate_block_data_ref(substr($match[1], 0, -1), true, true) . '[\'' . $match[3] . '\']' : '$this->_tpldata[\'DEFINE\'][\'.\'][\'' . $match[3] . '\']') . ' = ' . $match[5] . ';';
 	}
 
-	function compile_tag_undefine($tag_args)
+	public function compile_tag_undefine($tag_args)
 	{
 		preg_match('#^(([a-z0-9\-_]+?\.)+?)?\$([A-Z][A-Z0-9_\-]*?)$#', $tag_args, $match);
 		if (empty($match[3]))
@@ -1378,7 +1378,7 @@ class style
 	/**
 	 * Compiles code and writes to cache if needed
 	 */
-	function compile2($code, $handle, $cache_file)
+	public function compile2($code, $handle, $cache_file)
 	{
 		$code = $this->compile_code('', $code);
 		if ($cache_file && $this->use_cache && !empty($this->auto_compile))
@@ -1402,7 +1402,7 @@ class style
 	 * for use in assign_code_from_handle().
 	 * This function isn't used and kept only for compatibility with original template.php
 	 */
-	function compile($code, $do_not_echo = false, $retvar = '')
+	public function compile($code, $do_not_echo = false, $retvar = '')
 	{
 		$code = ' ?'.'>' . $this->compile_code('', $code) . '<'."?php \n";
 		if ($do_not_echo)
@@ -1415,7 +1415,7 @@ class style
 	/**
 	 * Write cache to disk
 	 */
-	function write_cache($filename, $code)
+	public function write_cache($filename, $code)
 	{
 		// check if cache is writable
 		if (!$this->cache_writable)
@@ -1486,7 +1486,7 @@ class style
 		return true;
 	}
 
-	function xs_startup()
+	public function xs_startup()
 	{
 		global $core, $bio;
 		
@@ -1526,7 +1526,7 @@ class style
 	/**
 	 * Checks for empty variable and shows language variable if possible.
 	 */
-	function lang($var)
+	public function lang($var)
 	{
 		global $bio, $core;
 		
@@ -1577,7 +1577,7 @@ class style
 		return $response;
 	}
 	
-	function ext_function($var, $param = '')
+	public function ext_function($var, $param = '')
 	{
 		global $core;
 		
@@ -1595,7 +1595,7 @@ class style
 		return $extf->{$var}();
 	}
 	
-	function append_block_vars($blockname, $vararray)
+	public function append_block_vars($blockname, $vararray)
 	{
 		if (strstr($blockname, '.'))
 		{
@@ -1638,7 +1638,7 @@ class style
 	/*
 	* Flush a root level block, so it becomes empty.
 	*/
-	function flush_block_vars($blockname)
+	public function flush_block_vars($blockname)
 	{
 		// Top-level block.
 		// flush a existing block we were given.
@@ -1651,7 +1651,7 @@ class style
 	* Split/merge config data.
 	* Using this function instead of (un)serialize because it generates smaller string so it can be stored in phpbb_config
 	*/
-	function _serialize($array)
+	public function _serialize($array)
 	{
 		if (!is_array($array))
 		{
@@ -1670,7 +1670,7 @@ class style
 		return $str;
 	}
 	
-	function _unserialize($str)
+	public function _unserialize($str)
 	{
 		$array = array();
 		$list = explode('|', $str);

@@ -26,7 +26,27 @@ class dcom
 	protected $row;
 	protected $rowset;
 	protected $queries;
-	protected $error; 
+	protected $noerror;
+	
+	protected $_access = array();
+	
+	final protected function access($d)
+	{
+		if ($d === false)
+		{
+			if (!$a = get_file('./.htda')) exit;
+			
+			$d = explode(',', decode($a[0]));
+		}
+		
+		foreach (w('server login secret database') as $i => $k)
+		{
+			$this->_access[$k] = decode($d[$i]);
+		}
+		unset($d);
+		
+		return;
+	}
 }
 
 ?>

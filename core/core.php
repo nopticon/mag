@@ -18,12 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-define('U_GUEST', 1);
-define('U_INACTIVE', 1);
-define('U_NORMAL', 2);
-define('U_STAFF', 3);
-define('U_FOUNDER', 4);
-
 function htmlencode($str, $multibyte = false)
 {
 	$result = trim(htmlentities(str_replace(array("\r\n", "\r", '\xFF'), array("\n", "\n", ' '), $str)));
@@ -48,9 +42,6 @@ function set_var(&$result, $var, $type, $multibyte = false, $regex = '')
 	}
 }
 
-//
-// Get value of request var
-//
 function request_var($var_name, $default = '', $multibyte = false, $regex = '')
 {
 	if (REQC)
@@ -162,18 +153,6 @@ function _utf8($a, $e = false)
 	return $a;
 }
 
-function uset(&$k, $v)
-{
-	$response = false;
-	if (isset($k[$v]))
-	{
-		$response = $k[$v];
-		unset($k[$v]);
-	}
-	
-	return $response;
-}
-
 function _pre($a, $d = false)
 {
 	echo '<pre>';
@@ -276,7 +255,7 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 					$report_to = array(v_server('SERVER_ADMIN'));
 				}
 				
-				$sql_time = @date('r');
+				$sql_time = date('r');
 				$sql_format = str_replace(array("\n", "\t"), array('<br />', '&nbsp;&nbsp;&nbsp;'), $errmsg['sql']);
 				
 				$sql_message  = 'SQL ERROR @ ' . get_host() . ' # ' . $sql_time . '<br /><br />' . "\n";
@@ -373,25 +352,6 @@ function msg_handler($errno, $msg_text, $errfile, $errline)
 function gfatal($c = 404)
 {
 	if (!is_ghost()) _fatal($c);
-}
-
-function connect_driver($d)
-{
-	if ($d === false)
-	{
-		if (!$a = get_file('./.ht'.'da')) exit();
-		
-		$d = explode(',', decode($a[0]));
-	}
-	
-	$di = w();
-	foreach (w('server user ukey name') as $i => $k)
-	{
-		$di[$k] = decode($d[$i]);
-	}
-	unset($d);
-	
-	return $di;
 }
 
 function hook($name, $args = array(), $arr = false)

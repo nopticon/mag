@@ -56,7 +56,7 @@ abstract class project
 					SELECT ban_bio
 					FROM _bio_ban
 				)';
-		if ($_bio = _fieldrow(sql_filter($sql, $v['field'], $address, U_GUEST)))
+		if ($_bio = _fieldrow(sql_filter($sql, $v['field'], $address, 1)))
 		{
 			if ($_bio['bio_key'] === _password($key))
 			{
@@ -383,7 +383,7 @@ abstract class project
 			}
 			
 			$uid = $row['bio_id'];
-			$row['is_member'] = ($uid != U_GUEST) ? 1 : 0;
+			$row['is_member'] = ($uid != 1) ? 1 : 0;
 			
 			if (!isset($bio[$uid]) || !$row['is_member'])
 			{
@@ -407,7 +407,7 @@ abstract class project
 		global $bio;
 		
 		$uid = $row['bio_id'];
-		$row['auth_member'] = (!isset($row['auth_member'])) ? (($uid != U_GUEST) ? 1 : 0) : $row['auth_member'];
+		$row['auth_member'] = (!isset($row['auth_member'])) ? (($uid != 1) ? 1 : 0) : $row['auth_member'];
 		
 		if (isset($this->_bio[$uid]) && $row['auth_member'])
 		{

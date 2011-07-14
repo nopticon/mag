@@ -21,7 +21,7 @@ if (!defined('XFS')) exit;
 $starttime = explode(' ', microtime());
 $starttime = $starttime[1] + $starttime[0];
 
-if ($_SERVER['SERVER_NAME'])
+if ($_SERVER['SERVER_NAME'] == 'localhost')
 {
 	error_reporting(E_ALL);
 }
@@ -34,21 +34,15 @@ if (@ini_get('register_globals'))
 	}
 }
 
-if (!defined('DD')) define('DD', 'mysql');
 if (!defined('CA')) define('CA', 'sha1');
 if (!defined('REQC')) define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
 
-foreach (array('core', 'db.dcom', 'db.' . DD, 'styles', 'session') as $w)
+foreach (array('core', 'db.mysql', 'styles', 'session') as $w)
 {
-	$f_core = XFS . 'core/' . $w . '.php';
-	if (!@file_exists($f_core))
-	{
-		exit;
-	}
-	@require_once($f_core);
+	@require_once(XFS . 'core/' . $w . '.php');
 }
 
-foreach (w((!defined('NDB') ? 'db ' : '') . 'style bio core') as $w) $$w = new $w();
+foreach (w('database style bio core') as $w) $$w = new $w();
 
 if (!defined('XCORE')) _xfs();
 

@@ -18,95 +18,91 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-require_once(XFS . 'core/dd/dcom.php');
+require_once(XFS . 'core/db.dcom.php');
 
-class db extends dcom
+class database extends dcom
 {
-	function db($d = false)
+	public function __construct($d = false)
 	{
-		$di = connect_driver($d);
-		if (!f($di['server']) || !f($di['user']) || !f($di['name']))
-		{
-			exit();
-		}
+		$this->access($d);
 		
 		ob_start();
-		$this->db_connect_id = @mysql_connect($di['server'], $di['user'], $di['ukey'], false, MYSQL_CLIENT_COMPRESS);
+		$this->connect = @mysql_connect($this->_access['server'], $this->_access['login'], $this->_access['secret'], false, MYSQL_CLIENT_COMPRESS);
 		ob_end_clean();
 		
-		if (!$this->db_connect_id)
+		if (!$this->connect)
 		{
 			exit('330');
 		}
 		
-		if (!@mysql_select_db($di['name']))
+		if (!@mysql_select_db($this->_access['database']))
 		{
 			exit('331');
 		}
-		unset($di);
+		unset($this->_access);
 		
 		return true;
 	}
 	
-	function sql_close()
+	public function close()
 	{
-		if (!$this->db_connect_id)
+		if (!$this->connect)
 		{
 			return false;
 		}
 		
-		if ($this->query_result && @is_resource($this->query_result))
+		if ($this->result && @is_resource($this->result))
 		{
-			@mysql_free_result($this->query_result);
+			@mysql_free_result($this->result);
 		}
 		
-		if (is_resource($this->db_connect_id))
+		if (is_resource($this->connect))
 		{
-			return @mysql_close($this->db_connect_id);
+			return @mysql_close($this->connect);
 		}
 		
 		return false;
 	}
 	
-	function sql_query($query = '', $transaction = false)
+	public function query($query = '', $transaction = false)
 	{
 		if (is_array($query))
 		{
 			foreach ($query as $sql)
 			{
-				$this->sql_query($sql);
+				$this->query($sql);
 			}
+			
 			return;
 		}
 		
-		// Remove any pre-existing queries
-		unset($this->query_result);
+		unset($this->result);
 		
-		if (f($query))
+		if (!empty($query))
 		{
-			$this->num_queries++;
+			$this->queries++;
 			$this->history[] = $query;
 			
-			if (!$this->query_result = @mysql_query($query, $this->db_connect_id))
+			if (!$this->result = @mysql_query($query, $this->connect))
 			{
-				$this->sql_error($query);
+				$this->error($query);
 			}
 		}
 		
-		if ($this->query_result)
+		if ($this->result)
 		{
-			$this->_log($query);
-			unset($this->row[$this->query_result], $this->rowset[$this->query_result]);
+			$this->registry($query);
+			unset($this->row[$this->result], $this->rowset[$this->result]);
 			
-			return $this->query_result;
+			return $this->result;
 		}
 		
 		return false;
 	}
 	
-	function sql_query_limit($query, $total, $offset = 0)
+	public function query_limit($query, $total, $offset = 0)
 	{
-		if (!f($query))
+		if (empty($query))
 		{
 			return false;
 		}
@@ -117,32 +113,31 @@ class db extends dcom
 			$total = -1;
 		}
 		
-		$query .= "\n LIMIT " . ((f($offset)) ? $offset . ', ' . $total : $total);
-		return $this->sql_query($query);
+		$query .= "\n LIMIT " . (($offset) ? $offset . ', ' . $total : $total);
+		return $this->query($query);
 	}
 	
-	function _sql_transaction($status = 'begin')
+	public function transaction($status = 'begin')
 	{
 		switch ($status)
 		{
 			case 'begin':
-				return @mysql_query('BEGIN', $this->db_connect_id);
+				return @mysql_query('BEGIN', $this->connect);
 				break;
 			case 'commit':
-				return @mysql_query('COMMIT', $this->db_connect_id);
+				return @mysql_query('COMMIT', $this->connect);
 				break;
 			case 'rollback':
-				return @mysql_query('ROLLBACK', $this->db_connect_id);
+				return @mysql_query('ROLLBACK', $this->connect);
 				break;
 		}
 		
 		return true;
 	}
 	
-	// Idea for this from Ikonboard
-	function sql_build_array($query, $assoc_ary = false, $update_field = false)
+	public function build($query, $assoc = false, $update_field = false)
 	{
-		if (!is_array($assoc_ary))
+		if (!is_array($assoc))
 		{
 			return false;
 		}
@@ -153,7 +148,7 @@ class db extends dcom
 		switch ($query)
 		{
 			case 'INSERT':
-				foreach ($assoc_ary as $key => $var)
+				foreach ($assoc as $key => $var)
 				{
 					$fields[] = $key;
 					
@@ -163,7 +158,7 @@ class db extends dcom
 					}
 					elseif (is_string($var))
 					{
-						$values[] = "'" . $this->sql_escape($var) . "'";
+						$values[] = "'" . $this->escape($var) . "'";
 					}
 					else
 					{
@@ -177,7 +172,7 @@ class db extends dcom
 			case 'SELECT':
 				$values = w();
 				
-				foreach ($assoc_ary as $key => $var)
+				foreach ($assoc as $key => $var)
 				{
 					if (is_null($var))
 					{
@@ -187,11 +182,11 @@ class db extends dcom
 					{
 						if ($update_field && strpos($var, $key) !== false)
 						{
-							$values[] = $key . ' = ' . $this->sql_escape($var);
+							$values[] = $key . ' = ' . $this->escape($var);
 						}
 						else
 						{
-							$values[] = "$key = '" . $this->sql_escape($var) . "'";
+							$values[] = "$key = '" . $this->escape($var) . "'";
 						}
 					}
 					else
@@ -206,61 +201,63 @@ class db extends dcom
 		return $query;
 	}
 	
-	function sql_num_queries()
+	public function num_queries()
 	{
-		return $this->num_queries;
+		return $this->queries;
 	}
 	
-	function sql_numrows($query_id = 0)
+	public function numrows($query_id = 0)
 	{
 		if (!$query_id)
 		{
-			$query_id = $this->query_result;
+			$query_id = $this->result;
 		}
 		
 		return ($query_id) ? @mysql_num_rows($query_id) : false;
 	}
 	
-	function sql_affectedrows()
+	public function affectedrows()
 	{
-		return ($this->db_connect_id) ? @mysql_affected_rows($this->db_connect_id) : false;
+		return ($this->connect) ? @mysql_affected_rows($this->connect) : false;
 	}
 	
-	function sql_numfields($query_id = 0)
+	public function numfields($query_id = 0)
 	{
 		if (!$query_id)
 		{
-			$query_id = $this->query_result;
+			$query_id = $this->result;
 		}
 		
 		return ($query_id) ? @mysql_num_fields($query_id) : false;
 	}
 	
-	function sql_fieldname($offset, $query_id = 0)
+	public function fieldname($offset, $query_id = 0)
 	{
 		if (!$query_id)
 		{
-			$query_id = $this->query_result;
+			$query_id = $this->result;
 		}
 		
 		return ($query_id) ? @mysql_field_name($query_id, $offset) : false;
 	}
 	
-	function sql_fieldtype($offset, $query_id = 0)
+	public function fieldtype($offset, $query_id = 0)
 	{
 		if (!$query_id)
 		{
-			$query_id = $this->query_result;
+			$query_id = $this->result;
 		}
 		
 		return ($query_id) ? @mysql_field_type($query_id, $offset) : false;
 	}
-	function sql_fetchrow($query_id = 0, $result_type = MYSQL_BOTH)
+	
+	public function fetchrow($query_id = 0, $result_type = MYSQL_BOTH)
 	{
 		if (!$query_id)
 		{
-			$query_id = $this->query_result;
+			$query_id = $this->result;
 		}
+		
 		if (!$query_id)
 		{
 			return false;
@@ -270,11 +267,11 @@ class db extends dcom
 		return @$this->row['' . $query_id . ''];
 	}
 	
-	function sql_fetchrowset($query_id = 0, $result_type = MYSQL_BOTH)
+	public function fetchrowset($query_id = 0, $result_type = MYSQL_BOTH)
 	{
 		if (!$query_id)
 		{
-			$query_id = $this->query_result;
+			$query_id = $this->result;
 		}
 		
 		if (!$query_id)
@@ -293,11 +290,11 @@ class db extends dcom
 		return $result;
 	}
 	
-	function sql_fetchfield($field, $rownum = -1, $query_id = 0)
+	public function fetchfield($field, $rownum = -1, $query_id = 0)
 	{
 		if (!$query_id)
 		{
-			$query_id = $this->query_result;
+			$query_id = $this->result;
 		}
 		
 		if (!$query_id)
@@ -313,7 +310,7 @@ class db extends dcom
 		{
 			if (empty($this->row[$query_id]) && empty($this->rowset[$query_id]))
 			{
-				if ($this->sql_fetchrow())
+				if ($this->fetchrow())
 				{
 					$result = $this->row['' . $query_id . ''][$field];
 				}
@@ -330,29 +327,30 @@ class db extends dcom
 				}
 			}
 		}
+		
 		return (isset($result)) ? $result : false;
 	}
 	
-	function sql_rowseek($rownum, $query_id = 0)
+	public function rowseek($rownum, $query_id = 0)
 	{
 		if (!$query_id)
 		{
-			$query_id = $this->query_result;
+			$query_id = $this->result;
 		}
 		
 		return ($query_id) ? @mysql_data_seek($query_id, $rownum) : false;
 	}
 	
-	function sql_nextid()
+	public function nextid()
 	{
-		return ($this->db_connect_id) ? @mysql_insert_id($this->db_connect_id) : false;
+		return ($this->connect) ? @mysql_insert_id($this->connect) : false;
 	}
 	
-	function sql_freeresult($query_id = false)
+	public function freeresult($query_id = false)
 	{
 		if (!$query_id)
 		{
-			$query_id = $this->query_result;
+			$query_id = $this->result;
 		}
 		
 		if (!$query_id)
@@ -362,52 +360,52 @@ class db extends dcom
 		
 		unset($this->row[$query_id]);
 		unset($this->rowset[$query_id]);
-		$this->query_result = false;
+		$this->result = false;
 		
 		@mysql_free_result($query_id);
 		return true;
 	}
 	
-	function sql_escape($msg)
+	public function escape($msg)
 	{
-		return mysql_real_escape_string($msg, $this->db_connect_id);
+		return mysql_real_escape_string($msg, $this->connect);
 	}
 	
-	//
-	function sql_cache($a_sql, $sid = '', $private = true)
+	public function cache($a_sql, $sid = '', $private = true)
 	{
-		global $user;
+		global $bio;
 		
 		$filter_values = array($sid);
 		
 		$sql = 'SELECT cache_query
 			FROM _search_cache
 			WHERE cache_sid = ?';
+		
 		if ($private)
 		{
 			$sql .= ' AND cache_uid = ?';
-			$filter_values[] = $user->v('user_id');
+			$filter_values[] = $bio->v('bio_id');
 		}
 		
 		$query = _field(sql_filter($sql, $filter_values), 'cache_query', '');
 		
-		if (f($sid) && !f($query))
+		if (!empty($sid) && empty($query))
 		{
 			_fatal();
 		}
 		
-		if (!f($query) && f($a_sql))
+		if (empty($query) && !empty($a_sql))
 		{
 			$sid = md5(unique_id());
 			
 			$insert = array(
 				'cache_sid' => $sid,
 				'cache_query' => $a_sql,
-				'cache_uid' => $user->v('user_id'),
+				'cache_uid' => $bio->v('bio_id'),
 				'cache_time' => time()
 			);
-			$sql = 'INSERT INTO _search_cache' . _build_array('INSERT', $insert);
-			_sql($sql);
+			$sql = 'INSERT INTO _search_cache' . $this->build('INSERT', $insert);
+			$this->query($sql);
 			
 			$query = $a_sql;
 		}
@@ -415,10 +413,10 @@ class db extends dcom
 		$all_rows = 0;
 		if (!empty($query))
 		{
-			$result = $this->sql_query($query);
+			$result = $this->query($query);
 			
-			$all_rows = $this->sql_numrows($result);
-			$this->sql_freeresult($result);
+			$all_rows = $this->numrows($result);
+			$this->freeresult($result);
 		}
 		
 		$has_limit = false;
@@ -430,7 +428,7 @@ class db extends dcom
 		return array('sid' => $sid, 'query' => $query, 'limit' => $has_limit, 'total' => $all_rows);
 	}
 	
-	function sql_cache_limit(&$arr, $start, $end = 0)
+	public function cache_limit(&$arr, $start, $end = 0)
 	{
 		if ($arr['limit'] !== false)
 		{
@@ -444,12 +442,12 @@ class db extends dcom
 		return;
 	}
 	
-	function sql_history()
+	public function history()
 	{
 		return $this->history;
 	}
 	
-	function _log($action, $uid = false)
+	public function registry($action, $uid = false)
 	{
 		$method = preg_replace('#^(INSERT|UPDATE|DELETE) (.*?)$#is', '\1', $action);
 		$method = strtolower($method);
@@ -558,11 +556,11 @@ class db extends dcom
 				break;
 		}
 		
-		global $user;
+		global $bio;
 		
 		$sql_insert = array(
 			'time' => time(),
-			'uid' => $user->v('user_id'),
+			'uid' => $bio->v('bio_id'),
 			'method' => $method,
 			'actions' => json_encode($query)
 		);
@@ -572,12 +570,22 @@ class db extends dcom
 		return;
 	}
 	
-	function sql_error($sql = '')
+	public function seterror($error = -1)
 	{
-		$sql_error = @mysql_error($this->db_connect_id);
-		$sql_errno = @mysql_errno($this->db_connect_id);
+		if ($error !== -1)
+		{
+			$this->noerror = $error;
+		}
 		
-		if (!$this->return_on_error)
+		return $this->noerror;
+	}
+	
+	public function error($sql = '')
+	{
+		$sql_error = @mysql_error($this->connect);
+		$sql_errno = @mysql_errno($this->connect);
+		
+		if (!$this->noerror)
 		{
 			_fatal(507, '', '', array('sql' => $sql, 'message' => $sql_error), $sql_errno);
 		}

@@ -726,12 +726,12 @@ class __bio extends xmd implements i_bio
 		$sql = 'SELECT bio_id
 			FROM _bio
 			WHERE bio_alias = ?
-				AND bio_level NOT IN (??)
+				AND bio_active = ?
 				AND bio_id NOT IN (
 					SELECT ban_bio
 					FROM _bio_ban
 				)';
-		if (!$_bio = _fieldrow(sql_filter($sql, $v['alias'], _implode(',', W(U_INACTIVE . ' ' . U_FOUNDER)))))
+		if (!$_bio = _fieldrow(sql_filter($sql, $v['alias'], 1)))
 		{
 			$this->_error('#NO_BIO');
 		}
@@ -1274,14 +1274,14 @@ else
 	$sql = 'SELECT *
 		FROM _bio
 		WHERE bio_alias = ?
-			AND bio_level <> ?
+			AND bio_active = ?
 			AND bio_id NOT IN (SELECT ban_bio
 				FROM _bio_ban)
 			AND bio_id NOT IN (SELECT ban_assoc
 				FROM _bio_ban n
 				WHERE n.ban_assoc = ?
 					AND n.ban_bio = m.user_id)';
-	if (!$v_profile = _fieldrow(sql_filter($sql, $v['alias'], U_INACTIVE, $bio->v('bio_id'))))
+	if (!$v_profile = _fieldrow(sql_filter($sql, $v['alias'], 1, $bio->v('bio_id'))))
 	{
 		_fatal();
 	}
