@@ -35,7 +35,7 @@ class __create extends xmd
 	
 	public function news()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _news_home()
@@ -77,7 +77,7 @@ class __create extends xmd
 	
 	public function event()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _event_home()
@@ -170,7 +170,7 @@ class __create extends xmd
 	
 	public function artist()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _artist_home()
@@ -263,7 +263,7 @@ class __create extends xmd
 	
 	public function people()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _people_home()

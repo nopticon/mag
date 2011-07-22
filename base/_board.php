@@ -187,7 +187,7 @@ class __board extends xmd implements i_board
 	
 	public function topic()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _topic_home()
@@ -318,7 +318,7 @@ class __board extends xmd implements i_board
 	
 	public function publish()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _publish_home()

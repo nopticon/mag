@@ -21,10 +21,7 @@ if (!defined('XFS')) exit;
 $starttime = explode(' ', microtime());
 $starttime = $starttime[1] + $starttime[0];
 
-if ($_SERVER['SERVER_NAME'] == 'localhost')
-{
-	error_reporting(E_ALL);
-}
+error_reporting(E_ALL);
 
 if (@ini_get('register_globals'))
 {

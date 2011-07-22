@@ -12,7 +12,7 @@ RewriteRule ^([^.]+)?$ index.php?module=alias&args=alias:%2.$1 [L]
 
 RewriteRule ^$ index.php?module=home [L]
 RewriteRule ^(ext)/([0-9a-z\_\-]+)\.(js|css)$ index.php?module=$1&args=f:$2.e:$3 [L]
-RewriteRule ^(sign)(in|out|up)/?$ index.php?module=$1&args=x1:$2 [L]
+RewriteRule ^(sign)(in|out|up|ed)/?$ index.php?module=$1&args=x1:$2 [L]
 RewriteRule ^(board)/(topic|post)/([0-9]+)/?(([0-9a-z\_\.\-\:]+)/?)?$ index.php?module=$1&args=$2:$3.$5 [L]
 RewriteRule ^(board)/([a-z0-9]+)/(([0-9a-z\_\.\-\:]+)/?)?$ index.php?module=$1&args=f:$2.$4 [L]
 RewriteRule ^(events|help|news)/([0-9a-z\-\_]+)/?(([0-9a-z\_\.\-\:]+)/?)?$ index.php?module=$1&args=x1:read.alias:$2.$4 [L]

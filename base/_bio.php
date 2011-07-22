@@ -367,7 +367,7 @@ class __bio extends xmd implements i_bio
 	
 	public function journal()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _journal_create()
@@ -490,7 +490,7 @@ class __bio extends xmd implements i_bio
 	
 	public function posts()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _posts_modify()
@@ -566,7 +566,7 @@ class __bio extends xmd implements i_bio
 	
 	public function record()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _record_home()
@@ -679,7 +679,7 @@ class __bio extends xmd implements i_bio
 	//
 	public function permission()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _permission_home()
@@ -795,7 +795,7 @@ class __bio extends xmd implements i_bio
 	//
 	public function gallery()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _gallery_home()
@@ -1017,7 +1017,7 @@ class __bio extends xmd implements i_bio
 	//
 	public function biography()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _biography_home()
@@ -1063,7 +1063,7 @@ class __bio extends xmd implements i_bio
 	//
 	public function lyrics()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _lyrics_create()
@@ -1086,7 +1086,7 @@ class __bio extends xmd implements i_bio
 	//
 	public function analytics()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _analytics_home()
@@ -1181,7 +1181,7 @@ class __bio extends xmd implements i_bio
 	
 	public function media()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _media_home()

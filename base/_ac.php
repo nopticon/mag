@@ -44,7 +44,7 @@ class __ac extends xmd implements i_ac
 	
 	public function connected()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _connected_home()
@@ -52,6 +52,7 @@ class __ac extends xmd implements i_ac
 		global $bio, $core;
 		
 		$totals = w();
+		
 		$time_today = _timestamp();
 		$bots = get_bots();
 		

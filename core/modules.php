@@ -257,6 +257,8 @@ abstract class xmd extends project
 			}
 		}
 		
+		// TODO: Convert all method calls to object.
+		//return (object) $a;
 		return $a;
 	}
 	

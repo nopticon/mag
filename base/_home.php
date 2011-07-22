@@ -175,7 +175,7 @@ class __home extends xmd implements i_home
 	
 	public function status()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _status_home()
@@ -227,7 +227,7 @@ class __home extends xmd implements i_home
 	
 	public function like()
 	{
-		$thsi->method();
+		return $thsi->method();
 	}
 	
 	protected function _like_home()
@@ -280,7 +280,7 @@ class __home extends xmd implements i_home
 	
 	public function friend()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _friend_approve()

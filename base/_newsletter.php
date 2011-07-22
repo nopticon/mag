@@ -169,7 +169,7 @@ class __newsletter extends xmd implements i_newsletter
 	
 	public function check()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _check_home()
@@ -212,7 +212,7 @@ class __newsletter extends xmd implements i_newsletter
 	
 	public function create()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _create_home()
@@ -253,7 +253,7 @@ class __newsletter extends xmd implements i_newsletter
 	
 	public function edit()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _edit_home()
@@ -296,7 +296,7 @@ class __newsletter extends xmd implements i_newsletter
 	
 	public function clear()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _clear_home()
@@ -338,7 +338,7 @@ class __newsletter extends xmd implements i_newsletter
 	
 	public function report()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _report_home()
@@ -358,7 +358,7 @@ class __newsletter extends xmd implements i_newsletter
 	
 	public function total()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _total_home()

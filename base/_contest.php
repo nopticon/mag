@@ -62,7 +62,7 @@ class __contest extends xmd implements i_contest
 	
 	public function view()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _view_home()
@@ -182,7 +182,7 @@ class __contest extends xmd implements i_contest
 	
 	public function in()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _in_home()

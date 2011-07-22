@@ -81,7 +81,7 @@ class __radio extends xmd implements i_radio
 	
 	public function episode()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _episode_home()
@@ -91,7 +91,7 @@ class __radio extends xmd implements i_radio
 	
 	public function publish()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _publish_home()
@@ -101,7 +101,7 @@ class __radio extends xmd implements i_radio
 	
 	public function like()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _like_home()
@@ -111,7 +111,7 @@ class __radio extends xmd implements i_radio
 	
 	public function cp()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _cp_home()

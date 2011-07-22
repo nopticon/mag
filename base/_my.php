@@ -230,7 +230,7 @@ class __my extends xmd implements i_my
 	
 	public function messages()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _messages_home()
@@ -470,7 +470,7 @@ class __my extends xmd implements i_my
 	
 	public function account()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _account_home()
@@ -548,7 +548,7 @@ class __my extends xmd implements i_my
 	
 	public function password()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _password_home()

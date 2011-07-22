@@ -82,7 +82,7 @@ class __help extends xmd implements i_help
 	
 	public function faq()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _faq_home()
@@ -169,7 +169,7 @@ class __help extends xmd implements i_help
 	
 	public function desk()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _desk_home()

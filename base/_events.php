@@ -235,7 +235,7 @@ class __events extends xmd implements i_events
 	
 	public function view()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _view_home()
@@ -469,7 +469,7 @@ class __events extends xmd implements i_events
 	
 	public function star()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _star_home()
@@ -520,7 +520,7 @@ class __events extends xmd implements i_events
 	
 	public function attend()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _attend_home()
@@ -580,7 +580,7 @@ class __events extends xmd implements i_events
 	
 	public function tag()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _tag_home()
@@ -590,7 +590,7 @@ class __events extends xmd implements i_events
 	
 	public function comment()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _comment_home()
@@ -600,7 +600,7 @@ class __events extends xmd implements i_events
 	
 	public function acp()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _acp_home()

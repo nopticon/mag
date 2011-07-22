@@ -48,7 +48,7 @@ class __update extends xmd implements i_update
 	
 	public function import()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _import_news()
@@ -77,7 +77,7 @@ class __update extends xmd implements i_update
 	
 	public function members()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _members_home()
@@ -152,7 +152,7 @@ class __update extends xmd implements i_update
 	
 	public function subdomain()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _subdomain_home()
@@ -188,7 +188,7 @@ class __update extends xmd implements i_update
 	
 	public function bios()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _bios_home()

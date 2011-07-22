@@ -25,6 +25,7 @@ interface i_robot
 	public function mfeed();
 	public function optimize();
 	public function contest();
+	public function newsletter();
 }
 
 class __robot extends xmd implements i_robot
@@ -34,11 +35,7 @@ class __robot extends xmd implements i_robot
 		parent::__construct();
 		
 		$this->auth(false);
-		$this->_m(array(
-			'birthday' => w(),
-			'mfeed' => w(),
-			'optimize' => w())
-		);
+		$this->_m(_array_keys(w('birthday mfeed optimize contest newsletter')));
 	}
 	
 	public function home()
@@ -48,7 +45,7 @@ class __robot extends xmd implements i_robot
 	
 	public function birthday()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _birthday_home()
@@ -68,11 +65,8 @@ class __robot extends xmd implements i_robot
 		
 		foreach ($birthdays as $row)
 		{
-			$properties = array(
-				'to' => $row['bio_email'],
-				'template' => 'birthday'
-			);
-			_sendmail($properties);
+			$core->email->init('info', 'birthday:plain');
+			$core->email->send($row->bio_email);
 		}
 		
 		return;
@@ -80,7 +74,7 @@ class __robot extends xmd implements i_robot
 	
 	public function mfeed()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _mfeed_home()
@@ -120,7 +114,7 @@ class __robot extends xmd implements i_robot
 	
 	public function optimize()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _optimize_home()
@@ -129,18 +123,16 @@ class __robot extends xmd implements i_robot
 		
 		$core->v('site_disable', 1);
 		
-		$sql = 'SHOW TABLES';
-		$tables = _rowset($sql, false, false, false, MYSQL_NUM);
+		$tables = _rowset('SHOW TABLES', false, false, false, MYSQL_NUM);
 		
 		foreach ($tables as $row)
 		{
-			$sql = 'OPTIMIZE TABLE ' . $row[0];
-			_sql($sql);
+			sql_query('OPTIMIZE TABLE ' . $row[0]);
 		}
 
 		$core->v('site_disable', 0);
 		
-		$this->e('1');
+		return $this->warning->set('optimized');
 	}
 	
 	public function contest()
@@ -151,6 +143,103 @@ class __robot extends xmd implements i_robot
 	protected function _contest_home()
 	{
 		return;
+	}
+	
+	public function newsletter()
+	{
+		return $this->method();
+	}
+	
+	protected function _newsletter()
+	{
+		global $bio;
+		
+		$sql = 'SELECT *
+			FROM _newsletter
+			WHERE newsletter_active = 1
+			LIMIT 1';
+		if (!$newsletter = _fieldrow($sql)) {
+			$this->warning->set('no_newsletter');
+		}
+		
+		set_time_limit(0);
+		
+		if (!$newsletter->newsletter_start) {
+			$sql = 'UPDATE _newsletter SET newsletter_start = ?
+				WHERE newsletter_id = ?';
+			sql_query(sql_filter($sql, time(), $newsletter->newsletter_id));
+		}
+		
+		$sql = 'SELECT bio_id, bio_alias, bio_name, bio_address, bio_lastvisit
+			FROM _bio b
+			??
+			RIGHT JOIN _bio_newsletter bn ON b.bio_id = bn.newsletter_bio
+				AND bn.newsletter_receive = ? 
+			WHERE b.bio_lastvisit >= ?
+				AND b.bio_blocked = ?
+			ORDER BY b.bio_name
+			LIMIT ??, ??';
+		
+		$sql_country = '';
+		if (!empty($newsletter->newsletter_country)) {
+			$sql_country = sql_filter(' LEFT JOIN _countries ON bio_country = country_id
+				AND country_id IN (??)', implode(', ', w($newsletter->newsletter_country)));
+		}
+		
+		$members = _rowset(sql_filter($sql, $sql_country, 1, $newsletter['newsletter_lastvisit'], 0, $newsletter->newsletter_last, $core->v('newsletter_process')));
+		
+		$i = 0;
+		foreach ($members as $row)
+		{
+			if (!is_email($row['user_email'])) {
+				continue;
+			}
+			
+			$email = array(
+				'USERNAME' => $row->username,
+				'MESSAGE' => entity_decode($email->email_message)
+			);
+			
+			$core->email->init('press', 'mass:plain', $email);
+			$core->email->subject(entity_decode($email['email_subject']));
+			
+			if (!empty($row['user_public_email']) && $row['user_email'] != $row['user_public_email'] && is_email($row['user_public_email']))
+			{
+				$core->email->cc($row->bio_address_public);
+			}
+			
+			$core->email->send($row->user_email);
+			
+			$sql_history = array(
+				'history_newsletter' => $newsletter->newsletter_id, 
+				'history_bio' => $row->bio_id,
+				'history_time' => time(),
+			);
+			sql_query('INSERT INTO _newsletter_history' . sql_build('INSERT', $sql_history));
+			
+			sleep(2);
+			
+			$i++;
+		}
+		
+		if ($i)
+		{
+			$email['email_last'] += $i;
+			
+			$sql = 'UPDATE _newsletter SET newsletter_last = ?
+				WHERE newsletter_id = ?';
+			sql_query(sql_filter($sql, $newsletter->newsletter_last, $newsletter->newsletter_id));
+		}
+		else
+		{
+			$sql = 'UPDATE _newsletter SET newsletter_active = ?, newsletter_end = ?
+				WHERE newsletter_id = ?';
+			sql_query(sql_filter($sql, 0, time(), $newsletter->newsletter_id));
+			
+			$this->warning->set('finished: ' . $newsletter->newsletter_id);
+		}
+		
+		return $this->warning->set('completed: ' . $i);
 	}
 }
 

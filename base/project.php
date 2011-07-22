@@ -33,6 +33,22 @@ abstract class project
 {
 	private $_bio = array();
 	
+	protected function alias_exists($alias)
+	{
+		$sql = 'SELECT alias_id
+			FROM _alias
+			WHERE alias_name = ?';
+		return _fieldrow(sql_filter($sql, $alias));
+	}
+	
+	protected function country_exists($country)
+	{
+		$sql = 'SELECT country_id
+			FROM _countries
+			WHERE country_id = ?';
+		return _fieldrow(sql_filter($sql, $v->country));
+	}
+	
 	protected function _bio_publish($address, $key)
 	{
 		if (!f($address))
