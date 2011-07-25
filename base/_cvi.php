@@ -20,12 +20,7 @@ if (!defined('XFS')) exit;
 
 define('PCK', './pack/');
 
-interface i_cvi
-{
-	public function home();
-}
-
-class __cvi extends xmd implements i_cvi
+class __cvi extends xmd
 {
 	public function __construct()
 	{

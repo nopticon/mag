@@ -457,7 +457,7 @@ class __bio extends xmd implements i_bio
 			'subject' => $subject,
 			'content' => $content
 		);
-		return $this->e(json_encode($response));
+		return $this->output(json_encode($response));
 	}
 	
 	protected function _journal_remove()
@@ -731,18 +731,18 @@ class __bio extends xmd implements i_bio
 					SELECT ban_bio
 					FROM _bio_ban
 				)';
-		if (!$_bio = _fieldrow(sql_filter($sql, $v['alias'], 1)))
+		if (!$_bio = sql_fieldrow(sql_filter($sql, $v['alias'], 1)))
 		{
-			$this->_error('#NO_BIO');
+			$this->warning->set('bio_not_exists');
 		}
 		
 		$sql = 'SELECT auth_bio
 			FROM _bio_auth
 			WHERE auth_assoc = ?
 				AND auth_bio = ?';
-		if (_field(sql_filter($sql, $this->a('bio_id'), $_bio['bio_id']), 'auth_bio', 0))
+		if (sql_field(sql_filter($sql, $this->a('bio_id'), $_bio['bio_id']), 'auth_bio', 0))
 		{
-			return $this->e('~OK');
+			$this->warning->ok();
 		}
 		
 		$sql_insert = array(
@@ -751,7 +751,7 @@ class __bio extends xmd implements i_bio
 			'auth_time' => time()
 		);
 		$sql = 'INSERT INTO _bio_auth' . _build_array('INSERT', $sql_insert);
-		_sql($sql);
+		sql_query($sql);
 		
 		redirect(_link('alias', array('alias' => $this->a('bio_alias'), 'x1' => $this->x(1), 'x2' => $this->x(2))));
 	}
@@ -864,10 +864,10 @@ class __bio extends xmd implements i_bio
 			
 			if ($f === false && count($upload->error))
 			{
-				$this->error($upload->error);
+				$this->warning->set($upload->error);
 			}
 			
-			if (!$this->errors())
+			if (!$this->warning->exist)
 			{
 				$total = 0;
 				foreach ($f as $row)

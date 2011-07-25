@@ -481,7 +481,7 @@ class __board extends xmd implements i_board
 					'legend' => _lang('PUBLISH_TOPIC_GUEST')
 				);
 			}
-			$this->e(json_encode($response));
+			$this->output(json_encode($response));
 		}
 		
 		return redirect(_link('board', array('topic', $v['topic'])));

@@ -87,44 +87,44 @@ class __create extends xmd
 		$v_check = array('e_title' => 'INVALID_NAME', 'e_cat' => 'INVALID_CATEGORY');
 		foreach ($v_check as $vk => $vv)
 		{
-			if (!f($v[$vk])) $this->error($vv);
+			if (empty($v[$vk])) $this->warning->set($vv);
 		}
 		
-		if (!$this->errors())
+		if (!$this->warning->exist)
 		{
 			$v['e_alias'] = _alias($v['e_title']);
 			
-			if (!f($v['e_alias']))
+			if (empty($v['e_alias']))
 			{
-				$this->error('INVALID_ALIAS');
+				$this->warning->set('INVALID_ALIAS');
 			}
 		}
 		
-		if (!$this->errors())
+		if (!$this->warning->exist)
 		{
 			$sql = 'SELECT cat_id
 				FROM _events_category
 				WHERE cat_id = ?';
-			if (!_fieldrow(sql_filter($sql, $v['e_cat'])))
+			if (!sql_fieldrow(sql_filter($sql, $v->e_cat)))
 			{
-				$this->error('INVALID_CATEGORY');
+				$this->warning->set('invalid_category');
 			}
 		}
 		
-		if (!$this->errors())
+		if (!$this->warning->exist)
 		{
-			require_once(XFS . 'core/upload.php');
-			$upload = new upload();
+			$core->require('upload');
+			$core->upload->init();
 			
-			$f = $upload->process(LIB . 'tmp/', $_FILES['e_flyer'], w('jpg'), max_upload_size());
+			$f = $core->upload->process(LIB . 'tmp/', $_FILES['e_flyer'], w('jpg'), max_upload_size());
 			
-			if ($f === false && count($upload->error))
+			if ($f === false && count($core->upload->warning))
 			{
-				$this->error($upload->error);
+				$this->warning->set($core->upload->warning);
 			}
 		}
 		
-		if (!$this->errors())
+		if (!$this->warning->exist())
 		{
 			$sql_insert = array(
 				'alias' => $v['e_alias'],
@@ -137,12 +137,11 @@ class __create extends xmd
 				'end' => $e_end,
 				'images' => 0
 			);
-			$sql = 'INSERT INTO _events' . _build_array('INSERT', prefix('event', $sql_insert));
-			_sql($sql);
+			sql_query('INSERT INTO _events' . sql_build('INSERT', prefix('event', $sql_insert)));
 			
-			$v['e_id'] = _nextid();
+			$v['e_id'] = sql_nextid();
 			
-			if (is_array($v['e_artists']))
+			if (is_array($v->e_artists))
 			{
 				foreach ($v['e_artists'] as $row)
 				{

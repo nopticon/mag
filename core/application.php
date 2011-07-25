@@ -31,15 +31,17 @@ if (@ini_get('register_globals'))
 	}
 }
 
-if (!defined('CA')) define('CA', 'sha1');
-if (!defined('REQC')) define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
-
-foreach (array('core', 'db.mysql', 'styles', 'session') as $w)
+if (!defined('REQC'))
 {
-	@require_once(XFS . 'core/' . $w . '.php');
+	define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
 }
 
-foreach (w('database style bio core') as $w) $$w = new $w();
+require_once(XFS . 'core/core.php');
+
+$core = new core();
+$core->import('db.mysql', 'database');
+$core->import('styles', 'style');
+$core->import('session', 'bio');
 
 if (!defined('XCORE')) _xfs();
 
