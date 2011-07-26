@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-function htmlencode($str, $multibyte = false)
+function html_encode($str, $multibyte = false)
 {
 	$result = trim(htmlentities(str_replace(array("\r\n", "\r", '\xFF'), array("\n", "\n", ' '), $str)));
 	$result = (get_magic_quotes_gpc()) ? stripslashes($result) : $result;
@@ -219,43 +219,36 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 {
 	sql_close();
 	
+	$warning = '<b>%s</b>: in file <b>%s</b> on line <b>%s</b>: <b>%s</b><br>';
+	
 	switch ($code)
 	{
 		case 504:
-			echo '<b>PHP Notice</b>: in file <b>' . $errfile . '</b> on line <b>' . $errline . '</b>: <b>' . $errmsg . '</b><br>';
-			break;
 		case 505:
-			echo '<b>Another Error</b>: in file <b>' . basename($errfile) . '</b> on line <b>' . $errline . '</b>: <b>' . $errmsg . '</b><br>';
+			echo sprintf($warning, 'PHP Notice', $errfile, $errline, $errmsg);
 			break;
 		case 506:
 			exit('USER_ERROR: ' . $errmsg);
 			break;
 		default:
-			$error_path = './style/' . _tbrowser() . '/http-error/%s.htm';
+			$error_path = XFS . XHTM . _tbrowser() . '/http-error/%s.htm';
 			
-			switch ($errno)
+			if ($errno)
 			{
-				case 2:
-					$filepath = sprintf($error_path, 'no' . $errno);
-					break;
-				default:
-					$filepath = sprintf($error_path, $code . ((is_ghost()) ? '-ghost' : ''));
-					break;
+				$code .= '-' . $errno;
 			}
+
+			$filepath = sprintf($error_path, $code . ((is_ghost()) ? '-ghost' : ''));
 			if (!@file_exists($filepath))
 			{
 				$filepath = sprintf($error_path, 'default');
 			}
+			
 			$v_host = get_protocol() . get_host();
 			
 			// SQL error
 			if ($code == 507)
 			{
-				if (!$report_to = get_file('./base/server_admin'))
-				{
-					$report_to = array(v_server('SERVER_ADMIN'));
-				}
-				
 				$sql_time = date('r');
 				$sql_format = str_replace(array("\n", "\t"), array('<br />', '&nbsp;&nbsp;&nbsp;'), $errmsg['sql']);
 				
@@ -275,12 +268,15 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 				}
 				$sql_message = _utf8($sql_message);
 				
-				// Send report to server admins
-				// Email addresses can be configured @ ./base/server_admin
+				if (!$report_to = get_file(XFS . XCOR . 'store/server_admin')) {
+					$report_to = array(v_server('SERVER_ADMIN'));
+				}
+				
+				// Send report to server admins @ ./core/store/server_admin
 				if (count($report_to))
 				{
-					require_once(XFS . 'core/class.phpmailer.php');
-					$mail = new PHPMailer();
+					$core->init();
+					$core->send();
 					
 					$mail->SetFrom($report_to[0]);
 					
@@ -1345,7 +1341,7 @@ function _message($a)
 	
 	if ($core->v('markdown_enabled'))
 	{
-		require_once(XFS . 'core/markdown.php');
+		require_once(XFS . XCOR . 'markdown.php');
 		$a = Markdown($a);
 	}
 	else
@@ -2111,7 +2107,7 @@ function _xfs($mod = false, $wdir = false, $warg = false)
 		_fatal(499, '', '', 'Enable mod_rewrite on Apache.');
 	}
 	
-	require_once(XFS . 'core/modules.php');
+	require_once(XFS . XCOR . 'modules.php');
 	
 	if ($mod === false)
 	{
@@ -2150,10 +2146,8 @@ function _xfs($mod = false, $wdir = false, $warg = false)
 				_fatal();
 			}
 			
-			class __home extends xmd
-			{
-				public function home()
-				{
+			class __home extends xmd {
+				public function home() {
 					return true;
 				}
 			}

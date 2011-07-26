@@ -20,23 +20,19 @@ if (!defined('XFS')) exit;
 
 class core
 {
-	protected $cache;
+	protected $email;
 	protected $config;
 	protected $sf;
-	
-	protected $cache_dir;
-	protected $cache_last = '';
-	protected $cache_f = false;
 	
 	public function __construct()
 	{
 		$sql = 'SELECT *
 			FROM _config';
-		$this->config = _rowset($sql, 'config_name', 'config_value');
+		$this->config = sql_rowset($sql, 'config_name', 'config_value');
 		
 		if ($this->v('site_disabled'))
 		{
-			exit('SITE DISABLED');
+			exit('not_running');
 		}
 		
 		$address = $this->v('site_address');
@@ -79,7 +75,11 @@ class core
 			$this->cache_f = true;
 		}
 		
-		$this->email = new sendmail();
+		//
+		// Load additional objects.
+		//
+		$this->email = $this->import('emailer');
+		$this->cache = $this->import('cache');
 		
 		return;
 	}
@@ -92,8 +92,7 @@ class core
 		
 		require_once(XFS . 'core/' . $filename . '.php');
 		
-		${$object} = new $object;
-		
+		return new $object;
 	}
 	
 	public function v($k, $v = false, $nr = false)
@@ -146,108 +145,6 @@ class core
 		}
 		
 		return $this->sf;
-	}
-	
-	//
-	// Cache data system
-	//
-	
-	public function cache_crypt($str)
-	{
-		return sha1($str);
-	}
-	
-	public function cache_check()
-	{
-		return $this->cache_f;
-	}
-	
-	public function cache_load($v, $force = false)
-	{
-		if (!$this->cache_check() && !$force)
-		{
-			return;
-		}
-		
-		$filepath = $this->cache_dir . $this->cache_crypt($v);
-		$this->cache_last = $v;
-		
-		if (!@file_exists($filepath))
-		{
-			return false;
-		}
-		
-		// Cache expiration time
-		if (time() - @filemtime($filepath) < 3600)
-		{
-			if ($plain = get_file($filepath))
-			{
-				return json_decode($plain[0], true);
-			}
-		}
-		
-		return $this->cache_unload($v);
-	}
-	
-	public function cache_unload()
-	{
-		if (!$this->cache_check())
-		{
-			return;
-		}
-		
-		$files = w();
-		if ($a = func_get_args())
-		{
-			foreach ($a as $row)
-			{
-				if (!f($row)) continue;
-				
-				$files[] = $this->cache_crypt($row);
-			}
-		}
-		else
-		{
-			$files = _dirlist($this->cache_dir, '^([a-z0-9]+)$', 'files');
-		}
-		
-		foreach ($files as $row)
-		{
-			$row = $this->cache_dir . $row;
-			if (@file_exists($row))
-			{
-				@unlink($row);
-			}
-		}
-		return false;
-	}
-	
-	public function cache_store($v, $k = false, $force = false)
-	{
-		if (!$this->cache_check() && !$force)
-		{
-			return $v;
-		}
-		
-		$k = ($k === false) ? $this->cache_last : $k;
-		
-		if (!f($k)) return;
-		
-		$this->cache_unload($k);
-		$filepath = $this->cache_dir . $this->cache_crypt($k);
-		
-		if ($fp = @fopen($filepath, 'w'))
-		{
-			if (@flock($fp, LOCK_EX))
-			{
-				fputs($fp, json_encode($v));
-				@flock($fp, LOCK_UN);
-			}
-			
-			fclose($fp);
-			@chmod($filepath, 0777);
-		}
-		return $v;
 	}
 }
 

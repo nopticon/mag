@@ -36,13 +36,13 @@ if (!defined('REQC'))
 	define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
 }
 
-require_once(XFS . 'core/core.php');
+require_once(XFS . XCOR . 'core.php');
 
 $core = new core();
-$core->import('db.mysql', 'database');
-$core->import('styles', 'style');
-$core->import('session', 'bio');
+$database = $core->import('db.mysql');
+$style = $core->import('styles');
+$bio = $core->import('session');
 
-if (!defined('XCORE')) _xfs();
+if (!defined('XRUN')) _xfs();
 
 ?>

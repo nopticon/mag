@@ -48,6 +48,11 @@ class emailer
 		$this->eformat = $this->format();
 	}
 	
+	public function init()
+	{
+		return;
+	}
+	
 	public function format($f = 'html')
 	{
 		$this->eformat = $f;

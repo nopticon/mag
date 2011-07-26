@@ -17,6 +17,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 define('XFS', './');
-require_once(XFS . 'core/application.php');
+define('XMOD', 'module/');
+define('XCOR', 'core/');
+define('XHTM', 'style');
+
+require_once(XFS . XCOR . 'application.php');
 
 ?>

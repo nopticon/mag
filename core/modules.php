@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-if (@file_exists('./base/project.php'))
+if (@file_exists('./module/project.php'))
 {
-	require_once('./base/project.php');
+	require_once('./module/project.php');
 }
 
 if (!class_exists('project'))
@@ -41,10 +41,6 @@ abstract class xmd extends project
 	public $level_2 = array();
 	public $nav = array();
 	public $page_title_v = array();
-	public $je = array(
-		'OK' => '~[200]',
-		'CN' => '~[201]'
-	);
 	
 	private $methods = array();
 	
@@ -301,12 +297,12 @@ abstract class xmd extends project
 		// TODO: Improve module installation!
 		
 		// Pre run check
-		if (!$modules = $core->cache_load('modules'))
+		if (!$modules = $core->cache->load('modules'))
 		{
 			$sql = 'SELECT *
 				FROM _modules
 				ORDER BY module_name';
-			$modules = $core->cache_store(_rowset($sql));
+			$modules = $core->cache->store(_rowset($sql));
 		}
 		
 		$run_install = true;
