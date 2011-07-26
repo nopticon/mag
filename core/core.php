@@ -20,6 +20,8 @@ if (!defined('XFS')) exit;
 
 class core
 {
+	protected $input = array();
+	
 	protected $email;
 	protected $config;
 	protected $sf;
@@ -124,6 +126,164 @@ class core
 		}
 		
 		return $a;
+	}
+	
+	public function run($mod = false)
+	{
+		global $bio, $core, $warning;
+		
+		if (!$rewrite = enable_rewrite())
+		{
+			_fatal(499, '', '', 'Enable mod_rewrite on Apache.');
+		}
+		
+		require_once(XFS.XCOR . 'modules.php');
+		
+		if ($mod === false)
+		{
+			$mod = request_var('module', '');
+		}
+		$mod = (!empty($mod)) ? $mod : 'home';
+		
+		if (!$_module = $core->cache->load('module_' . str_replace('/', '_', $mod)))
+		{
+			$sql = 'SELECT *
+				FROM _modules
+				WHERE module_alias = ?';
+			if (!$_module = $core->cache->store(sql_fieldrow($sql, $mod)))
+			{
+				$warning->fatal();
+			}
+		}
+		
+		$_module->module_path = XFS.XCOR . '_'. $_module->module_path . '.php';
+		
+		if (!@file_exists($_module->module_path))
+		{
+			$warning->fatal();
+		}
+		
+		@require_once($_module->module_path);
+		
+		$_object = '__' . $mod;
+		if (!class_exists($_object))
+		{
+			$warning->fatal();
+		}
+		$module = new $_object();
+		
+		$module->m($mod);
+		
+		if (@method_exists($module, 'install'))
+		{
+			$module->_install();
+		}
+		
+		if (!defined('ULIB'))
+		{
+			define('ULIB', _link() . str_replace(w('../ ./'), '', LIB));
+		}
+		
+		if (empty($this->input))
+		{
+			$_input = array();
+			
+			if ($arg = request_var('args'))
+			{
+				foreach (explode('.', $arg) as $str_pair)
+				{
+					$pair = explode(':', $str_pair);
+					
+					if (isset($pair[0]) && isset($pair[1]) && !empty($pair[0]))
+					{
+						$this->input[$pair[0]] = $pair[1];
+					}
+				}
+			}
+			
+			if (isset($_POST) && count($_POST))
+			{
+				$_POST = _utf8($_POST);
+				$this->input = array_merge($this->input, $_POST);
+			}
+		}
+		
+		$module->levels($this->input);
+		
+		if (!method_exists($module, $module->x(1)))
+		{
+			$warning->fatal();
+		}
+		
+		if ($module->auth() && (!$module->x(1) || !in_array($module->x(1), $module->exclude)))
+		{
+			$module->signin();
+		}
+		
+		//
+		// All verifications passed, so start session for the request
+		$bio->start(true);
+		$bio->setup();
+		
+		if (!$module->auth_access() && $module->auth())
+		{
+			$warning->fatal();
+		}
+		
+		$module->navigation('home', '', '');
+		$module->navigation($module->m(), '');
+		
+		if ($module->x(1) != 'home' && @method_exists($module, 'init'))
+		{
+			$module->init();
+		}
+		
+		hook(array($module, $module->x(1)));
+		
+		if (!$module->_template())
+		{
+			$module->_template($mod);
+		}
+		
+		//
+		// Output template
+		$page_module = 'MODULE_' . $mod;
+		if ($bio->is_lang($page_module))
+		{
+			$module->page_title($page_module);
+		}
+		
+		$browser_upgrade = false;
+		if (!$core->v('skip_browser_detect') && ($list_browser = get_file('./base/need_browser')))
+		{
+			$browser_list = w();
+			
+			foreach ($list_browser as $row)
+			{
+				$e = explode(' :: ', $row);
+				$browser_list[$e[0]] = $e[1];
+			}
+			
+			foreach ($browser_list as $browser => $version)
+			{
+				if (_browser($browser) && _browser($browser, $version))
+				{
+					v_style(array(
+						'visual' => ULIB . LIB_VISUAL)
+					);
+					$module->_template('browsers');
+					$browser_upgrade = true;
+				}
+			}
+		}
+		
+		$sv = array(
+			'X1' => $module->x(1),
+			'X2' => $module->x(2),
+			'NAVIGATION' => $module->get_navigation(),
+			'BROWSER_UPGRADE' => $browser_upgrade
+		);
+		_layout($module->_template(), $module->page_title(), $sv);
 	}
 	
 	// Used by template system $A[]

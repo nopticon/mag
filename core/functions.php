@@ -202,7 +202,7 @@ function _tbrowser($tpl = '')
 			
 			foreach ($a as $row)
 			{
-				if (@file_exists('./style/' . $row))
+				if (@file_exists(XFS . XHTM . $row))
 				{
 					$tpl = $row;
 					break;
@@ -217,7 +217,11 @@ function _tbrowser($tpl = '')
 
 function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno = 0)
 {
+	global $file, $warning;
+	
 	sql_close();
+	
+	// TODO: Check if is ghost request.
 	
 	$warning = '<b>%s</b>: in file <b>%s</b> on line <b>%s</b>: <b>%s</b><br>';
 	
@@ -231,7 +235,8 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 			exit('USER_ERROR: ' . $errmsg);
 			break;
 		default:
-			$error_path = XFS . XHTM . _tbrowser() . '/http-error/%s.htm';
+			$error_path = XFS . XHTM . _tbrowser() . '/warnings/%s.htm';
+			$sql_message = 'SQL ERROR @ %s # %s<br /><br />' . "\n" . ' %s<br /><br />' . "\n";
 			
 			if ($errno)
 			{
@@ -251,11 +256,9 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 			{
 				$sql_time = date('r');
 				$sql_format = str_replace(array("\n", "\t"), array('<br />', '&nbsp;&nbsp;&nbsp;'), $errmsg['sql']);
+				$sql_message = sprintf($sql_message, get_host(), $sql_time, _page());
 				
-				$sql_message  = 'SQL ERROR @ ' . get_host() . ' # ' . $sql_time . '<br /><br />' . "\n";
-				$sql_message .= _page() . '<br /><br />' . "\n";
-				
-				if (f($errmsg['message']))
+				if (!empty($errmsg['message']))
 				{
 					$sql_message .= $errmsg['message'] . '<br /><br />' . "\n";
 				}
@@ -268,6 +271,8 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 				}
 				$sql_message = _utf8($sql_message);
 				
+				if (!$report_to = $file->read(XFS.XCOR . 'core/server_admin'))
+				
 				if (!$report_to = get_file(XFS . XCOR . 'store/server_admin')) {
 					$report_to = array(v_server('SERVER_ADMIN'));
 				}
@@ -275,8 +280,8 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 				// Send report to server admins @ ./core/store/server_admin
 				if (count($report_to))
 				{
-					$core->init();
-					$core->send();
+					$core->email->init();
+					$core->email->send();
 					
 					$mail->SetFrom($report_to[0]);
 					
@@ -376,15 +381,6 @@ function hook($name, $args = array(), $arr = false)
 	
 	$f = 'call_user_func' . ((!$arr) ? '_array' : '');
 	return $f($name, $args);
-}
-
-function fwrite_line($f, $a)
-{
-	$fp = @fopen($f, 'a+');
-	fwrite($fp, $a . "\n");
-	fclose($fp);
-	
-	return $a;
 }
 
 function netsock($host, $param = '', $port = 80, $advanced = false, $useragent = false)
@@ -1973,55 +1969,6 @@ function _browser($a_browser = false, $a_version = false, $name = false, $d_name
 	);
 }
 
-function _lib_define()
-{
-	if (!defined('LIB')) define('LIB', './space/');
-	
-	if (!defined('LIBD')) define('LIBD', _link() . str_replace(w('../ ./'), '', LIB));
-}
-
-function _dirlist($d, $filter = false, $sd = false)
-{
-	if (substr($d, -1) != '/')
-	{
-		$d .= '/';
-	}
-	
-	if (!$fp = @opendir($d))
-	{
-		return false;
-	}
-	
-	$r = w();
-	while (false !== ($f = @readdir($fp)))
-	{
-		if ($f == '.' || $f == '..')
-		{
-			continue;
-		}
-		
-		if (is_dir($d . $f))
-		{
-			if ($sd === 'files') continue;
-			
-			$r[$f] = _dirlist($d . $f . '/', $filter. $sd);
-		}
-		else
-		{
-			if (($sd === 'dir') || ($filter !== false && !preg_match('#' . $filter . '#', trim($f)))) continue;
-			
-			$r[] = $f;
-		}
-	}
-	@closedir($fp);
-	
-	if (count($r))
-	{
-		array_multisort($r);
-	}
-	return $r;
-}
-
 function _layout($template, $page_title = false, $v_custom = false)
 {
 	global $core, $bio, $style, $starttime;
@@ -2055,8 +2002,6 @@ function _layout($template, $page_title = false, $v_custom = false)
 	}
 	
 	//
-	_lib_define();
-	
 	$filename = (strpos($template, '#') !== false) ? str_replace('#', '.', $template) : $template . '.htm';
 	$style->set_filenames(array(
 		'body' => $filename)
@@ -2096,243 +2041,6 @@ function _layout($template, $page_title = false, $v_custom = false)
 	
 	sql_close();
 	exit();
-}
-
-function _xfs($mod = false, $wdir = false, $warg = false)
-{
-	global $bio, $core;
-	
-	if (!$rewrite = enable_rewrite())
-	{
-		_fatal(499, '', '', 'Enable mod_rewrite on Apache.');
-	}
-	
-	require_once(XFS . XCOR . 'modules.php');
-	
-	if ($mod === false)
-	{
-		$mod = request_var('module', '');
-	}
-	$mod = (f($mod)) ? $mod : 'home';
-	
-	$p_dir = false;
-	$d_list = w('./ ' . XFS);
-	foreach ($d_list as $row)
-	{
-		$mod_dir = $row . 'base/_' . $mod;
-		if (!$p_dir) $p_dir = ($wdir === false && @file_exists($mod_dir) && is_dir($mod_dir)) ? true : false;
-		
-		if ($p_dir) break;
-	}
-	
-	if (!$p_dir)
-	{
-		$found_mod = false;
-		foreach ($d_list as $row)
-		{
-			$mod_dir = $row . 'base/_' . (($wdir !== false) ? $wdir . '/_' : '') . $mod;
-			$mod_path = $mod_dir . '.php';
-			if (@file_exists($mod_path))
-			{
-				$found_mod = true;
-				break;
-			}
-		}
-		
-		if (!$found_mod)
-		{
-			if ($mod != 'home')
-			{
-				_fatal();
-			}
-			
-			class __home extends xmd {
-				public function home() {
-					return true;
-				}
-			}
-		}
-		else
-		{
-			require_once($mod_path);
-		}
-		
-		$mod_class = '__' . $mod;
-		if (!class_exists($mod_class))
-		{
-			_fatal();
-		}
-		$module = new $mod_class();
-	}
-	
-	if ($warg === false)
-	{
-		$warg = w();
-		$arg = request_var('args');
-		
-		if (f($arg))
-		{
-			foreach (explode('.', $arg) as $v)
-			{
-				$el = explode(':', $v);
-				if (isset($el[0]) && isset($el[1]) && f($el[0]))
-				{
-					$warg[$el[0]] = $el[1];
-				}
-			}
-		}
-		
-		if (isset($_POST) && count($_POST))
-		{
-			$_POST = _utf8($_POST);
-			$warg = array_merge($warg, $_POST);
-		}
-	}
-	
-	if ($p_dir)
-	{
-		_xfs(((isset($warg['x1'])) ? $warg['x1'] : ''), $mod, $warg);
-	}
-	else
-	{
-		_lib_define();
-		
-		$warg_x = 0;
-		foreach ($warg as $warg_k => $warg_v)
-		{
-			if (preg_match('/x\d+/i', $warg_k))
-			{
-				$warg_x = str_replace('x', '', $warg_k);
-			}
-		}
-		
-		if ($wdir !== false)
-		{
-			for ($i = 0; $i < $warg_x; $i++)
-			{
-				$warg['x' . ($i + 1)] = (isset($warg['x' + ($i + 2)])) ? $warg['x' + ($i + 2)] : '';
-			}
-		}
-	}
-	
-	if (defined('MY_TIMEZONE') && !f(ini_get('date.timezone')) && function_exists('date_default_timezone_set'))
-	{
-		@ini_set('date.timezone', MY_TIMEZONE);
-	}
-	
-	$module->xlevel($warg);
-	
-	if (!$p_dir && $module->auth() && (!$module->x(1) || !count($module->exclude) || !in_array($module->x(1), $module->exclude)))
-	{
-		_login();
-	}
-	
-	if (!method_exists($module, $module->x(1)))
-	{
-		_fatal();
-	}
-	
-	// Session start
-	$bio->start(true);
-	$bio->setup();
-	
-	$module->m($mod);
-	if (!$module->auth_access() && $module->auth())
-	{
-		_fatal();
-	}
-	
-	if (@method_exists($module, 'install'))
-	{
-		$module->_install();
-	}
-	
-	$module->navigation('home', '', '');
-	$module->navigation($module->m(), '');
-	
-	if ($module->x(1) != 'home' && @method_exists($module, 'init'))
-	{
-		$module->init();
-	}
-	
-	hook(array($module, $module->x(1)));
-	
-	if (!$module->_template())
-	{
-		$module->_template($mod);
-	}
-	
-	if (@file_exists('./base/tree'))
-	{
-		$menu = array_map('trim', @file('./base/tree'));
-		$i = 0;
-		
-		foreach ($menu as $row)
-		{
-			if (substr($row, 0, 1) == '#') continue;
-			
-			preg_match('#^\*{0,} (.*?) <(.*?)>$#i', $row, $row_key);
-			
-			$row_level = strripos($row, '*') + 1;
-			$row_mod = array(dvar(array_key(explode('/', $row_key[2]), 1), 'home'));
-			
-			if ($row_level > 1)
-			{
-				$v_row_mod = array_key(explode(':', array_key(explode('.', array_key(explode('/', $row_key[2]), 2)), 0)), 1);
-				if (f($v_row_mod)) $row_mod[] = $v_row_mod;
-			}
-			
-			if (!_auth_get(implode('_', $row_mod))) continue;
-			
-			if (!$i) _style('tree');
-			
-			_style('tree.row' . (($row_level > 1) ? '.sub' . ($row_level - 1) : ''), array(
-				'V_NAME' => trim(str_replace('*', '', $row_key[1])),
-				'V_LINK' => _link() . substr($row_key[2], 1))
-			);
-			$i++;
-		}
-	}
-	
-	//
-	// Output template
-	$page_smodule = 'CONTROL_' . $mod;
-	if ($bio->is_lang($page_smodule))
-	{
-		$module->page_title($page_smodule);
-	}
-	
-	$browser_upgrade = false;
-	if (!$core->v('skip_browser_detect') && ($list_browser = get_file('./base/need_browser')))
-	{
-		$browser_list = w();
-		
-		foreach ($list_browser as $row)
-		{
-			$e = explode(' :: ', $row);
-			$browser_list[$e[0]] = $e[1];
-		}
-		
-		foreach ($browser_list as $browser => $version)
-		{
-			if (_browser($browser) && _browser($browser, $version))
-			{
-				v_style(array(
-					'visual' => LIBD . LIB_VISUAL)
-				);
-				$module->_template('browsers');
-				$browser_upgrade = true;
-			}
-		}
-	}
-	
-	$sv = array(
-		'X1' => $module->x(1),
-		'X2' => $module->x(2),
-		'NAVIGATION' => $module->get_navigation(),
-		'BROWSER_UPGRADE' => $browser_upgrade
-	);
-	_layout($module->_template(), $module->page_title(), $sv);
 }
 
 set_error_handler('msg_handler');

@@ -19,8 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 define('XFS', './');
 define('XMOD', 'module/');
 define('XCOR', 'core/');
-define('XHTM', 'style');
+define('XHTM', 'style/');
+define('LIB', 'lib/');
 
-require_once(XFS . XCOR . 'application.php');
+require_once(XFS.XCOR . 'application.php');
 
 ?>

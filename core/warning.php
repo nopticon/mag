@@ -1,7 +1,7 @@
 <?php
 /*
 <NPT, a web development framework.>
-Copyright (C) <2009>  <NPT>
+Copyright (C) <2011>  <NPT>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,36 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-$starttime = explode(' ', microtime());
-$starttime = $starttime[1] + $starttime[0];
-
-error_reporting(E_ALL);
-
-if (@ini_get('register_globals'))
+class warning
 {
-	foreach ($_REQUEST as $var_name => $void)
+	public function __construct()
 	{
-		unset(${$var_name});
+		return;
 	}
-}
-
-if (!defined('REQC'))
-{
-	define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
-}
-
-require_once(XFS . XCOR . 'core.php');
-
-$core = new core();
-$database = $core->import('db.mysql');
-$style = $core->import('styles');
-$bio = $core->import('session');
-$warning = $core->import('warning');
-$file = $core->import('filesystem');
-
-if (!defined('XRUN'))
-{
-	$core->run();
 }
 
 ?>

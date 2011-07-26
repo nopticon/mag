@@ -38,7 +38,7 @@ abstract class project
 		$sql = 'SELECT alias_id
 			FROM _alias
 			WHERE alias_name = ?';
-		return _fieldrow(sql_filter($sql, $alias));
+		return sql_fieldrow(sql_filter($sql, $alias));
 	}
 	
 	protected function country_exists($country)
@@ -46,7 +46,7 @@ abstract class project
 		$sql = 'SELECT country_id
 			FROM _countries
 			WHERE country_id = ?';
-		return _fieldrow(sql_filter($sql, $v->country));
+		return sql_fieldrow(sql_filter($sql, $v->country));
 	}
 	
 	protected function _bio_publish($address, $key)
@@ -72,7 +72,7 @@ abstract class project
 					SELECT ban_bio
 					FROM _bio_ban
 				)';
-		if ($_bio = _fieldrow(sql_filter($sql, $v['field'], $address, 1)))
+		if ($_bio = sql_fieldrow(sql_filter($sql, $v['field'], $address, 1)))
 		{
 			if ($_bio['bio_key'] === _password($key))
 			{
@@ -80,7 +80,7 @@ abstract class project
 				{
 					$sql = 'UPDATE _bio SET bio_fails = 0
 						WHERE bio_id = ?';
-					_sql(sql_filter($sql, $_bio['bio_id']));
+					sql_query(sql_filter($sql, $_bio['bio_id']));
 				}
 				
 				$bio->session_create($_bio['bio_id']);
@@ -96,7 +96,7 @@ abstract class project
 			
 			$sql = 'UPDATE _bio SET bio_fails = bio_fails + 1
 				WHERE bio_id = ?';
-			_sql(sql_filter($sql, $_bio['bio_id']));
+			sql_query(sql_filter($sql, $_bio['bio_id']));
 			
 			sleep(5);
 			$this->_error('LOGIN_ERROR');
@@ -123,7 +123,7 @@ abstract class project
 		$sql = 'SELECT *
 			FROM _pages
 			WHERE page_alias = ?';
-		if (!$page = _fieldrow(sql_filter($sql, $v)))
+		if (!$page = sql_fieldrow(sql_filter($sql, $v)))
 		{
 			return false;
 		}
@@ -176,7 +176,7 @@ abstract class project
 						FROM _groups g, _groups_assoc a
 						WHERE g.group_id = a.assoc_group
 							AND a.assoc_bio = ?';
-					$groups = _rowset(sql_filter($sql, $bio->v('bio_id')));
+					$groups = sql_rowset(sql_filter($sql, $bio->v('bio_id')));
 				}
 				
 				if (is_array($groups))
@@ -207,7 +207,7 @@ abstract class project
 				AND stat_day = ?
 				AND stat_month = ?
 				AND stat_year = ?';
-		if ($stat = _fieldrow(sql_filter($sql, $bio->page, $h, $d, $m, $y)))
+		if ($stat = sql_fieldrow(sql_filter($sql, $bio->page, $h, $d, $m, $y)))
 		{
 			if ($bio->v('auth_member'))
 			{
@@ -235,7 +235,7 @@ abstract class project
 				);
 			}
 			
-			$sql = 'INSERT INTO _stats' . _build_array('INSERT', $sql_insert);
+			$sql = 'INSERT INTO _stats' . sql_build('INSERT', $sql_insert);
 		}
 		_sql($sql);
 		
@@ -255,7 +255,7 @@ abstract class project
 					)';
 		}
 		
-		if (!$_bio = _fieldrow(sql_filter($sql, $bio)))
+		if (!$_bio = sql_fieldrow(sql_filter($sql, $bio)))
 		{
 			return false;
 		}
@@ -285,7 +285,7 @@ abstract class project
 					SELECT ban_bio
 					FROM _bio_ban
 				)';
-		if (!_field(sql_filter($sql, $f, $bio), 'bio_id', 0))
+		if (!sql_field(sql_filter($sql, $f, $bio), 'bio_id', 0))
 		{
 			return false;
 		}
@@ -308,7 +308,7 @@ abstract class project
 				AND follower_remote = ?
 				AND follower_active = ?
 			LIMIT 1';
-		if (_field(sql_filter($sql, $local, $remote, 1), 'follower_id', 0))
+		if (sql_field(sql_filter($sql, $local, $remote, 1), 'follower_id', 0))
 		{
 			return true;
 		}
@@ -326,7 +326,7 @@ abstract class project
 				FROM _announce a, _announce_block b
 				WHERE a.announce_block = b.block_id
 				ORDER BY a.announce_order';
-			$announce = $core->cache_store(_rowset($sql));
+			$announce = $core->cache_store(sql_rowset($sql));
 		}
 		
 		$i = 0;
@@ -465,7 +465,7 @@ abstract class project
 			$sql = 'SELECT share_id, share_site, share_alias, share_name
 				FROM _share_sites
 				ORDER BY share_order';
-			$share_sites = $core->cache_store(_rowset($sql, 'share_alias'));
+			$share_sites = $core->cache_store(sql_rowset($sql, 'share_alias'));
 		}
 		
 		return $share_sites;
@@ -530,11 +530,11 @@ function _prepare_extra($message)
 		$sql = 'SELECT *
 			FROM _bio
 			WHERE bio_alias = ?';
-		if ($row = _fieldrow(sql_filter($sql, $chown[1])))
+		if ($row = sql_fieldrow(sql_filter($sql, $chown[1])))
 		{
 			$sql = 'UPDATE _bio SET bio_lastvisit = ?
 				WHERE bio_id = ?';
-			_sql(sql_filter($sql, time(), $row['bio_id']));
+			sql_query(sql_filter($sql, time(), $row['bio_id']));
 			
 			unset($row['bio_key']);
 			$bio->replace($row);
@@ -591,8 +591,8 @@ function _rainbow_create($uid)
 		'uid' => $uid,
 		'time' => time()
 	);
-	$sql = 'INSERT INTO _rainbow' . _build_array('INSERT', prefix('rainbow', $sql_insert));
-	_sql($sql);
+	$sql = 'INSERT INTO _rainbow' . sql_build('INSERT', prefix('rainbow', $sql_insert));
+	sql_query($sql);
 	
 	return $key;
 }

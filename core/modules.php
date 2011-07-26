@@ -130,7 +130,7 @@ abstract class xmd extends project
 		return $var;
 	}
 	
-	final public function xlevel($arg = false)
+	final public function levels($arg = false)
 	{
 		if ($arg !== false)
 		{
@@ -326,8 +326,8 @@ abstract class xmd extends project
 				'author' => $proc['AUTHOR'],
 				'link' => $proc['LINK']
 			);
-			$sql = 'INSERT INTO _modules' . _build_array('INSERT', prefix('module', $sql_insert));
-			_sql($sql);
+			$sql = 'INSERT INTO _modules' . sql_build('INSERT', prefix('module', $sql_insert));
+			sql_query($sql);
 		}
 		
 		return;
