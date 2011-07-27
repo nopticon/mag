@@ -20,9 +20,10 @@ if (!defined('XFS')) exit;
 
 class core
 {
+	public $email;
+	
 	protected $input = array();
 	
-	public $email;
 	protected $config;
 	protected $sf;
 	
@@ -119,7 +120,7 @@ class core
 	
 	public function run($mod = false)
 	{
-		global $bio, $core, $warning;
+		global $bio, $core, $file, $warning;
 		
 		if (!$rewrite = enable_rewrite())
 		{
@@ -243,7 +244,7 @@ class core
 		}
 		
 		$browser_upgrade = false;
-		if (!$core->v('skip_browser_detect') && ($list_browser = get_file('./base/need_browser')))
+		if (!$core->v('skip_browser_detect') && ($list_browser = $file->read(XFS.XCOR . 'store/need_browser')))
 		{
 			$browser_list = w();
 			

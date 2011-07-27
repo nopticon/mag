@@ -203,27 +203,28 @@ function enable_rewrite()
 }
 
 function _tbrowser($tpl = '')
+{
+	if (!f($tpl))
 	{
-		if (!f($tpl))
+		$a = _browser();
+		$_a = array($a['type'] . '-' . $a['platform'] . '-' . $a['browser'] . '-' . $a['version'], $a['type'] . '-' . $a['platform'] . '-' . $a['browser'], $a['type'] . '-' . $a['platform'], $a['type']);
+		
+		foreach ($a as $row)
 		{
-			$a = _browser();
-			$_a = array($a['type'] . '-' . $a['platform'] . '-' . $a['browser'] . '-' . $a['version'], $a['type'] . '-' . $a['platform'] . '-' . $a['browser'], $a['type'] . '-' . $a['platform'], $a['type']);
-			
-			foreach ($a as $row)
+			if (@file_exists(XFS . XHTM . $row))
 			{
-				if (@file_exists(XFS . XHTM . $row))
-				{
-					$tpl = $row;
-					break;
-				}
+				$tpl = $row;
+				break;
 			}
 		}
-		
-		if (!f($tpl)) $tpl = 'desktop';
-		
-		return $tpl;
 	}
+	
+	if (!f($tpl)) $tpl = 'desktop';
+	
+	return $tpl;
+}
 
+//function msg_handler($errno, $msg_text, $errfile, $errline)
 function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno = 0)
 {
 	global $core, $file, $warning;
@@ -1560,7 +1561,10 @@ function _format_date($d = false, $f = false)
 
 function redirect($url, $i = true)
 {
+	global $warning;
+	
 	sql_close();
+	
 	$url = trim($url);
 	
 	// Prevent external domain injection
@@ -1571,7 +1575,7 @@ function redirect($url, $i = true)
 			$url_path = parse_url($url, PHP_URL_HOST);
 			if ($url_path === false || $url_path != get_host())
 			{
-				_fatal();
+				$warning->fatal();
 			}
 		}
 		else
@@ -1656,7 +1660,7 @@ function is_remote($f = 'cache_skip')
 {
 	$is_remote = true;
 	
-	if ($host_list = get_file(XFS . 'core/conf/' . $f))
+	if ($host_list = get_file(XFS.XCOR . 'conf/' . $f))
 	{
 		foreach ($host_list as $row)
 		{
@@ -1824,8 +1828,6 @@ function _auth_get($name, $uid = false, $global = false)
 	
 	return $bio->auth_get($name, $uid, $global);
 }
-
-
 
 function _browser($a_browser = false, $a_version = false, $name = false, $d_name = false)
 {

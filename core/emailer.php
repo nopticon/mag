@@ -28,7 +28,7 @@ class emailer
 	private $from;
 	private $format;
 	
-	private $tpl_msg = array();
+	private $template = array();
 	
 	public function __construct()
 	{
@@ -64,8 +64,6 @@ class emailer
 		}
 		
 		$this->vars = $vars;
-		
-		
 		
 		return;
 	}
@@ -103,50 +101,33 @@ class emailer
 
 	public function use_template($template)
 	{
-		global $core;
+		global $bio, $core, $database;
 		
-		$template_parts = explode('/', $template);
+		$template_parts = array_map('trim', explode('/', $template));
 		
-		if (isset($template_parts[0]))
+		$template_file = (isset($template_parts[0])) ? $template_parts[0] : 'default';
+		$template_lang = ($bio->v('bio_lang')) ? $bio->v('bio_lang') : $core->v('site_lang');
+		
+		if (!isset($this->template[$template_lang][$template_file]))
 		{
-			$template_file = $template_parts[0];
-		}
-		
-		if (isset($template_parts[1]))
-		{
-			$template_lang = $template_parts[1];
-		}
-		
-		if (empty($template_file))
-		{
-			$template_file = 'default';
-		}
-		
-		if (empty($template_lang))
-		{
-			$template_lang = $core->v('site_lang');
-		}
-		
-		if (empty($this->tpl_msg[$template_lang . $template_file]))
-		{
-			$tpl_file = XFS.XCOR . 'lang/' . $template_lang . '/email/' . $template_file . '.txt';
-
-			if (!@file_exists($tpl_file))
+			// Load template
+			if (!$contents = $core->cache->load('email_' . $template_lang . '_' . $template_file))
 			{
-				trigger_error('Could not find email template file :: ' . $tpl_file);
+				$sql = 'SELECT *
+					FROM _email_template
+					WHERE email_template = ?
+						AND email_lang = ?';
+				if (!$contents = $core->cache->store(_rowset($sql, $template_file, $template_lang)))
+				{
+					$this->use_template();
+				}
 			}
-
-			if (!($fd = @fopen($tpl_file, 'r')))
-			{
-				trigger_error('Failed opening template file :: ' . $tpl_file);
-			}
-
-			$this->tpl_msg[$template_lang . $template_file] = fread($fd, filesize($tpl_file));
-			fclose($fd);
+			
+			$this->template[$template_lang][$template_file] = $contents;
 		}
-
-		$this->msg = $this->tpl_msg[$template_lang . $template_file];
-
+		
+		$this->message = $this->template[$template_lang][$template_file];
+		
 		return true;
 	}
 
@@ -155,29 +136,27 @@ class emailer
 		global $core, $bio;
 		
 		// Escape all quotes, else the eval will fail.
-		$this->msg = str_replace ("'", "\'", $this->msg);
-		$this->msg = preg_replace('#\{([a-z0-9\-_]*?)\}#is', "' . $\\1 . '", $this->msg);
-
-		// Set vars
-		reset ($this->vars);
-		while (list($key, $val) = each($this->vars)) 
+		$this->message = str_replace ("'", "\'", $this->message);
+		$this->message = preg_replace('#\{([a-z0-9\-_]*?)\}#is', "' . $\\1 . '", $this->message);
+		
+		foreach ($this->vars as $k => $v)
 		{
-			$$key = $val;
+			${$k} = $v;
 		}
 
 		eval("\$this->msg = '$this->msg';");
 
 		// Clear vars
-		foreach ($this->vars as $key => $val)
+		foreach ($this->vars as $k => $v)
 		{
-			unset($$key);
+			unset($$k);
 		}
 
 		// We now try and pull a subject from the email body ... if it exists,
 		// do this here because the subject may contain a variable
 		$drop_header = '';
 		$match = array();
-		if (preg_match('#^(Subject:(.*?))$#m', $this->msg, $match))
+		if (preg_match('#^(Subject:(.*?))$#m', $this->message, $match))
 		{
 			$this->subject = (trim($match[2]) != '') ? trim($match[2]) : (($this->subject != '') ? $this->subject : 'No Subject');
 			$drop_header .= '[\r\n]*?' . preg_quote($match[1], '#');
@@ -187,7 +166,7 @@ class emailer
 			$this->subject = (($this->subject != '') ? $this->subject : 'No Subject');
 		}
 
-		if (preg_match('#^(Charset:(.*?))$#m', $this->msg, $match))
+		if (preg_match('#^(Charset:(.*?))$#m', $this->message, $match))
 		{
 			$this->encoding = (trim($match[2]) != '') ? trim($match[2]) : _lang('ENCODING');
 			$drop_header .= '[\r\n]*?' . preg_quote($match[1], '#');
@@ -199,16 +178,45 @@ class emailer
 
 		if ($drop_header != '')
 		{
-			$this->msg = trim(preg_replace('#' . $drop_header . '#s', '', $this->msg));
+			$this->message = trim(preg_replace('#' . $drop_header . '#s', '', $this->message));
 		}
 
 		$to = $this->addresses['to'];
 
 		$cc = (isset($this->addresses['cc']) && count($this->addresses['cc'])) ? implode(', ', $this->addresses['cc']) : '';
 		$bcc = (isset($this->addresses['bcc']) && count($this->addresses['bcc'])) ? implode(', ', $this->addresses['bcc']) : '';
+		
+		if (empty($this->from))
+		{
+			$this->from = $core->v('site_email');
+		}
 
 		// Build header
-		$this->extra_headers = (($this->reply_to != '') ? "Reply-to: $this->reply_to\n" : '') . (($this->from != '') ? "From: $this->from\n" : "From: " . $core->v('site_email') . "\n") . "Return-Path: " . $core->v('site_email') . "\nMessage-ID: <" . md5(uniqid(time())) . "@" . get_host() . ">\nMIME-Version: 1.0\nContent-type: text/" . $this->eformat . "; charset=" . $this->encoding . "\nContent-transfer-encoding: 8bit\nDate: " . date('r', time()) . "\nX-Priority: 2\nX-MSMail-Priority: High\n" . $this->extra_headers . (($cc != '') ? "Cc: $cc\n" : '')  . (($bcc != '') ? "Bcc: $bcc\n" : ''); 
+		$headers = array();
+		
+		if (!empty($this->reply_to))
+		{
+			$headers[] = 'Reply-to: ' . $this->reply_to;
+		}
+		
+		if (!empty($this->from))
+		{
+			$headers[] = 'From: ' . $this->from;
+		}
+		
+		$headers[] = "Return-Path: " . $core->v('site_email');
+		$headers[] = "Message-ID: <" . md5(uniqid(time())) . "@" . get_host() . ">";
+		$headers[] = "MIME-Version: 1.0";
+		$headers[] = "Content-type: text/" . $this->format . "; charset=" . $this->encoding;
+		$headers[] = "Content-transfer-encoding: 8bit";
+		$headers[] = "Date: " . date('r', time());
+		$headers[] = "X-Priority: 2";
+		$headers[] = "X-MSMail-Priority: High";
+		
+		$this->extra_headers = implode("\n", $headers);
+		
+		
+		$this->extra_headers = $this->extra_headers . (($cc != '') ? "Cc: $cc\n" : '')  . (($bcc != '') ? "Bcc: $bcc\n" : ''); 
 
 		// Send message ... removed $this->encode() from subject for time being
 		$empty_to_header = ($to == '') ? true : false;
