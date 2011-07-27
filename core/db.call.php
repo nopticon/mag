@@ -156,8 +156,7 @@ function sql_rowset($sql, $a = false, $b = false, $g = false, $rt = MYSQL_ASSOC)
 	$arr = w();
 	while ($row = $database->fetchrow($result, $rt))
 	{
-		$z = ($b === false) ? $row : $row[$b];
-		$z = (object) $z;
+		$z = ($b === false) ? (object) $row : $row[$b];
 		
 		if ($a === false)
 		{
@@ -234,12 +233,19 @@ function sql_queries()
 	return $database->num_queries();
 }
 
-function sql_nextid($sql)
+function sql_query_nextid($sql)
 {
 	global $database;
 	
 	$database->query($sql);
 
+	return $database->nextid();
+}
+
+function sql_nextid()
+{
+	global $database;
+	
 	return $database->nextid();
 }
 
@@ -257,13 +263,6 @@ function sql_affectedrows()
 	global $database;
 	
 	return $database->affectedrows();
-}
-
-function sql_nextid()
-{
-	global $database;
-	
-	return $database->nextid();
 }
 
 function sql_escape($sql)

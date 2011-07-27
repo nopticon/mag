@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-define('LIB', '../lib/');
-
 // CONST
 define('LIB_ARTIST', 'a');
 define('LIB_BASE', 'm');

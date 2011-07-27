@@ -18,6 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
+function _import($filename, $object  = false)
+{
+	if (!$object) $object = $filename;
+	
+	require_once(XFS.XCOR . $filename . '.php');
+	
+	return new $object;
+}
+
 function html_encode($str, $multibyte = false)
 {
 	$result = trim(htmlentities(str_replace(array("\r\n", "\r", '\xFF'), array("\n", "\n", ' '), $str)));
@@ -38,7 +47,7 @@ function set_var(&$result, $var, $type, $multibyte = false, $regex = '')
 	
 	if ($type == 'string')
 	{
-		$result = htmlencode($result, $multibyte);
+		$result = html_encode($result, $multibyte);
 	}
 }
 
@@ -179,7 +188,7 @@ function enable_rewrite()
 {
 	global $core;
 	
-	if (!$rewrite = $core->cache_load('rewrite_enabled'))
+	if (!$rewrite = $core->cache->load('rewrite_enabled'))
 	{
 		ob_start();
 		phpinfo(INFO_MODULES);
@@ -187,7 +196,7 @@ function enable_rewrite()
 		ob_end_clean();
 		
 		$rewrite = strpos($contents, 'mod_rewrite') !== false;
-		$core->cache_store('rewrite_enabled', $rewrite);
+		$core->cache->store('rewrite_enabled', $rewrite);
 	}
 	
 	return $rewrite;
@@ -217,7 +226,7 @@ function _tbrowser($tpl = '')
 
 function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno = 0)
 {
-	global $file, $warning;
+	global $core, $file, $warning;
 	
 	sql_close();
 	
@@ -2010,7 +2019,7 @@ function _layout($template, $page_title = false, $v_custom = false)
 	// SQL History
 	if ($core->v('show_sql_history'))
 	{
-		foreach (_sql_history() as $i => $row)
+		foreach (sql_history() as $i => $row)
 		{
 			if (!$i) _style('sql_history');
 			

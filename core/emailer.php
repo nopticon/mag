@@ -20,44 +20,56 @@ if (!defined('XFS')) exit;
 
 class emailer
 {
-	private $msg;
+	private $message;
 	private $subject;
 	private $extra_headers;
 	private $addresses;
 	private $reply_to;
 	private $from;
-	private $htmle;
-	private $eformat;
+	private $format;
 	
 	private $tpl_msg = array();
 	
 	public function __construct()
 	{
-		$this->reset();
-		
-		$this->reply_to = '';
-		$this->from = '';
+		return $this->reset();
 	}
 	
 	// Resets all the data (address, template file, etc etc to default
 	public function reset()
 	{
+		$this->reply_to = '';
+		$this->from = '';
+		$this->vars = '';
+		$this->message = '';
+		$this->extra_headers = '';
 		$this->addresses = array();
-		$this->vars = $this->msg = $this->extra_headers = '';
-		$this->htmle = false;
-		$this->eformat = $this->format();
+		$this->format = 'html';
 	}
 	
-	public function init()
+	public function init($from, $template = '', $vars = array())
 	{
+		$this->from = trim($from);
+		
+		$template_parts = explode(':', $template);
+		
+		if (isset($template_parts[0]))
+		{
+			$this->use_template($template_parts[0]);
+		}
+		
+		if (isset($template_parts[1]))
+		{
+			$this->format = $template_parts[1];
+		}
+		
+		$this->vars = $vars;
+		
+		
+		
 		return;
 	}
 	
-	public function format($f = 'html')
-	{
-		$this->eformat = $f;
-	}
-
 	// Sets an email address to send to
 	public function email_address($address)
 	{
@@ -79,52 +91,49 @@ class emailer
 		$this->reply_to = trim($address);
 	}
 
-	public function from($address)
-	{
-		$this->from = trim($address);
-	}
-
-	public function set_subject($subject = '')
+	public function subject($subject = '')
 	{
 		$this->subject = trim(preg_replace('#[\n\r]+#s', '', $subject));
 	}
 	
-	public function set_decode($v = false)
-	{
-		$this->htmle = $v;
-	}
-
 	public function extra_headers($headers)
 	{
 		$this->extra_headers .= trim($headers) . "\n";
 	}
 
-	public function use_template($template_file, $template_lang = '')
+	public function use_template($template)
 	{
 		global $core;
-
-		if (trim($template_file) == '')
+		
+		$template_parts = explode('/', $template);
+		
+		if (isset($template_parts[0]))
 		{
-			trigger_error('No template file set');
+			$template_file = $template_parts[0];
 		}
-
-		if (trim($template_lang) == '')
+		
+		if (isset($template_parts[1]))
+		{
+			$template_lang = $template_parts[1];
+		}
+		
+		if (empty($template_file))
+		{
+			$template_file = 'default';
+		}
+		
+		if (empty($template_lang))
 		{
 			$template_lang = $core->v('site_lang');
 		}
-
+		
 		if (empty($this->tpl_msg[$template_lang . $template_file]))
 		{
-			$tpl_file = './base/lang/' . $template_lang . '/email/' . $template_file . '.txt';
+			$tpl_file = XFS.XCOR . 'lang/' . $template_lang . '/email/' . $template_file . '.txt';
 
-			if (!@file_exists(@realpath($tpl_file)))
+			if (!@file_exists($tpl_file))
 			{
-				$tpl_file = './base/lang/' . $core->v('site_lang') . '/email/' . $template_file . '.txt';
-
-				if (!@file_exists($tpl_file))
-				{
-					trigger_error('Could not find email template file :: ' . $tpl_file);
-				}
+				trigger_error('Could not find email template file :: ' . $tpl_file);
 			}
 
 			if (!($fd = @fopen($tpl_file, 'r')))
@@ -139,11 +148,6 @@ class emailer
 		$this->msg = $this->tpl_msg[$template_lang . $template_file];
 
 		return true;
-	}
-
-	public function assign_vars($vars)
-	{
-		$this->vars = (empty($this->vars)) ? $vars : $this->vars . $vars;
 	}
 
 	public function send()

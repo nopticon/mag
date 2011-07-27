@@ -389,7 +389,7 @@ class bio
 		return true;
 	}
 	
-	public function auth_replace($key, $value, $bio = false)
+	public function auth_replace2($key, $value, $bio = false)
 	{
 		$bio = $this->auth_bio($bio);
 		
@@ -401,7 +401,7 @@ class bio
 		return true;
 	}
 	
-	public function auth_remove($key, $bio = false)
+	public function auth_remove2($key, $bio = false)
 	{
 		$bio = $this->auth_bio($bio);
 		

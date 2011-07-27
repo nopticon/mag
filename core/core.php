@@ -22,7 +22,7 @@ class core
 {
 	protected $input = array();
 	
-	protected $email;
+	public $email;
 	protected $config;
 	protected $sf;
 	
@@ -32,7 +32,7 @@ class core
 			FROM _config';
 		$this->config = sql_rowset($sql, 'config_name', 'config_value');
 		
-		if ($this->v('site_disabled'))
+		if ($this->v('site_disable'))
 		{
 			exit('not_running');
 		}
@@ -80,30 +80,19 @@ class core
 		//
 		// Load additional objects.
 		//
-		$this->email = $this->import('emailer');
-		$this->cache = $this->import('cache');
+		$this->email = _import('emailer');
+		$this->cache = _import('cache');
 		
 		return;
 	}
 	
-	public function import($filename, $object  = false)
-	{
-		global $$object;
-		
-		if (!$object) $object = $filename;
-		
-		require_once(XFS . 'core/' . $filename . '.php');
-		
-		return new $object;
-	}
-	
 	public function v($k, $v = false, $nr = false)
 	{
-		$a = (isset($this->config[$k])) ? $this->config[$k] : false;
+		$a = (isset($this->config->$k)) ? $this->config->$k : false;
 		
 		if ($nr !== false && $v !== false)
 		{
-			$this->config[$k] = $v;
+			$this->config->$k = $v;
 			return $v;
 		}
 		
@@ -113,16 +102,16 @@ class core
 			
 			if ($a !== false)
 			{
-				$sql = 'UPDATE _config SET ' . _build_array('UPDATE', $sql_update) . sql_filter('
+				$sql = 'UPDATE _config SET ' . sql_build('UPDATE', $sql_update) . sql_filter('
 					WHERE config_name = ?', $k);
 			}
 			else
 			{
 				$sql_update['config_name'] = $k;
-				$sql = 'INSERT INTO _config' . _build_array('INSERT', $sql_update);
+				$sql = 'INSERT INTO _config' . sql_build('INSERT', $sql_update);
 			}
-			_sql($sql);
-			$this->config[$k] = $a = $v;
+			sql_query($sql);
+			$this->config->$k = $a = $v;
 		}
 		
 		return $a;

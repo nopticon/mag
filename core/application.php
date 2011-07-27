@@ -36,14 +36,14 @@ if (!defined('REQC'))
 	define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
 }
 
-require_once(XFS . XCOR . 'core.php');
+require_once(XFS.XCOR . 'functions.php');
 
-$core = new core();
-$database = $core->import('db.mysql');
-$style = $core->import('styles');
-$bio = $core->import('session');
-$warning = $core->import('warning');
-$file = $core->import('filesystem');
+$database = _import('db.mysql', 'database');
+$style = _import('styles', 'style');
+$bio = _import('session', 'bio');
+$core = _import('core');
+$warning = _import('warning');
+$file = _import('filesystem');
 
 if (!defined('XRUN'))
 {
