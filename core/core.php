@@ -140,13 +140,13 @@ class core
 			$sql = 'SELECT *
 				FROM _modules
 				WHERE module_alias = ?';
-			if (!$_module = $core->cache->store(sql_fieldrow($sql, $mod)))
+			if (!$_module = $core->cache->store(sql_fieldrow(sql_filter($sql, $mod))))
 			{
 				$warning->fatal();
 			}
 		}
 		
-		$_module->module_path = XFS.XCOR . '_'. $_module->module_path . '.php';
+		$_module->module_path = XFS.XCOR . '_'. $_module->module_path . $_module->module_basename;
 		
 		if (!@file_exists($_module->module_path))
 		{

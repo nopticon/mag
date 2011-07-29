@@ -54,7 +54,7 @@ function sql_filter()
 		$args = $args[0];
 	}
 	
-	$args = array_map('_escape', $args);
+	$args = array_map('sql_escape', $args);
 	
 	foreach ($args as $i => $row)
 	{

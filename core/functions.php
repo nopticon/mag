@@ -281,30 +281,21 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 				}
 				$sql_message = _utf8($sql_message);
 				
-				if (!$report_to = $file->read(XFS.XCOR . 'core/server_admin'))
-				
-				if (!$report_to = get_file(XFS . XCOR . 'store/server_admin')) {
+				if (!$report_to = $file->read(XFS.XCOR . 'store/server_admin')) {
 					$report_to = array(v_server('SERVER_ADMIN'));
 				}
 				
 				// Send report to server admins @ ./core/store/server_admin
 				if (count($report_to))
 				{
-					$core->email->init();
-					$core->email->send();
-					
-					$mail->SetFrom($report_to[0]);
-					
-					foreach ($report_to as $i => $row)
-					{
-						$ff = (!$i) ? 'Address' : 'CC';
-						$mail->{'Add' . $ff}($row);
-					}
-					
-					$mail->Subject = 'PHP/SQL error @ ' . get_host();
-					$mail->MsgHTML($sql_message);
-					$mail->AltBody = $sql_message;
-					$mail->Send();
+					/*
+					$core->email->init($report_to[0]);
+					$core->email->subject('PHP/SQL error @ ' . get_host());
+					$core->email->message($sql_message);
+					$core->email->send($report_to);
+					*/
+					echo $sql_message;
+					exit;
 				}
 			}
 			
