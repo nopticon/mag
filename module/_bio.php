@@ -98,16 +98,16 @@ class __bio extends xmd implements i_bio
 		
 		$v = $this->__(w('domain alias tab:home'));
 		
-		if (!f($v['domain']) && !f($v['alias']))
+		if (empty($v['domain']) && empty($v['alias']))
 		{
 			_fatal();
 		}
 		
-		if (f($v['domain']))
+		if (!empty($v['domain']))
 		{
 			$v['domain'] = $this->strip_domain($v['domain']);
 		}
-		elseif (f($v['alias']))
+		elseif (!empty($v['alias']))
 		{
 			$v['alias'] = _low($v['alias'], true);
 			
@@ -125,7 +125,7 @@ class __bio extends xmd implements i_bio
 				AND b.bio_active = ?
 				AND b.bio_type = t.type_id
 			LIMIT 1';
-		if (!$_bio = _fieldrow(sql_filter($sql, $v['alias'], $v['domain'], 1)))
+		if (!$_bio = sql_fieldrow(sql_filter($sql, $v['alias'], $v['domain'], 1)))
 		{
 			_fatal();
 		}
@@ -138,13 +138,13 @@ class __bio extends xmd implements i_bio
 					AND r.relation_alias = ?
 					AND r.relation_id = m.module_relation
 					AND p.publish_module = m.module_id';
-			if (!_field(sql_filter($sql, $_bio['bio_id'], $v['tab']), 'relation_id', 0))
+			if (!sql_field(sql_filter($sql, $_bio['bio_id'], $v['tab']), 'relation_id', 0))
 			{
 				_fatal();
 			}
 		}
 		
-		switch ($_bio['type_alias'])
+		switch ($_bio->type_alias)
 		{
 			case 'artist':
 			case 'page':
@@ -155,7 +155,7 @@ class __bio extends xmd implements i_bio
 						WHERE auth_local = ?
 							AND auth_remote = ?
 						LIMIT 1';
-					if (_field(sql_filter($sql, $_bio['bio_id'], $bio->v('bio_id'))))
+					if (sql_field(sql_filter($sql, $_bio->bio_id, $bio->v('bio_id'))))
 					{
 						$bio->v('auth_page', true);
 					}
@@ -167,7 +167,7 @@ class __bio extends xmd implements i_bio
 		
 		//
 		// Access Control
-		switch ($_bio['bio_access'])
+		switch ($_bio->bio_access)
 		{
 			case BIO_ACCESS_FOLLOWER:
 				if (!$bio->v('auth_member'))
@@ -175,7 +175,7 @@ class __bio extends xmd implements i_bio
 					_login();
 				}
 				
-				if (!$this->bio_follower($_bio['bio_id']) && !$bio->v('auth_page'))
+				if (!$this->bio_follower($_bio->bio_id) && !$bio->v('auth_page'))
 				{
 					_fatal();
 				}
@@ -214,11 +214,11 @@ class __bio extends xmd implements i_bio
 		$sql = 'SELECT bio_id, bio_alias, bio_name, bio_avatar, bio_avatar_up
 			FROM _bio b, _followers f
 			WHERE f.follower_local = ?
-				AND f.folloer_active = ?
+				AND f.follower_active = ?
 				AND f.follower_remote = b.bio_id
 			ORDER BY f.follower_top
 			LIMIT ??';
-		$followers = _rowset(sql_filter($sql, $_bio['bio_id'], 1, $_bio['bio_top_follow']));
+		$followers = sql_rowset(sql_filter($sql, $_bio->bio_id, 1, $_bio->bio_top_follow));
 		
 		foreach ($followers as $i => $row)
 		{
@@ -245,7 +245,7 @@ class __bio extends xmd implements i_bio
 					WHERE timeline_bio = ?
 					ORDER BY timeline_time DESC
 					LIMIT ??, ??';
-				$posts = _rowset();
+				$posts = sql_rowset();
 				break;
 			default:
 				$sql = 'SELECT *
@@ -254,7 +254,7 @@ class __bio extends xmd implements i_bio
 						AND timeline_module = ?
 					ORDER BY timeline_time DESC
 					LIMIT ??, ??';
-				$posts = _rowset();
+				$posts = sql_rowset();
 				break;
 		}
 		
@@ -265,20 +265,20 @@ class __bio extends xmd implements i_bio
 				AND r.relation_id = m.module_relation
 				AND p.publish_module = m.module_id
 			ORDER BY p.publish_time DESC';
-		$publish = _rowset(sql_filter($sql, $_bio['bio_id'], $v['tab']));
+		$publish = sql_rowset(sql_filter($sql, $_bio->bio_id, $v['tab']));
 		
 		foreach ($posts as $i => $row)
 		{
 			if (!$i) _style('timeline');
 			
-			$module = 'module_' . $row['module_alias'];
+			$module = 'module_' . $row->module_alias;
 			if (@method_exists($this, $module))
 			{
 				$this->{$module}($_bio, $row);
 			}
 			
 			//
-			$style->set_filenames(array('module' => 'modules/' . $row['module_alias'] . '.htm'));
+			$style->set_filenames(array('module' => 'modules/' . $row->module_alias . '.htm'));
 			$style->assign_var_from_handle('S_MODULE', 'module');
 			
 			_style('modules.row', _style_var('S_MODULE'));
@@ -291,7 +291,7 @@ class __bio extends xmd implements i_bio
 	{
 		// parse
 		
-		$d['video_added'] = _format_date($d['video_added']);
+		$d->video_added = _format_date($d->video_added);
 		return;
 	}
 	
@@ -300,8 +300,8 @@ class __bio extends xmd implements i_bio
 		// parse
 		
 		_style('notes', _vs(array(
-			'subject' => $note['note_subject'],
-			'message' => _message($note['note_content'])
+			'subject' => $note->note_subject,
+			'message' => _message($note->note_content)
 		), 'note'));
 		
 		return;
@@ -318,9 +318,9 @@ class __bio extends xmd implements i_bio
 	{
 		// parse dynamic
 		
-		_style('links_' . $a['rel_id'], _vs(array(
-			'name' => $row['link_name'],
-			'address' => $row['link_address']
+		_style('links_' . $a->rel_id, _vs(array(
+			'name' => $row->link_name,
+			'address' => $row->link_address
 		), 'link'));
 		
 		return;
@@ -350,7 +350,7 @@ class __bio extends xmd implements i_bio
 			WHERE picture_module = ?
 				AND picture_bio = ?
 			ORDER BY picture_order';
-		$pictures = _rowset(sql_filter($sql, $a['rel_id'], $a['rel_bio']));
+		$pictures = sql_rowset(sql_filter($sql, $a->rel_id, $a->rel_bio));
 		
 		foreach ($pictures as $row)
 		{
@@ -397,10 +397,10 @@ class __bio extends xmd implements i_bio
 			'draft' => (int) $v['draft'],
 			'ip' => $bio->v('ip')
 		);
-		$sql = 'INSERT INTO _bio_journal' . _build_array('INSERT', prefix('blog', $sql_insert));
-		$blog_id = _sql_nextid($sql);
+		$sql = 'INSERT INTO _bio_journal' . sql_build('INSERT', prefix('blog', $sql_insert));
+		$blog_id = sql_nextid($sql);
 		
-		$bio->notify_store('blog', $blog_id);
+		$bio->notify->store('blog', $blog_id);
 		
 		return redirect(_link('alias', $this->a('a_alias')));
 	}
@@ -417,13 +417,13 @@ class __bio extends xmd implements i_bio
 			FROM _bio_journal
 			WHERE blog_id = ?
 				AND blog_bio = ?';
-		if (!$blog = _fieldrow(sql_filter($sql, $v['id'], $this->a('bio_id'))))
+		if (!$blog = sql_fieldrow(sql_filter($sql, $v['id'], $this->a('bio_id'))))
 		{
 			_fatal();
 		}
 		
-		$subject = $blog['blog_subject'];
-		$content = $blog['blog_content'];
+		$subject = $blog->blog_subject;
+		$content = $blog->blog_content;
 		
 		if (_button())
 		{
@@ -441,19 +441,19 @@ class __bio extends xmd implements i_bio
 				'blog_ip' => $bio->v('ip'))
 			);
 			
-			$sql = 'UPDATE _bio_journal SET ' . _build_array('UPDATE', $sql_update) . sql_filter('
+			$sql = 'UPDATE _bio_journal SET ' . sql_build('UPDATE', $sql_update) . sql_filter('
 				WHERE blog_id = ?', $v['id']);
-			_sql($sql);
+			sql_query($sql);
 			
-			$bio->notify_store('blog', $v['id']);
+			$bio->notify->store('blog', $v['id']);
 			
 			redirect(_link('alias', array('alias' => $this->a('bio_alias'))));
 		}
 		
-		$this->navigation(array('alias' => $this->a['a_subdomain'], 'x1' => 'cp', 'x2' => $this->mode, 'x3' => $this->manage, 'id' => $topic_data['topic_id']), 'A_NEWS_EDIT');
+		$this->navigation(array('alias' => $this->a['a_subdomain'], 'x1' => 'cp', 'x2' => $this->mode, 'x3' => $this->manage, 'id' => $topic_data->topic_id), 'A_NEWS_EDIT');
 		
 		$response = array(
-			'action' => _link_bio('', array('x1' => $this->x(1), 'x2' => $this->x(2), 'x3' => $this->x(3), 'id' => $blog['blog_id'])),
+			'action' => _link_bio('', array('x1' => $this->x(1), 'x2' => $this->x(2), 'x3' => $this->x(3), 'id' => $blog->blog_id)),
 			'subject' => $subject,
 			'content' => $content
 		);
@@ -466,24 +466,22 @@ class __bio extends xmd implements i_bio
 		
 		$v = $this->__(array('id' => 0));
 		
-		if (!$v['id'])
-		{
+		if (!$v['id']) {
 			_fatal();
 		}
 		
 		$sql = 'SELECT blog_id
 			FROM _bio_journal
 			WHERE blog_id = ?';
-		if (!_field(sql_filter($sql, $v['id']), 'blog_id', 0))
-		{
+		if (!sql_field(sql_filter($sql, $v['id']), 'blog_id', 0)) {
 			_fatal();
 		}
 		
 		$sql = 'DELETE FROM _bio_journal
 			WHERE blog_id = ?';
-		_sql(sql_filter($sql, $v['id']));
+		sql_query(sql_filter($sql, $v['id']));
 		
-		$bio->notify_remove('blog', $v['id']);
+		$bio->notify->remove('blog', $v['id']);
 		
 		redirect(_link('a', $this->a['a_alias']));
 	}
@@ -511,23 +509,22 @@ class __bio extends xmd implements i_bio
 			if (!f($vv)) $this->_error('#NO_' . $k);
 		}
 		
-		$sql = 'SELECT *
+		$sql = 'SELECT post_id
 			FROM _bio_posts
 			WHERE post_id = ?
 				AND post_bio = ?';
-		if (!$post = _fieldrow(sql_filter($sql, $v['id'], $this->a('bio_id'))))
-		{
+		if (!$post = sql_fieldrow(sql_filter($sql, $v['id'], $this->a('bio_id')))) {
 			_fatal();
 		}
 		
 		$sql_update = array(
 			'post_content' => _prepare($v['content'])
 		);
-		$sql = 'UPDATE _bio_posts SET ' . _build_array('UPDATE', $sql_update) . sql_filter('
+		$sql = 'UPDATE _bio_posts SET ' . sql_build('UPDATE', $sql_update) . sql_filter('
 			WHERE post_id = ?', $v['id']);
-		_sql($sql);
+		sql_query($sql);
 		
-		return redirect(_link('alias', array('alias' => $this->a('a_alias'), 'messages', $post_data['post_id'])));
+		return redirect(_link('alias', array('alias' => $this->a('a_alias'), 'messages', $post->post_id)));
 	}
 	
 	public function _posts_remove()
@@ -536,30 +533,27 @@ class __bio extends xmd implements i_bio
 		
 		global $bio;
 		
-		if (!$bio->v('auth_bio_post_remove'))
-		{
+		if (!$bio->v('auth_bio_post_remove')) {
 			_fatal();
 		}
 		
 		$v = $this->__(array('id' => 0));
-		if (!$v['id'])
-		{
+		if (!$v['id']) {
 			_fatal();
 		}
 		
 		$sql = 'SELECT post_id
 			FROM _bio_posts
 			WHERE post_id = ?';
-		if (!_field(sql_filter($sql, $v['id']), 'post_id', 0))
-		{
+		if (!sql_field(sql_filter($sql, $v['id']), 'post_id', 0)) {
 			_fatal();
 		}
 		
 		$sql = 'DELETE FROM _bio_posts
 			WHERE post_id = ?';
-		_sql(sql_filter($sql, $v['id']));
+		sql_query(sql_filter($sql, $v['id']));
 		
-		$bio->notify_remove('posts', $v['id']);
+		$bio->notify->remove('posts', $v['id']);
 		
 		return redirect(_link('alias', array('alias' => $this->a('a_alias'))));
 	}
@@ -575,19 +569,18 @@ class __bio extends xmd implements i_bio
 		
 		$v = $this->__(array('alias' => 0));
 		
-		if (f($v['m']))
+		if (!empty($v['m']))
 		{
 			$sql = 'SELECT bio_id, bio_alias, bio_name
 				FROM _bio
 				WHERE bio_alias = ?';
-			if (!$_bio = _fieldrow(sql_filter($sql, $v['alias'])))
-			{
-				$this->_error('#NO_SUCH_BIO');
+			if (!$_bio = sql_fieldrow(sql_filter($sql, $v['alias']))) {
+				_fatal();
 			}
 			
 			v_style(array(
-				'BIO_NAME' => $_bio['bio_name'],
-				'BIO_LINK' => _link_bio($_bio['bio_alias']))
+				'BIO_NAME' => $_bio->bio_name,
+				'BIO_LINK' => _link_bio($_bio->bio_alias))
 			);
 			
 			//
@@ -597,12 +590,12 @@ class __bio extends xmd implements i_bio
 				WHERE record_assoc = ?
 					AND record_bio = ?
 				ORDER BY record_time DESC';
-			$records = _rowset($sql);
+			$records = sql_rowset($sql);
 			
 			$index = w();
 			foreach ($records as $row)
 			{
-				$index[$row['record_module']][] = $row['record_assoc'];
+				$index[$row->record_module][] = $row->record_assoc;
 			}
 			
 			foreach ($records as $i => $row)
@@ -631,7 +624,7 @@ class __bio extends xmd implements i_bio
 				
 				if (f($sql))
 				{
-					$records[$i]['sources'] = _rowset($sql);
+					$records[$i]['sources'] = sql_rowset($sql);
 				}
 			}
 		}
@@ -643,7 +636,7 @@ class __bio extends xmd implements i_bio
 					AND r.record_bio = b.bio_id
 				GROUP BY b.bio_id
 				ORDER BY b.bio_name';
-			$records = _rowset(sql_filter($sql, $this->data['ub']));
+			$records = sql_rowset(sql_filter($sql, $_bio->bio_id));
 			
 			$no_results = false;
 			$tcol = 0;
@@ -657,12 +650,12 @@ class __bio extends xmd implements i_bio
 				if (!$tcol) _style('members.row');
 				
 				_style('members.row.col', array(
-					'USER_ID' => $row['bio_id'],
-					'USERNAME' => $row['bio_name'],
+					'USER_ID' => $row->bio_id,
+					'USERNAME' => $row->bio_name,
 					'AVATAR' => _avatar($row),
 					'U_VIEWLOG' => _link_control('a', array('a' => $this->data['subdomain'], 'mode' => $this->mode, 'manage' => $this->manage, 'm' => $row['bio_id'])),
-					'TOTAL' => $row['total'],
-					'ACTION' => _lang('CONTROL_A_LOG_ACTION' . (($row['total'] == 1) ? '' : 'S')))
+					'TOTAL' => $row->total,
+					'ACTION' => _lang('CONTROL_A_LOG_ACTION' . (($row->total == 1) ? '' : 'S')))
 				);
 				
 				$tcol = ($tcol == 3) ? 0 : $tcol + 1;
@@ -691,9 +684,8 @@ class __bio extends xmd implements i_bio
 			WHERE a.auth_assoc = ?
 				AND a.auth_bio = b.bio_id
 			ORDER BY b.bio_name';
-		if (!$auth = _rowset(sql_filter($sql, $this->a('bio_id'))))
-		{
-			_style('no_auth');
+		if (!$auth = sql_rowset(sql_filter($sql, $this->a('bio_id')))) {
+			_fatal();
 		}
 		
 		foreach ($auth as $i => $row)
@@ -701,8 +693,8 @@ class __bio extends xmd implements i_bio
 			if (!$i) _style('auth');
 			
 			_style('auth.row', array(
-				'V_PROFILE' => _link_bio($row['bio_alias']),
-				'V_USERNAME' => $row['bio_name'],
+				'V_PROFILE' => _link_bio($row->bio_alias),
+				'V_USERNAME' => $row->bio_name,
 				'V_AVATAR' => _avatar($row),
 				'U_REMOVE' => _link('alias', array('alias' => $this->a('bio_alias'), 'x1' => $this->x(1), 'x2' => 'remove')))
 			);
@@ -731,26 +723,24 @@ class __bio extends xmd implements i_bio
 					SELECT ban_bio
 					FROM _bio_ban
 				)';
-		if (!$_bio = sql_fieldrow(sql_filter($sql, $v['alias'], 1)))
-		{
-			$this->warning->set('bio_not_exists');
+		if (!$_bio = sql_fieldrow(sql_filter($sql, $v['alias'], 1))) {
+			_fatal();
 		}
 		
 		$sql = 'SELECT auth_bio
 			FROM _bio_auth
 			WHERE auth_assoc = ?
 				AND auth_bio = ?';
-		if (sql_field(sql_filter($sql, $this->a('bio_id'), $_bio['bio_id']), 'auth_bio', 0))
-		{
+		if (sql_field(sql_filter($sql, $this->a('bio_id'), $_bio['bio_id']), 'auth_bio', 0)) {
 			$this->warning->ok();
 		}
 		
 		$sql_insert = array(
 			'auth_assoc' => $this->a('bio_id'),
-			'auth_bio' => $_bio['bio_id'],
+			'auth_bio' => $_bio->bio_id,
 			'auth_time' => time()
 		);
-		$sql = 'INSERT INTO _bio_auth' . _build_array('INSERT', $sql_insert);
+		$sql = 'INSERT INTO _bio_auth' . sql_build('INSERT', $sql_insert);
 		sql_query($sql);
 		
 		redirect(_link('alias', array('alias' => $this->a('bio_alias'), 'x1' => $this->x(1), 'x2' => $this->x(2))));
@@ -758,8 +748,7 @@ class __bio extends xmd implements i_bio
 	
 	protected function _permission_remove()
 	{
-		if (!is_ghost())
-		{
+		if (!is_ghost()) {
 			_fatal();
 		}
 		
@@ -768,8 +757,7 @@ class __bio extends xmd implements i_bio
 		$sql = 'SELECT bio_id
 			FROM _bio
 			WHERE bio_id = ?';
-		if (!_field(sql_filter($sql, $v['bio']), 'bio_id', 0))
-		{
+		if (!sql_field(sql_filter($sql, $v['bio']), 'bio_id', 0)) {
 			_fatal();
 		}
 		
@@ -777,15 +765,14 @@ class __bio extends xmd implements i_bio
 			FROM _bio_auth
 			WHERE auth_assoc = ?
 				AND auth_bio = ?';
-		if (!_field(sql_filter($sql, $v['bio']), 'auth_bio', 0))
-		{
+		if (!sql_field(sql_filter($sql, $v['bio']), 'auth_bio', 0)) {
 			_fatal();
 		}
 		
 		$sql = 'DELETE FROM _bio_auth
 			WHERE auth_assoc = ?
 				AND auth_bio = ?';
-		_sql(sql_filter($sql, $this->a('bio_id'), $v['bio']));
+		sql_query(sql_filter($sql, $this->a('bio_id'), $v['bio']));
 		
 		redirect(_link('alias', array('alias' => $this->a['a_alias'], 'x1' => $this->x(1), 'x2' => $this->x(2))));
 	}
@@ -809,7 +796,7 @@ class __bio extends xmd implements i_bio
 			WHERE b.bio_id = ?
 				AND b.bio_id = i.image_bio
 			ORDER BY i.image_id';
-		if (!$images = _rowset(sql_filter($sql, $this->a('bio_id'))))
+		if (!$images = sql_rowset(sql_filter($sql, $this->a('bio_id'))))
 		{
 			_style('empty', array(
 				'MESSAGE' => _lang('CONTROL_A_GALLERY_EMPTY'))
@@ -824,13 +811,13 @@ class __bio extends xmd implements i_bio
 			if (!$col) _style('gallery.row');
 			
 			_style('gallery.row.col', array(
-				'ITEM' => $row['image'],
-				'URL' => _link('a', array($this->data['subdomain'], 4, $row['image'], 'view')),
-				'IMAGE' => dd(false, true, true) . 'artists/' . $this->data['ub'] . '/thumbnails/' . $row['image'] . '.jpg',
-				'WIDTH' => $row['width'], 
-				'HEIGHT' => $row['height'],
-				'VIEWS' => $row['views'],
-				'DOWNLOADS' => $row['downloads'])
+				'ITEM' => $row->image,
+				'URL' => _link('a', array($bio->v('bio_alias'), 4, $row->image, 'view')),
+				'IMAGE' => dd(false, true, true) . 'artists/' . $bio->v('bio_id') . '/thumbnails/' . $row->image . '.jpg',
+				'WIDTH' => $row->width, 
+				'HEIGHT' => $row->height,
+				'VIEWS' => $row->views,
+				'DOWNLOADS' => $row->downloads)
 			);
 			
 			$col = ($col == 3) ? 0 : $col + 1;
@@ -848,13 +835,13 @@ class __bio extends xmd implements i_bio
 		
 		if (_button())
 		{
-			require_once(XFS . 'core/upload.php');
-			$upload = new upload();
+			$upload = _import('upload');
 			
+			// Start
 			$sql = 'SELECT MAX(image_id) AS total
 				FROM _bio_images
 				WHERE image_bio = ?';
-			$image = _field(sql_filter($sql, $this->a('bio_id')), 'total', 0) + 1;
+			$image = sql_field(sql_filter($sql, $this->a('bio_id')), 'total', 0) + 1;
 			
 			$upload->chmod(array(
 				_lib(LIB_BIO . ' ' . $this->a('bio_id'))
@@ -890,8 +877,8 @@ class __bio extends xmd implements i_bio
 						'downloads' => 0,
 						'allow_dl' => (int) $allow_dl
 					);
-					$sql = 'INSERT INTO _bio_images' . _build_array('INSERT', prefix('image', $sql_insert));
-					_sql($sql);
+					$sql = 'INSERT INTO _bio_images' . sql_build('INSERT', prefix('image', $sql_insert));
+					sql_query($sql);
 					
 					$image++;
 				}
@@ -926,9 +913,8 @@ class __bio extends xmd implements i_bio
 		{
 			$v = $this->__(array('picture' => array(0)));
 			
-			if (!count($v['picture']))
-			{
-				$this->_error('#NO_IMAGES');
+			if (!count($v['picture'])) {
+				_fatal();
 			}
 			
 			$sql = 'SELECT *
@@ -936,9 +922,8 @@ class __bio extends xmd implements i_bio
 				WHERE image_bio = ?
 					AND image_assoc IN (??)
 				ORDER BY image_id';
-			if (!$images = _rowset(sql_filter($sql, $this->a('bio_id'), _implode(',', $v['picture']))))
-			{
-				$this->_error('#NO_IMAGES');
+			if (!$images = sql_rowset(sql_filter($sql, $this->a('bio_id'), _implode(',', $v['picture'])))) {
+				_fatal();
 			}
 			
 			$filepath = array(
@@ -967,7 +952,11 @@ class __bio extends xmd implements i_bio
 					$delete_images = w();
 					do
 					{
-						$gfile = array($gallery_path . $row['image'] . '.jpg', $thumbs_path . $row['image'] . '.jpg');
+						$gfile = array(
+							$gallery_path . $row['image'] . '.jpg',
+							$thumbs_path . $row['image'] . '.jpg'
+						);
+						
 						foreach ($gfile as $image)
 						{
 							if (@is_file($image) && @is_readable($image))
@@ -1026,15 +1015,15 @@ class __bio extends xmd implements i_bio
 		
 		$v = $this->__(w('s'));
 		
-		$sql = 'SELECT a_bio
-			FROM _artists
-			WHERE ub = ?';
-		$a_bio = _field(sql_filter($sql, $this->data['ub']), 'a_bio', '');
+		$sql = 'SELECT bio_details
+			FROM _bio
+			WHERE bio_id = ?';
+		$details = sql_field(sql_filter($sql, $this->data['ub']), 'bio_details', '');
 		
 		$s_hidden = array('module' => $this->control->module, 'a' => $this->data['subdomain'], 'mode' => $this->mode, 'manage' => 'edit');
 		
 		v_style(array(
-			'MESSAGE' => $a_bio,
+			'MESSAGE' => $details,
 			'S_HIDDEN' => _hidden($s_hidden))
 		);
 		
@@ -1052,7 +1041,7 @@ class __bio extends xmd implements i_bio
 			
 			$sql = 'UPDATE _artists SET a_bio = ?
 				WHERE a_id = ?';
-			_sql(sql_filter($sql, _prepare($v['message']), $this->data['ub']));
+			sql_query(sql_filter($sql, _prepare($v['message']), $this->data['ub']));
 		}
 		
 		redirect(_link_control('a', array('a' => $this->data['subdomain'], 'mode' => $this->mode, 's' => 'u')));
@@ -1094,22 +1083,16 @@ class __bio extends xmd implements i_bio
 		global $bio;
 		
 		$sql = 'SELECT *, SUM(members + guests) AS total
-			FROM _artists_stats
-			WHERE ub = ' . (int) $this->data['ub'] . '
+			FROM _bio_stats
+			WHERE bio_id = ?
 			GROUP BY date
 			ORDER BY date DESC';
-		$result = $db->sql_query($sql);
-		
-		$stats = w();
-		while ($row = $db->sql_fetchrow($result))
-		{
-			$stats[$row['date']] = $row;
-		}
-		$db->sql_freeresult($result);
+		$stats = sql_rowset(sql_filter($sql, $bio->v('bio_id')), 'stats_date');
 		
 		$years_sum = w();
 		$years_temp = w();
 		$years = w();
+		
 		foreach ($stats as $date => $void)
 		{
 			$year = substr($date, 0, 4);
@@ -1189,46 +1172,39 @@ class __bio extends xmd implements i_bio
 		global $bio;
 		
 		$sql = 'SELECT *
-			FROM _dl
-			WHERE ub = ' . (int) $this->data['ub'] . '
+			FROM _bio_media
+			WHERE media_bio = ?
 			ORDER BY title';
-		$result = $db->sql_query($sql);
-		
-		if ($row = $db->sql_fetchrow($result))
-		{
-			$downloads_type = array(
-				1 => '/net/icons/browse.gif',
-				2 => '/net/icons/store.gif'
-			);
-			
-			_style('downloads');
-			
-			$tcol = 0;
-			do
-			{
-				if (!$tcol) _style('downloads.row');
-				
-				_style('downloads.row.col', array(
-					'ITEM' => $row['id'],
-					'URL' => _link_control('a', array('a' => $this->data['subdomain'], 'mode' => $this->mode, 'manage' => 'edit', 'd' => $row['id'])),
-					'POSTS_URL' => _link('a', array($this->data['subdomain'], 9, $row['id'])) . '#dpf',
-					'IMAGE_TYPE' => $downloads_type[$row['ud']],
-					'DOWNLOAD_TITLE' => $row['title'],
-					'VIEWS' => $row['views'],
-					'DOWNLOADS' => $row['downloads'],
-					'POSTS' => $row['posts'])
-				);
-				
-				$tcol = ($tcol == 2) ? 0 : $tcol + 1;
-			}
-			while ($row = $db->sql_fetchrow($result));
-			$db->sql_freeresult($result);
-		}
-		else
-		{
+		if (!$media = sql_rowset(sql_filter($sql, $bio->v('bio_id')))) {
 			_style('empty', array(
 				'MESSAGE' => _lang('CONTROL_A_DOWNLOADS_EMPTY'))
 			);
+		}
+		
+		$downloads_type = array(
+			1 => '/net/icons/browse.gif',
+			2 => '/net/icons/store.gif'
+		);
+		
+		$col = 0;
+		foreach ($media as $i => $row)
+		{
+			if (!$i) _style('downloads');
+			
+			if (!$col) _style('downloads.row');
+			
+			_style('downloads.row.col', array(
+				'ITEM' => $row->media_id,
+				'URL' => _link_control('a', array('a' => $this->data['subdomain'], 'mode' => $this->mode, 'manage' => 'edit', 'd' => $row['id'])),
+				'POSTS_URL' => _link('a', array($this->data['subdomain'], 9, $row['id'])) . '#dpf',
+				'IMAGE_TYPE' => $downloads_type[$row['ud']],
+				'DOWNLOAD_TITLE' => $row['title'],
+				'VIEWS' => $row['views'],
+				'DOWNLOADS' => $row['downloads'],
+				'POSTS' => $row['posts'])
+			);
+			
+			$col = ($col == 2) ? 0 : $col + 1;
 		}
 		
 		return;

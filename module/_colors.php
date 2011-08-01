@@ -30,8 +30,7 @@ class __colors extends xmd
 		global $core;
 		
 		$v = $this->__(w('url'));
-		if (!f($v['url']))
-		{
+		if (!f($v['url'])) {
 			$v['url'] = $core->v('site_address');
 		}
 		

@@ -1,0 +1,11 @@
+
+_objects table
+	
+	object_id
+	object_type
+	object_parent
+	object_subject
+	object_content
+	object_time
+	object_ip
+	object_bio 

@@ -65,20 +65,20 @@ class __ac extends xmd implements i_ac
 					AND b.bio_lastvisit < ?)
 				)
 			ORDER BY b.bio_name';
-		$sessions = _rowset(sql_filter($sql));
+		$sessions = sql_rowset(sql_filter($sql));
 		
 		$i = 0;
 		foreach ($sessions as $row)
 		{
 			// Guest
-			if ($row['bio_id'] == 1)
+			if ($row->bio_id == 1)
 			{
-				if ($row['session_ip'] != $last_ip)
+				if ($row->session_ip != $last_ip)
 				{
 					$totals['guest']++;
 				}
 				
-				$last_ip = $row['session_ip'];
+				$last_ip = $row->session_ip;
 				continue;
 			}
 			
@@ -93,9 +93,9 @@ class __ac extends xmd implements i_ac
 			// Member
 			if ($row['bio_id'] != $last_bio_id)
 			{
-				$is_bot = isset($bots[$row['bio_id']]);
+				$is_bot = isset($bots[$row->bio_id]);
 				
-				if ($row['bio_show'])
+				if ($row->bio_show)
 				{
 					if (!$is_bot)
 					{
@@ -107,17 +107,17 @@ class __ac extends xmd implements i_ac
 					$totals['hidden']++;
 				}
 				
-				if ((!$is_bot && ($row['bio_show'] || $bio->v('auth_founder'))) || ($is_bot && $bio->v('auth_founder')))
+				if ((!$is_bot && ($row->bio_show || $bio->v('auth_founder'))) || ($is_bot && $bio->v('auth_founder')))
 				{
 					_style('online.list.row', array(
-						'USERNAME' => $row['bio_name'],
-						'PROFILE' => _link_bio($row['bio_alias']))
+						'USERNAME' => $row->bio_name,
+						'PROFILE' => _link_bio($row->bio_alias))
 					);
 				}
 			}
 			
 			//
-			$last_bio_id = $row['bio_id'];
+			$last_bio_id = $row->bio_id;
 			$i++;
 		}
 		
@@ -149,7 +149,7 @@ class __ac extends xmd implements i_ac
 			WHERE s.session_time >= ??
 				AND b.bio_id = s.session_bio
 			ORDER BY b.bio_name, s.session_ip';
-		$this->f_connected(sql_filter($sql, ($local_time[0] - 300)), 'online', 'MEMBERS_ONLINE');
+		$this->connected(sql_filter($sql, ($local_time[0] - 300)), 'online', 'MEMBERS_ONLINE');
 		
 		// Today online
 		$sql = 'SELECT bio_id, bio_alias, bio_name, bio_show, bio_level
@@ -158,7 +158,7 @@ class __ac extends xmd implements i_ac
 				AND bio_lastvisit >= ?
 				AND bio_lastvisit < ?
 			ORDER BY bio_name';
-		$this->f_connected(sql_filter($sql, _implode(',', w(USER_INACTIVE)), $time_today, ($time_today + 86399)), 'online', 'MEMBERS_TODAY', 'MEMBERS_VISIBLE');
+		$this->connected(sql_filter($sql, _implode(',', w(USER_INACTIVE)), $time_today, ($time_today + 86399)), 'online', 'MEMBERS_TODAY', 'MEMBERS_VISIBLE');
 		
 		return;
 	}
@@ -172,7 +172,17 @@ class __ac extends xmd implements i_ac
 			$bots = get_bots();
 		}
 		
-		foreach (array('last_bio_id' => 0, 'users_visible' => 0, 'users_hidden' => 0, 'users_guests' => 0, 'users_bots' => 0, 'last_ip' => '', 'users_online' => 0) as $k => $v)
+		$fields = array(
+			'last_bio_id' => 0,
+			'users_visible' => 0,
+			'users_hidden' => 0,
+			'users_guests' => 0,
+			'users_bots' => 0,
+			'users_online' => 0,
+			'last_ip' => ''
+		);
+		
+		foreach ($fields as $k => $v)
 		{
 			$$k = $v;
 		}
@@ -180,30 +190,30 @@ class __ac extends xmd implements i_ac
 		_style($block, array('L_TITLE' => _lang($block_title)));
 		_style($block . '.members');
 		
-		$online = _rowset($sql);
+		$online = sql_rowset($sql);
 		
 		foreach ($online as $row)
 		{
 			// Guest
-			if ($row['bio_id'] == 1)
+			if ($row->bio_id == 1)
 			{
-				if ($row['session_ip'] != $last_ip)
+				if ($row->session_ip != $last_ip)
 				{
 					$users_guests++;
 				}
 				
-				$last_ip = $row['session_ip'];
+				$last_ip = $row->session_ip;
 				continue;
 			}
 			
 			// Member
-			if ($row['bio_id'] != $last_bio_id)
+			if ($row->bio_id != $last_bio_id)
 			{
-				$is_bot = isset($user_bots[$row['bio_id']]);
+				$is_bot = isset($user_bots[$row->bio_id]);
 				
-				if ($row['bio_show'])
+				if ($row->bio_show)
 				{
-					$username = $row['bio_name'];
+					$username = $row->bio_name;
 					if (!$is_bot)
 					{
 						$users_visible++;
@@ -211,20 +221,20 @@ class __ac extends xmd implements i_ac
 				}
 				else
 				{
-					$username = '*' . $row['bio_name'];
+					$username = '*' . $row->bio_name;
 					$users_hidden++;
 				}
 				
-				if ((($row['bio_show'] || $bio->v('auth_founder')) && !$is_bot) || ($is_bot && $bio->v('auth_founder')))
+				if ((($row->bio_show || $bio->v('auth_founder')) && !$is_bot) || ($is_bot && $bio->v('auth_founder')))
 				{
 					_style($block . '.members.item', array(
 						'USERNAME' => $username,
-						'PROFILE' => _link_bio($row['bio_alias']))
+						'PROFILE' => _link_bio($row->bio_alias))
 					);
 				}
 			}
 			
-			$last_bio_id = $row['bio_id'];
+			$last_bio_id = $row->bio_id;
 		}
 		
 		$users_total = (int) $users_visible + $users_hidden + $users_guests + $users_bots;

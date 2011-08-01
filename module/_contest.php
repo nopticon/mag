@@ -44,16 +44,16 @@ class __contest extends xmd implements i_contest
 			WHERE contest_start > ??
 				AND contest_end < ??
 			ORDER BY contest_start';
-		$contest = _rowset(sql_filter($sql, $now, $now));
+		$contest = sql_rowset(sql_filter($sql, $now, $now));
 		
 		foreach ($contest as $i => $row)
 		{
 			if (!$i) _style('contest');
 			
 			_style('contest.row', array(
-				'URL' => _link('contest', $row['contest_alias']),
-				'SUBJECT' => $row['contest_subject'],
-				'END' => _format_date($row['contest_end']))
+				'URL' => _link('contest', $row->contest_alias),
+				'SUBJECT' => $row->contest_subject,
+				'END' => _format_date($row->contest_end))
 			);
 		}
 		
