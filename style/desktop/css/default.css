@@ -1,7 +1,7 @@
 body {
 	margin: 10px;
 	padding: 0;
-	background: url(SPATH/pattern.jpg) fixed #262624;
+	background: url(DOMAIN/pattern.jpg) fixed #262624;
 }
 div, select {
 	cursor: default;
@@ -97,7 +97,7 @@ header h1 a {
 	display: block;
 	width: 268px;
 	height: 44px;
-	background: url(SPATH/logo-rk.gif) no-repeat;
+	background: url(DOMAIN/logo-rk.gif) no-repeat;
 	text-indent: -9000px;
 }
 header h1 a:hover {
@@ -124,28 +124,28 @@ nav ul li a:hover {
 	color: #BDA412;
 }
 #nav_today {
-	background: url(SPATH/m_today.png) bottom no-repeat;
+	background: url(DOMAIN/m_today.png) bottom no-repeat;
 }
 #nav_radio {
-	background: url(SPATH/m_radio.png) bottom no-repeat;
+	background: url(DOMAIN/m_radio.png) bottom no-repeat;
 }
 #nav_artists {
-	background: url(SPATH/m_artists.png) bottom no-repeat;
+	background: url(DOMAIN/m_artists.png) bottom no-repeat;
 }
 #nav_events {
-	background: url(SPATH/m_events.png) bottom no-repeat;
+	background: url(DOMAIN/m_events.png) bottom no-repeat;
 }
 #nav_board {
-	background: url(SPATH/m_board.png) bottom no-repeat;
+	background: url(DOMAIN/m_board.png) bottom no-repeat;
 }
 #nav_community {
-	background: url(SPATH/m_community.png) bottom no-repeat;
+	background: url(DOMAIN/m_community.png) bottom no-repeat;
 }
 #nav_partners {
-	background: url(SPATH/m_partner.png) bottom no-repeat;
+	background: url(DOMAIN/m_partner.png) bottom no-repeat;
 }
 #nav_create {
-	background: url(SPATH/m_create.png) bottom no-repeat;
+	background: url(DOMAIN/m_create.png) bottom no-repeat;
 }
 
 section.main {
