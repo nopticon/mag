@@ -17,10 +17,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 define('XFS', './');
-define('XMOD', 'module/');
-define('XCOR', 'core/');
-define('XHTM', 'style/');
-define('LIB', 'lib/');
+define('XMOD', 'controllers/');
+define('XCOR', 'libraries/');
+define('XHTM', 'views/');
+define('LIB', 'assets/');
 
 require_once(XFS.XCOR . 'application.php');
 

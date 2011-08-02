@@ -122,7 +122,7 @@ class __newsletter extends xmd implements i_newsletter
 			$emailer->use_template('mass');
 			
 			$emailer->format('plain');
-			$emailer->from('Rock Republik <press@rockrepublik.net>');
+			$emailer->from('press');
 			$emailer->set_subject(entity_decode($email['email_subject']));
 			$emailer->email_address($row['user_email']);
 			

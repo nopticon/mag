@@ -19,11 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 if (!defined('XFS')) exit;
 
 $lang = array(
-	'SITE_TITLE' => 'Rock Republik Networks',
-	'SITE_SHORT' => 'La comunidad m&aacute;s grande de rock guatemalteco e internacional con lo mejor en artistas, eventos, m&uacute;sica, radio 24 horas, foros, comunidad, noticias, promociones y mucho m&aacute;s!',
-	
-	'PAGE_HEADER' => 'MAG',
-	
 	// Pages
 	'US' => 'Qui&eacute;nes somos',
 	'HOME' => 'Inicio',
