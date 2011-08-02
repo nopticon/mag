@@ -25,8 +25,8 @@ class _pdf
 	
 	public function __construct()
 	{
-		require_once(XFS . 'core/pdf/pdf.extend.php');
-		require_once(XFS . 'core/pdf/pdf.core.php');
+		require_once(XFS.XCOR . 'pdf.extend.php');
+		require_once(XFS.XCOR . 'pdf.core.php');
 		
 		$this->cp = new Cezpdf();
 		

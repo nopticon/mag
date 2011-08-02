@@ -567,7 +567,7 @@ class bio
 		$tpl = _tbrowser($tpl);
 		
 		// Load UI template
-		$style->set_template('./style' . ((!empty($tpl)) ? '/' . $tpl : ''));
+		$style->set_template(XFS.XHTM . ((!empty($tpl)) ? $tpl : ''));
 		return;
 	}
 	
@@ -582,7 +582,7 @@ class bio
 			$d = $core->v('site_lang');
 		}
 		
-		$filepath = './base/lang/' . $d . '/' . $f . '.php';
+		$filepath = XFS.XCOR . 'lang/' . $d . '/' . $f . '.php';
 		if (@file_exists($filepath))
 		{
 			require_once($filepath);

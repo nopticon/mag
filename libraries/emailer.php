@@ -229,7 +229,7 @@ class emailer
 		
 		if ($core->v('mail_use_smtp'))
 		{
-			require_once(XFS . 'core/class.phpmailer.php');
+			require_once(XFS.XCOR . 'mail.smtp.php');
 			$mail = new PHPMailer(true);
 			
 			$mail->IsSMTP();

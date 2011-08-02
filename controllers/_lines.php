@@ -29,12 +29,11 @@ class __lines extends xmd
 	public function home()
 	{
 		$lines = w();
-		
-		$d = './';
+		$d = XFS;
 		
 		$this->proc($d, $lines, w('php htm css'), w('. .. .svn'));
 		
-		if (XFS != './') $this->proc(XFS . 'core/', $lines, w('php htm css'), w('. .. .svn'));
+		if (XFS != '../') $this->proc(XFS.XCOR, $lines, w('php htm css'), w('. .. .svn'));
 		
 		$total = 0;
 		foreach ($lines as $row)
@@ -53,7 +52,7 @@ class __lines extends xmd
 		{
 			if (in_array($row, $exc) || preg_match('/.*~/', $row)) continue;
 			
-			$dbase = $base . (($base != './') ? '/' : '') . $row;
+			$dbase = $base . (($base != XFS) ? '/' : '') . $row;
 			if (@is_dir($dbase)) $this->proc($dbase, $lines, $ext, $exc);
 			
 			$f_ext = _extension($row);

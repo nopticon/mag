@@ -151,8 +151,8 @@ class style
 		
 		$old_root = $this->root;
 		$root = str_replace('\\', '/', $root);
-		$this->cachedir = XFS . 'core/cache/';
-		$this->tpldir = './style/';
+		$this->cachedir = XFS.XCOR . 'cache/';
+		$this->tpldir = XFS.XHTM;
 		$this->tpldir_len = strlen($this->tpldir);
 		$this->root = $root;
 		$this->tpl = $this->template_name($root);

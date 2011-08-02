@@ -18,9 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-if (@file_exists('./module/project.php'))
+$project_file = XFS.XMOD . 'project.php';
+if (@file_exists($project_file))
 {
-	require_once('./module/project.php');
+	require_once($project_file);
 }
 
 if (!class_exists('project'))
@@ -415,13 +416,12 @@ abstract class xmd extends project
 			_fatal();
 		}
 		
-		$template = XFS . 'base/__imodule.php';
-		if (!@file_exists($template))
-		{
+		$template = XFS.XMOD . '__imodule.php';
+		if (!@file_exists($template)) {
 			_fatal();
 		}
 		
-		$base = './base/';
+		$base = XFS.XMOD;
 		if (@file_exists($base . '_' . $v['name'] . '.php'))
 		{
 			$this->e('Module already exists: ' . $v['name']);

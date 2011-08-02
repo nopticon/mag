@@ -73,7 +73,8 @@ class __cvm extends xmd
 			{
 				exec('ffmpeg -i ' . $row_wma . ' -vn -ar 44100 -ac 2 -ab 64kb -f mp3 ' . $row_mp3);
 				
-				include_once(XFS . 'core/getid3/getid3.php');
+				include_once(XFS.XCOR . 'getid3/getid3.php');
+				
 				$getID3 = new getID3;
 				$getID3->setOption(array('encoding' => $tag_format));
 				getid3_lib::IncludeDependency(GETID3_INCLUDEPATH.'write.php', __FILE__, true);

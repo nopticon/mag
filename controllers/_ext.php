@@ -38,7 +38,7 @@ class __ext extends xmd
 			_fatal();
 		}
 		
-		$location = './style/' . _tbrowser() . '/' . $v['e'] . '/';
+		$location = XFS.XHTM . _tbrowser() . '/' . $v['e'] . '/';
 		
 		if (!@is_dir($location))
 		{
@@ -146,7 +146,8 @@ class __ext extends xmd
 			case 'js':
 				$content_type = 'application/x-javascript';
 				
-				require_once(XFS . 'core/jsmin.php');
+				require_once(XFS.XCOR . 'jsmin.php');
+				
 				$ext = JSMin::minify($ext);
 				break;
 		}

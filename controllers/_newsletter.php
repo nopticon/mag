@@ -113,11 +113,7 @@ class __newsletter extends xmd implements i_newsletter
 				continue;
 			}
 			
-			if (!$i)
-			{
-				include(XFS . 'core/emailer.php');
-				$emailer = new emailer();
-			}
+			// TODO: New email calling
 			
 			$emailer->use_template('mass');
 			
@@ -138,7 +134,7 @@ class __newsletter extends xmd implements i_newsletter
 			$emailer->send();
 			$emailer->reset();
 			
-			fwrite_line('./mass.txt', $row['username'] . ' . ' . $row['user_email'] . ' . ' . $row['user_public_email'] . ' . ' . $user->format_date($row['user_lastvisit']));
+			fwrite_line(XFS.XCOR . 'store/newsletter', $row['username'] . ' . ' . $row['user_email'] . ' . ' . $row['user_public_email'] . ' . ' . $user->format_date($row['user_lastvisit']));
 			
 			sleep(2);
 			
@@ -343,7 +339,7 @@ class __newsletter extends xmd implements i_newsletter
 	
 	protected function _report_home()
 	{
-		$report = $this->implode('', @file('./mass.txt'));
+		$report = $this->implode('', @file(XFS.XCOR . 'store/newsletter'));
 		
 		$list = explode("\n", $report);
 		

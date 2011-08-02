@@ -21,6 +21,7 @@ if (!defined('XFS')) exit;
 class core
 {
 	public $email;
+	public $cache;
 	
 	protected $input = array();
 	
@@ -43,7 +44,7 @@ class core
 		
 		if ($host_addr != get_host())
 		{
-			$allow_hosts = get_file('./base/domain_alias');
+			$allow_hosts = get_file(XFS.XCOR . 'store/domain_alias');
 			
 			foreach ($allow_hosts as $row)
 			{
@@ -71,7 +72,7 @@ class core
 			redirect($a, false);
 		}
 		
-		$this->cache_dir = XFS . 'core/cache/';
+		$this->cache_dir = XFS.XCOR . 'cache/';
 		
 		if (is_remote() && @file_exists($this->cache_dir) && @is_writable($this->cache_dir) && @is_readable($this->cache_dir))
 		{

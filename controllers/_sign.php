@@ -248,9 +248,9 @@ class __sign extends xmd implements i_sign
 		}
 		
 		// GeoIP
-		require_once(XFS . 'core/geoip.php');
-		$gi = geoip_open(XFS . 'core/GeoIP.dat', GEOIP_STANDARD);
+		require_once(XFS.XCOR . 'geoip.php');
 		
+		$gi = geoip_open(XFS.XCOR . 'store/geoip.dat', GEOIP_STANDARD);
 		$geoip_code = strtolower(geoip_country_code_by_addr($gi, $bio->ip));
 		
 		$sql = 'SELECT *

@@ -60,7 +60,7 @@ class captcha
 	public function __construct()
 	{
 		$this->path = LIB . 'captcha/';
-		$this->data_directory = XFS . 'core/cache/xcf/';
+		$this->data_directory = XFS.XCOR . 'cache/xcf/';
 		
 		$images = $fonts = array();
 		

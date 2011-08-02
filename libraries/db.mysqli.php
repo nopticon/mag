@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-require_once(XFS . 'core/db.dcom.php');
+require_once(XFS.XCOR . 'db.dcom.php');
 
 class database extends dcom
 {
@@ -457,7 +457,7 @@ class database extends dcom
 			return;
 		}
 		
-		if (!$whitelist = get_file('./base/sql_history'))
+		if (!$whitelist = get_file(XFS.XCOR . 'store/sql_history'))
 		{
 			return;
 		}

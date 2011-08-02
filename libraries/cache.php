@@ -28,7 +28,7 @@ class cache
 	{
 		$this->last = '';
 		$this->allow = false;
-		$this->folder = XFS . 'core/cache/';
+		$this->folder = XFS.XCOR . 'cache/';
 		
 		if (is_remote() && @file_exists($this->folder) && @is_readable($this->folder) && @is_writable($this->folder))
 		{

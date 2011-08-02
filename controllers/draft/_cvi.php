@@ -56,11 +56,10 @@ class __cvi extends xmd
 				@chmod($gallery, 0777);
 			}
 			
-			require_once(XFS . 'core/upload.php');
-			require_once(XFS . 'core/zip.php');
+			require_once(XFS.XCOR . 'upload.php');
+			require_once(XFS.XCOR . 'zip.php');
 			
-			if (!is_writable($original) || !is_writable($gallery))
-			{
+			if (!is_writable($original) || !is_writable($gallery)) {
 				exit;
 			}
 			

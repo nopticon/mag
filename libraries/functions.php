@@ -293,7 +293,7 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 					$report_to = array(v_server('SERVER_ADMIN'));
 				}
 				
-				// Send report to server admins @ ./core/store/server_admin
+				// Send report to server admins @ XFS.XCOR . store/server_admin
 				if (count($report_to))
 				{
 					/*

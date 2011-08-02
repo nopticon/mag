@@ -457,7 +457,7 @@ class database extends dcom
 			return;
 		}
 		
-		if (!$whitelist = get_file('./base/sql_history'))
+		if (!$whitelist = get_file(XFS.XCOR . 'store/sql_history'))
 		{
 			return;
 		}
