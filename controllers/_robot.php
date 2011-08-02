@@ -25,7 +25,7 @@ interface i_robot
 	public function mfeed();
 	public function optimize();
 	public function contest();
-	public function newsletter();
+	public function press();
 }
 
 class __robot extends xmd implements i_robot
@@ -35,7 +35,7 @@ class __robot extends xmd implements i_robot
 		parent::__construct();
 		
 		$this->auth(false);
-		$this->_m(_array_keys(w('birthday mfeed optimize contest newsletter')));
+		$this->_m(_array_keys(w('birthday mfeed optimize contest press')));
 	}
 	
 	public function home()
@@ -145,12 +145,12 @@ class __robot extends xmd implements i_robot
 		return;
 	}
 	
-	public function newsletter()
+	public function press()
 	{
 		return $this->method();
 	}
 	
-	protected function _newsletter()
+	protected function _press_home()
 	{
 		global $bio;
 		
@@ -176,7 +176,7 @@ class __robot extends xmd implements i_robot
 			RIGHT JOIN _bio_newsletter bn ON b.bio_id = bn.newsletter_bio
 				AND bn.newsletter_receive = ? 
 			WHERE b.bio_lastvisit >= ?
-				AND b.bio_blocked = ?
+				AND b.bio_status <> ?
 			ORDER BY b.bio_name
 			LIMIT ??, ??';
 		
@@ -186,7 +186,7 @@ class __robot extends xmd implements i_robot
 				AND country_id IN (??)', implode(', ', w($newsletter->newsletter_country)));
 		}
 		
-		$members = _rowset(sql_filter($sql, $sql_country, 1, $newsletter['newsletter_lastvisit'], 0, $newsletter->newsletter_last, $core->v('newsletter_process')));
+		$members = _rowset(sql_filter($sql, $sql_country, 1, $newsletter['newsletter_lastvisit'], 2, $newsletter->newsletter_last, $core->v('newsletter_process')));
 		
 		$i = 0;
 		foreach ($members as $row)

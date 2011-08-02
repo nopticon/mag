@@ -8,3 +8,13 @@ Apache Virtualhost configuration
 Public access
 
 /var/www/vhosts/bio/mag/assets/
+
+----------------------------------------------------------
+TEMP OLD HTACCESS CODE
+
+RewriteRule ^forum/([a-z]+)/?([0-9]+)/?$ http://mag.localhost/board/$1/s:$2/ [R=301,L]
+RewriteRule ^(topic|post)/([a-z0-9]+)/(s([0-9]+)/)?$ http://mag.localhost/board/$1/$2/s:$4/ [R=301,L]
+RewriteRule ^m/([0-9a-z\_\-]+)/?(([a-z]+)/?)?$ http://$1.rockbio.com/page:$3/ [R=301,L]
+RewriteRule ^a/([0-9a-z]+)/?(([0-9]+)/?)?$ http://$1.rockbio.com/page:$3 [R=301,L]
+RewriteRule ^a/([0-9a-z]+)/9/([0-9]+)/$ http://$1.rockbio.com/page:music.s:$2 [R=301,L]
+RewriteRule ^a/?$ http://mag.localhost/artists/ [R=301,L]

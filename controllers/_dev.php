@@ -31,6 +31,7 @@ interface i_dev
 	public function uptime();
 	public function random();
 	public function emoticon();
+	public function fetch();
 }
 
 class __dev extends xmd implements i_dev
@@ -40,7 +41,7 @@ class __dev extends xmd implements i_dev
 		parent::__construct();
 		
 		$this->auth(false);
-		$this->_m(_array_keys(w('artists corp emoticon feed jobs uptime random services tos')));
+		$this->_m(_array_keys(w('artists corp emoticon feed fetch jobs uptime random services tos')));
 	}
 	
 	public function home()
@@ -483,7 +484,7 @@ class __dev extends xmd implements i_dev
 	
 	public function feed()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _feed_home()
@@ -578,7 +579,7 @@ class __dev extends xmd implements i_dev
 	
 	public function random()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _random_home()
@@ -643,6 +644,36 @@ class __dev extends xmd implements i_dev
 				'DESC' => $row->emoticon)
 			);
 		}
+		
+		return;
+	}
+	
+	public function fetch()
+	{
+		return $this->method();
+	}
+	
+	protected function _fetch_home()
+	{
+		global $bio, $warning;
+		
+		$v = $this->__(w('alias filename ext'));
+		if (empty($v->alias) || empty($v->filename)) {
+			$warning->now();
+		}
+		
+		$sql = 'SELECT *
+			FROM _fetch
+			WHERE fetch_alias = ?';
+		if (!$fetch = sql_fieldrow(sql_filter($sql, $v->filename))) {
+			$warning->now();
+		}
+		
+		if ($fetch->fetch_login) {
+			$bio->login();
+		}
+		
+		$filepath = LIB . 'fetch/' . _filename($fetch->fetch_id, $fetch->fetch_extension);
 		
 		return;
 	}
