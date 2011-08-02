@@ -54,7 +54,7 @@ alarm_email
 bio_id
 bio_type
 bio_stype
-bio_active
+bio_status
 bio_alias
 bio_name
 bio_key

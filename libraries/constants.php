@@ -18,37 +18,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-$starttime = explode(' ', microtime());
-$starttime = $starttime[1] + $starttime[0];
+define('LIB_ARTIST', 'a');
+define('LIB_BASE', 'm');
+define('LIB_EVENT', 'e');
+define('LIB_AVATAR', 'd');
+define('LIB_NEWS', 'n');
+define('LIB_RADIO', 'r');
+define('LIB_VISUAL', 'v');
 
-error_reporting(E_ALL);
+define('LIB', 'assets/');
 
-if (@ini_get('register_globals'))
-{
-	foreach ($_REQUEST as $var_name => $void)
-	{
-		unset(${$var_name});
-	}
-}
-
-if (!defined('REQC'))
-{
-	define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
-}
-
-require_once(XFS.XCOR . 'constants.php');
-require_once(XFS.XCOR . 'functions.php');
-
-$database = _import('db.mysql', 'database');
-$style = _import('style');
-$bio = _import('bio');
-$core = _import('core');
-$warning = _import('warning');
-$file = _import('filesystem');
-
-if (!defined('XRUN'))
-{
-	$core->run();
-}
+define('XMOD', 'controllers/');
+define('XHTM', 'views/');
 
 ?>

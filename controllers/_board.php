@@ -47,12 +47,12 @@ class __board extends xmd implements i_board
 		
 		$v = $this->__(array('f', 's' => 0));
 		
-		if (!empty($v['f']))
+		if (!empty($v->f))
 		{
 			$sql = 'SELECT *
 				FROM _board_forums
 				WHERE forum_alias = ?';
-			if (!$forum = sql_fieldrow(sql_filter($sql, $v['f']))) {
+			if (!$forum = sql_fieldrow(sql_filter($sql, $v->f))) {
 				_fatal();
 			}
 			
@@ -83,7 +83,7 @@ class __board extends xmd implements i_board
 					AND p2.post_id = t.topic_last_post_id
 				ORDER BY t.topic_important DESC, t.topic_last_post_id DESC
 				LIMIT ??, ??';
-			$topics = sql_rowset(sql_filter($sql, $forum->forum_id, $v['s'], $core->v('topics_per_page')));
+			$topics = sql_rowset(sql_filter($sql, $forum->forum_id, $v->s, $core->v('topics_per_page')));
 			
 			//
 			// Popular topics
@@ -98,7 +98,7 @@ class __board extends xmd implements i_board
 			{
 				if (!$i)
 				{
-					$pagination = _pagination(_link('board', $forum->forum_alias), 's:%d', $forum->forum_topics, $core->v('topics_per_page'), $v['s']);
+					$pagination = _pagination(_link('board', $forum->forum_alias), 's:%d', $forum->forum_topics, $core->v('topics_per_page'), $v->s);
 					
 					_style('topics', array_merge($pagination, array(
 						'ALIAS' => $forum->forum_alias))
@@ -193,8 +193,8 @@ class __board extends xmd implements i_board
 		
 		$v = $this->__(_array_keys(w('t p s'), 0));
 		
-		if (!$v['t'] && !$v['p']) {
-			_fatal();
+		if (!$v->t && !$v->p) {
+			$warning->now();
 		}
 		
 		$sql_from = $sql_where = $sql_count = $sql_order = '';
@@ -202,10 +202,10 @@ class __board extends xmd implements i_board
 		if ($v['p']) {
 			$sql_count = ', COUNT(p2.post_id) AS prev_posts, p.post_deleted';
 			$sql_from = ', _board_posts p, _board_posts p2, _bio b ';
-			$sql_where = sql_filter('p.post_id = ? AND p.poster_id = b.bio_id AND t.topic_id = p.topic_id AND p2.topic_id = p.topic_id AND p2.post_id <= ?', $v['p'], $v['p']);
+			$sql_where = sql_filter('p.post_id = ? AND p.poster_id = b.bio_id AND t.topic_id = p.topic_id AND p2.topic_id = p.topic_id AND p2.post_id <= ?', $v->p, $v->p);
 			$sql_order = ' GROUP BY p.post_id, t.topic_id, t.topic_title, t.topic_locked, t.topic_replies, t.topic_time, t.topic_important, t.topic_vote, t.topic_last_post_id, f.forum_name, f.forum_locked, f.forum_id, f.auth_view, f.auth_read, f.auth_post, f.auth_reply, f.auth_announce, f.auth_pollcreate, f.auth_vote ORDER BY p.post_id ASC';
 		} else {
-			$sql_where = sql_filter('t.topic_id = ?', $v['t']);
+			$sql_where = sql_filter('t.topic_id = ?', $v->t);
 		}
 		
 		$sql = 'SELECT t.*, f.*' . $sql_count . '
@@ -215,22 +215,22 @@ class __board extends xmd implements i_board
 			_fatal();
 		}
 		
-		$v['f'] = $topic_data->forum_id;
-		$v['t'] = $topic_data->topic_id;
+		$v->f = $topic_data->forum_id;
+		$v->t = $topic_data->topic_id;
 		
 		//
-		if ($v['p']) {
-			$v['s'] = floor(($topic_data->prev_posts - 1) / (int) $core->v('posts_per_page')) * (int) $core->v('posts_per_page');
+		if ($v->p) {
+			$v->s = floor(($topic_data->prev_posts - 1) / (int) $core->v('posts_per_page')) * (int) $core->v('posts_per_page');
 		}
 		
 		//
 		// Update the topic views
 		/*
-		if (!$v['offset'] && !$bio->v('auth_founder') && $bio->v('auth_member') && ($topic_data['topic_poster'] != $bio->v('bio_id')))
+		if (!$v->offset && !$bio->v('auth_founder') && $bio->v('auth_member') && ($topic_data['topic_poster'] != $bio->v('bio_id')))
 		{
 			$sql = 'UPDATE _forum_topics SET topic_views = topic_views + 1
 				WHERE topic_id = ?';
-			_sql(sql_filter($sql, $v['t']));
+			_sql(sql_filter($sql, $v->t));
 		}
 		*/
 		
@@ -242,7 +242,7 @@ class __board extends xmd implements i_board
 				AND p.post_bio = b.bio_id
 			ORDER BY p.post_time ASC
 			LIMIT ??, ??';
-		if (!$posts = sql_rowset(sql_filter($sql, $v['t'], $v['offset'], $core->v('posts_per_page')))) {
+		if (!$posts = sql_rowset(sql_filter($sql, $v->t, $v->offset, $core->v('posts_per_page')))) {
 			_fatal();
 		}
 		
@@ -254,7 +254,7 @@ class __board extends xmd implements i_board
 		
 		foreach ($posts as $i => $row)
 		{
-			if (!$i) _style('posts', _pagination(_link('board', array('topic', $v['t'], 's%d')), ($topic_data->topic_replies + 1), $core->v('posts_per_page'), $start));
+			if (!$i) _style('posts', _pagination(_link('board', array('topic', $v->t, 's%d')), ($topic_data->topic_replies + 1), $core->v('posts_per_page'), $start));
 			
 			$_row = array(
 				'ID' => $row->post_id,
@@ -274,12 +274,12 @@ class __board extends xmd implements i_board
 		
 		// TODO: Include social networks buttons
 		
-		$this->set_nav($v['f'], $topic_data->forum_name, 'forum');
-		$this->set_nav($v['t'], $topic_data->topic_title, 'topic');
+		$this->set_nav($v->f, $topic_data->forum_name, 'forum');
+		$this->set_nav($v->t, $topic_data->topic_title, 'topic');
 		
 		//
-		$_v = ($v['p']) ? 'p' : 'f';
-		$_w = ($v['p']) ? 'p' : 't';
+		$_v = ($v->p) ? 'p' : 'f';
+		$_w = ($v->p) ? 'p' : 't';
 		
 		v_style(array(
 			'U_PUBLISH' => _link('board publish'),
@@ -313,116 +313,116 @@ class __board extends xmd implements i_board
 	{
 		global $bio;
 		
-		$v = $this->__(array_merge(w('address key subject content playing'), _array_keys(w('f p'), 0)));
+		$v = $this->__(w('address key subject content playing f 0 p 0'));
 		
 		// TODO: Implement bio authorization
-		$this->_bio_publish($v['address'], $v['key']);
+		$this->_bio_publish($v->address, $v->key);
 		
 		//
-		if (!$v['forum'] && !$v['post']) {
-			_fatal();
+		if (!$v->forum && !$v->post) {
+			$warning->now();
 		}
 		
-		if ($v['forum']) {
-			if (!f($v['subject'])) {
+		if ($v->forum) {
+			if (empty($v->subject)) {
 				$this->_error('NO_TOPIC_SUBJECT');
 			}
 			
 			$sql = 'SELECT *
 				FROM _board_forums
 				WHERE forum_id = ?';
-			if (!$forum = sql_fieldrow(sql_filter($sql, $v['forum']))) {
-				_fatal();
+			if (!$forum = sql_fieldrow(sql_filter($sql, $v->forum))) {
+				$warning->now();
 			}
 			
-			$v['subject'] = _subject($v['subject']);
+			$v->subject = _subject($v->subject);
 		}
 		else
 		{
 			$sql = 'SELECT *
 				FROM _board_posts
 				WHERE post_id = ?';
-			if (!$post = sql_fieldrow(sql_filter($sql, $v['post']))) {
-				_fatal();
+			if (!$post = sql_fieldrow(sql_filter($sql, $v->post))) {
+				$warning->now();
 			}
 			
 			$sql = 'SELECT *
 				FROM _board_topics
 				WHERE topic_id = ?';
 			if (!$topic = sql_fieldrow(sql_filter($sql, $post->post_topic))) {
-				_fatal();
+				$warning->now();
 			}
 		}
 		
-		if ($v['forum'])
+		if ($v->forum)
 		{
 			if ($forum->forum_locked && !$this->auth_forum($forum, 'create')) {
-				_fatal();
+				$warning->now();
 			}
 		}
 		
-		if (empty($v['content'])) {
+		if (empty($v->content)) {
 			$this->_error('NO_TOPIC_CONTENT');
 		}
 		
-		$v['content'] = _prepare($v['content']);
+		$v->content = _prepare($v->content);
 		
 		// Start insert transaction
-		_sql_trans();
+		sql_transaction();
 		
 		$sql_commit = false;
-		if ($v['forum']) {
+		if ($v->forum) {
 			// Insert topic
 			$sql_insert = array(
-				'forum' => $v['forum'],
-				'subject' => $v['subject'],
+				'forum' => $v->forum,
+				'subject' => $v->subject,
 				'author' => $bio->v('bio_id'),
 				'time' => time(),
 				'active' => $bio->v('bio_confirmed')
 			);
 			$sql = 'INSERT INTO _board_topics' . sql_build('INSERT', prefix('topic', $sql_insert));
-			$v['topic_next'] = sql_nextid($sql);
+			$v->topic_next = sql_nextid($sql);
 			
 			// Insert post
 			$sql_insert = array(
-				'forum' => $v['forum'],
-				'topic' => $v['topic_next'],
+				'forum' => $v->forum,
+				'topic' => $v->topic_next,
 				'parent' => 0,
 				'bio' => $bio->v('bio_id'),
 				'time' => time(),
 				'active' => $bio->v('bio_confirmed'),
-				'message' => $v['content'],
-				'playing' => $v['playing']
+				'message' => $v->content,
+				'playing' => $v->playing
 			);
 			$sql = 'INSERT INTO _board_posts' . sql_build('INSERT', prefix('post', $sql_insert));
-			$v['post_next'] = sql_nextid($sql);
+			$v->post_next = sql_nextid($sql);
 			
-			if ($v['topic_next'] && $v['post_next']) {
+			if ($v->topic_next && $v->post_next) {
 				$sql_commit = true;
 			}
 		}
 		else
 		{
 			$sql_insert = array(
-				'forum' => $topic['topic_forum'],
-				'topic' => $topic['topic_id'],
-				'parent' => $v['post'],
+				'forum' => $topic->topic_forum,
+				'topic' => $topic->topic_id,
+				'parent' => $v->post,
 				'bio' => $bio->v('bio_id'),
 				'time' => time(),
 				'active' => $bio->v('bio_confirmed'),
-				'message' => $v['content'],
-				'playing' => $v['playing']
+				'message' => $v->content,
+				'playing' => $v->playing
 			);
 			$sql = 'INSERT INTO _board_posts' . sql_build('INSERT', prefix('post', $sql_insert));
-			$v['post_next'] = sql_nextid($sql);
+			$v->post_next = sql_nextid($sql);
 			
 			$sql_update = w();
 			
 			$sql = 'UPDATE _board_topics SET topic_replies = topic_replies + 1' . sql_build('UPDATE', $sql_update) . sql_filter('
-				WHERE topic_id = ?', $topic['topic_id']);
+				WHERE topic_id = ?', $topic->topic_id);
 			$updated = sql_affected($sql);
 			
-			if ($v['post_next'] && $updated) {
+			if ($v->post_next && $updated) {
 				$sql_commit = true;
 			}
 		}
@@ -435,15 +435,15 @@ class __board extends xmd implements i_board
 		
 		sql_transaction('commit');
 		
-		if (is_ghost() && $v['post'])
+		if (is_ghost() && $v->post)
 		{
 			if ($bio->v('bio_confirmed'))
 			{
 				$response = array(
 					'show' => 1,
-					'parent' => $v['post'],
-					'post' => $v['post_next'],
-					'content' => _message($v['content']),
+					'parent' => $v->post,
+					'post' => $v->post_next,
+					'content' => _message($v->content),
 					'time' => _format_date(),
 					
 					'profile' => array(
@@ -462,7 +462,7 @@ class __board extends xmd implements i_board
 			$this->output(json_encode($response));
 		}
 		
-		return redirect(_link('board', array('topic', $v['topic'])));
+		return redirect(_link('board', array('topic', $v->topic)));
 	}
 }
 

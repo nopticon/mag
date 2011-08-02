@@ -56,6 +56,24 @@ abstract class xmd extends project
 		return;
 	}
 	
+	public function local($load)
+	{
+		foreach (w($load) as $row)
+		{
+			$filepath = XFS.XCOR . $row . '.php';
+			
+			if (!file_exists($filepath)) {
+				echo 'Unable to import: ' . $row;
+				exit;
+			}
+			
+			require_once($filepath);
+			
+			$this->$row = new $row;
+			return true;
+		}
+	}
+	
 	final public function default_method()
 	{
 		return $this->method();
@@ -255,8 +273,8 @@ abstract class xmd extends project
 		}
 		
 		// TODO: Convert all method calls to object.
-		//return (object) $a;
-		return $a;
+		return (object) $a;
+		//return $a;
 	}
 	
 	// Throw an error excluding $arr input array

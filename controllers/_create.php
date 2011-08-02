@@ -25,6 +25,8 @@ class __create extends xmd
 		parent::__construct();
 		
 		$this->_m(_array_keys(w('news event artist people')));
+		
+		$this->load('objects');
 	}
 	
 	public function home()
@@ -62,14 +64,18 @@ class __create extends xmd
 				$this->_error('ALIAS_EXISTS');
 			}
 			
-			$v = array_merge($v, array(
-				'uid' => $bio->v('bio_id'),
-				'time' => time())
+			$add = array(
+				'uid' =>$bio->v('bio_id'),
+				'time' => time()
 			);
+			
+			$this->objects->merge($v, (object) $add);
+			$v = $this->objects->all();
+			
 			$sql = 'INSERT INTO _news' . _build_array('INSERT', prefix('news', $v));
 			$v['id'] = _sql_nextid($sql);
 			
-			redirect(_link('news', array('x1' => 'read', 'i' => $v['alias'])));
+			redirect(_link('news', array('x1' => 'read', 'i' => $v->alias)));
 		}
 		
 		return;
@@ -82,25 +88,27 @@ class __create extends xmd
 	
 	protected function _event_home()
 	{
-		$v = array_merge($v, $this->__(array('e_title', 'e_text', 'e_time' => array(0), 'e_artists' => array(0))));
+		global $warning;
+		
+		$v = $this->__(array('e_title', 'e_text', 'e_time' => array(0), 'e_artists' => array(0)));
 		
 		$v_check = array('e_title' => 'INVALID_NAME', 'e_cat' => 'INVALID_CATEGORY');
 		foreach ($v_check as $vk => $vv)
 		{
-			if (empty($v[$vk])) $this->warning->set($vv);
+			if (empty($v->$vk)) $warning->set($vv);
 		}
 		
-		if (!$this->warning->exist)
+		if (!$warning->exist)
 		{
 			$v['e_alias'] = _alias($v['e_title']);
 			
 			if (empty($v['e_alias']))
 			{
-				$this->warning->set('INVALID_ALIAS');
+				$arning->set('INVALID_ALIAS');
 			}
 		}
 		
-		if (!$this->warning->exist)
+		if (!$warning->exist)
 		{
 			$sql = 'SELECT cat_id
 				FROM _events_category
