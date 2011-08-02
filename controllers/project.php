@@ -425,6 +425,98 @@ abstract class project
 		
 		return $response;
 	}
+	
+	protected function bio_online()
+	{
+		global $bio, $core;
+		
+		$total = (object) array(
+			'now' => (object) w('active 0 inactive 0 robot 0 alien 0'),
+			'day' => (object) w('active 0 inactive 0 robot 0 alien 0')
+		);
+		
+		$today = _timestamp();
+		$robots = $bio-bots();
+		
+		foreach ($total as $period => &$object)
+		{
+			$this->bio_online_query($period, &$object, $today, $robots);
+		}
+		
+		return $total;
+	}
+	
+	protected function bio_online_query($period, &$object, $today, $robots)
+	{
+		global $bio, $core;
+		
+		switch ($period) {
+			case 'now':
+				$sql = 'SELECT b.bio_id, b.bio_alias, b.bio_name, b.bio_status, s.session_ip
+					FROM _bio b, _sessions s
+					WHERE s.session_time >= ??
+						AND b.bio_id = s.session_bio
+					ORDER BY b.bio_name, s.session_ip';
+				$sql = sql_filter($sql, ($local_time[0] - ($core->v('bio_now') * 60)));
+				break;
+			case 'day':
+				$sql = 'SELECT bio_id, bio_alias, bio_name, bio_status
+					FROM _bio
+					WHERE bio_id <> ?
+						AND bio_lastvisit >= ?
+						AND bio_lastvisit < ?
+					ORDER BY bio_name';
+				$sql = sql_filter($sql, 1, $time_today, ($time_today + 86400));
+				break;
+			default:
+				$sql = 'SELECT b.bio_id, b.bio_alias, b.bio_name, b.bio_level, b.bio_show, s.session_ip
+					FROM _bio b, _sessions s
+					WHERE ((s.session_time >= ?
+							AND b.bio_id = s.session_bio)
+						OR (b.bio_lastvisit >= ?
+							AND b.bio_lastvisit < ?)
+						)
+					ORDER BY b.bio_name';
+				$sql = sql_filter($sql);
+				break;
+		}
+		
+		
+		$sessions = sql_rowset($sql);
+		
+		$i = 0;
+		foreach ($sessions as $row)
+		{
+			// Guest
+			if ($row->bio_id == 1) {
+				if ($row->session_ip != $last_ip) {
+					$object->alien++;
+				}
+				
+				$last_ip = $row->session_ip;
+				continue;
+			}
+			
+			// Member
+			if ($row->bio_id != $last_bio_id) {
+				$is_bot = isset($bots[$row->bio_id]);
+				
+				if ($is_bot) {
+					$object->robot++;
+				} else if ($row->bio_status) {
+					$object->active++;
+				} else {
+					$object->inactive++;
+				}
+			}
+			
+			//
+			$last_bio_id = $row->bio_id;
+			$i++;
+		}
+		
+		return;
+	}
 }
 
 function _link_bio($alias, $attr = false, $ts = true)

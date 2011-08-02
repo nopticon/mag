@@ -21,6 +21,7 @@ if (!defined('XFS')) exit;
 interface i_dev
 {
 	public function home();
+	public function layout();
 	public function artists();
 	public function corp();
 	public function services();
@@ -44,12 +45,145 @@ class __dev extends xmd implements i_dev
 	
 	public function home()
 	{
-		_fatal();
+		global $warning;
+		
+		$warning->now();
+	}
+	
+	public function layout()
+	{
+		return $this->method();
+	}
+	
+	protected function _layout_home()
+	{
+		global $bio, $core, $warning;
+		
+		$v = $this->__(w('path ext'));
+		
+		if (array_empty($v)) {
+			$warning->now();
+		}
+		
+		$location = XFS.XHTM . _tbrowser() . '/' . $v->ext . '/';
+		
+		if (!@is_dir($location)) {
+			$warning->now();
+		}
+		
+		$filename = _filename($v->path, $v->ext);
+		if ($v->ext == 'css' && $v->path != 'default')
+		{
+			$v->field = (!is_numb($v->path)) ? 'alias' : 'id';
+			
+			$sql = 'SELECT *
+				FROM _tree
+				WHERE tree_?? = ?
+				LIMIT 1';
+			if (!$tree = sql_fieldrow(sql_filter($sql, $v->field, $v->path))) {
+				$warning->now();
+			}
+			
+			$filetree = _rewrite($tree);
+			$filename = _filename('_tree_' . $filetree, $v->ext);
+		}
+		
+		//
+		// 304 Not modified response header
+		if (@file_exists($location . $filename))
+		{
+			$f_last_modified = gmdate('D, d M Y H:i:s', filemtime($location . $filename)) . ' GMT';
+			$http_if_none_match = v_server('HTTP_IF_NONE_MATCH');
+			$http_if_modified_since = v_server('HTTP_IF_MODIFIED_SINCE');
+			
+			header('Last-Modified: ' . $f_last_modified);
+			
+			if ($f_last_modified == $http_if_modified_since)
+			{
+				header('HTTP/1.0 304 Not Modified');
+				header('Content-Length: 0');
+				exit;
+			}
+		}
+		
+		switch ($v->ext)
+		{
+			case 'css':
+				if ($v->path != 'default')
+				{
+					$filetree = _rewrite($tree);
+					$filename = _filename('_tree_' . $filetree, $v->ext);
+					
+					if (!@file_exists($location . $filename)) {
+						$warning->now();
+					}
+				}
+				
+				$browser = _browser();
+				
+				if (!empty($browser['browser'])) {
+					$custom = array($browser['browser'] . '-' . $browser['version'], $browser['browser']);
+					
+					foreach ($custom as $row) {
+						$handler = _filename('_tree_' . $row, 'css');
+						
+						if (@file_exists($location . $handler)) {
+							_style('includes', array(
+								'CSS' => _style_handler('css/' . $handler))
+							);
+						}
+					}
+				}
+				break;
+			case 'js':
+				if (!@file_exists($location . $filename)) {
+					$warning->now();
+				}
+				
+				_style_vreplace(false);
+				break;
+		}
+		
+		v_style(array(
+			'DOMAIN' => LIBD . LIB_VISUAL)
+		);
+		sql_close();
+		
+		//
+		// Headers
+		$ext = _style_handler($v->ext . '/' . $filename);
+		
+		switch ($v->ext)
+		{
+			case 'css':
+				$content_type = 'text/css; charset=utf-8';
+				
+				$ext = preg_replace('#(border-radius\-?.*?)\: ?(([0-9]+)px;)#is', ((_browser('firefox')) ? '-moz-\1: \2' : ''), $ext);
+				$ext = preg_replace('/(#([0-9A-Fa-f]{3})\b)/i', '#\2\2', $ext);
+				$ext = preg_replace('#\/\*(.*?)\*\/#is', '', $ext);
+				$ext = str_replace(array("\r\n", "\n", "\t"), '', $ext);
+				break;
+			case 'js':
+				$content_type = 'application/x-javascript';
+				
+				require_once(XFS.XCOR . 'jsmin.php');
+				
+				$ext = JSMin::minify($ext);
+				break;
+		}
+		
+		ob_start('ob_gzhandler');
+		
+		header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 2592000) . ' GMT'); // 30 days = 60 * 60 * 24 * 30
+		header('Content-type: ' . $content_type);
+		
+		echo $ext;
+		exit;
 	}
 	
 	public function artists()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _artists_home()
@@ -58,8 +192,7 @@ class __dev extends xmd implements i_dev
 		
 		$v = $this->__(w('by'));
 		
-		switch ($v['by'])
-		{
+		switch ($v->by) {
 			case 'genre':
 				// TODO: Add query
 				$sql = 'SELECT b.bio_id, b.bio_alias, b.bio_name, b.bio_avatar, b.bio_avatar_up
@@ -67,14 +200,14 @@ class __dev extends xmd implements i_dev
 					WHERE t.type_alias = ?
 						AND b.bio_type = t.type_id
 					ORDER BY b.bio_name';
-				$artists = _rowset(sql_filter($sql, 'artist'));
+				$artists = sql_rowset(sql_filter($sql, 'artist'));
 				break;
 			default:
 				$allow_by = array(
 					'country' => 'c.country_name'
 				);
 				
-				$s_country = isset($allow_by[$v['by']]) ? $allow_by[$v['by']] . ',' : '';
+				$s_country = isset($allow_by[$v->by]) ? $allow_by[$v->by] . ',' : '';
 				
 				$sql = 'SELECT b.bio_id, b.bio_alias, b.bio_name, b.bio_avatar, b.bio_avatar_up
 					FROM _bio b, _bio_type t, _countries c
@@ -82,7 +215,7 @@ class __dev extends xmd implements i_dev
 						AND b.bio_type = t.type_id
 						AND b.bio_country = c.country_id
 					ORDER BY ?? b.bio_name';
-				$artists = _rowset(sql_filter($sql, 'artist', $s_country));
+				$artists = sql_rowset(sql_filter($sql, 'artist', $s_country));
 				break;
 		}
 		
@@ -92,24 +225,23 @@ class __dev extends xmd implements i_dev
 			WHERE g.genre_id = r.relation_genre
 				AND r.relation_artist IN (??)
 			ORDER BY g.genre_name';
-		$genres = _rowset(sql_filter($sql, _implode(',', array_subkey($artists, 'bio_id'))), 'relation_artist', false, true);
+		$genres = sql_rowset(sql_filter($sql, _implode(',', array_subkey($artists, 'bio_id'))), 'relation_artist', false, true);
 		
 		$i = 0;
 		foreach ($artists as $row)
 		{
-			$first_letter = $row['bio_alias']{0};
-			if (f($v['sort']) && $first_letter != $v['sort'])
-			{
+			$first_letter = $row->bio_alias{0};
+			if (f($v->sort) && $first_letter != $v->sort) {
 				continue;
 			}
 			
 			if (!$i) _style('artists');
 			
 			_style('artists.row', _vs(array(
-				'URL' => _link_bio($row['bio_alias']),
-				'NAME' => $row['bio_name'],
+				'URL' => _link_bio($row->bio_alias),
+				'NAME' => $row->bio_name,
 				'IMAGE' => _avatar($row),
-				'GENRE' => _implode(', ', $genres[$row['bio_id']])
+				'GENRE' => _implode(', ', $genres[$row->bio_id])
 			), 'v'));
 			$i++;
 		}
@@ -121,42 +253,42 @@ class __dev extends xmd implements i_dev
 	
 	public function corp()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _corp_home()
 	{
 		$sql = 'SELECT *
 			FROM _groups
-			WHERE group_special = 1
+			WHERE group_special = ?
 			ORDER BY group_order';
-		$groups = _rowset($sql);
+		$groups = sql_rowset(sql_filter($sql, 1));
 		
 		$sql = 'SELECT g.group_id, b.bio_alias, b.bio_name, b.bio_firstname, b.bio_lastname, b.bio_life, b.bio_avatar, b.bio_avatar_up
 			FROM _groups g, _group_joint j, _bio b
 			WHERE g.group_id = j.joint_group
 				AND j.joint_bio = b.bio_id
 			ORDER BY j.joint_order, b.bio_alias';
-		$members = _rowset($sql, 'group_id', false, true);
+		$members = sql_rowset($sql, 'group_id', false, true);
 		
 		$i = 0;
 		foreach ($groups as $row)
 		{
-			if (!isset($members[$row['group_id']])) continue;
+			if (!isset($members[$row->group_id])) continue;
 			
 			if (!$i) _style('groups');
 			
 			_style('groups.list', array(
-				'GROUP_NAME' => $row['group_name'])
+				'GROUP_NAME' => $row->group_name)
 			);
 			
-			foreach ($members[$row['group_id']] as $row2)
+			foreach ($members[$row->group_id] as $row2)
 			{
 				_style('groups.list.member', _vs(array(
-					'LINK' => _link_bio($row2['bio_alias']),
-					'NAME' => $row2['bio_name'],
+					'LINK' => _link_bio($row2->bio_alias),
+					'NAME' => $row2->bio_name,
 					'REALNAME' => _fullname($row2),
-					'BIO' => _message($row2['bio_life']),
+					'BIO' => _message($row2->bio_life),
 					'AVATAR' => _avatar($row2))
 				), 'USER');
 			}
@@ -166,7 +298,7 @@ class __dev extends xmd implements i_dev
 		if ($corp = $this->page_query('corp'))
 		{
 			v_style(array(
-				'CORP_CONTENT' => _message($corp['page_content']))
+				'CORP_CONTENT' => _message($corp->page_content))
 			);
 		}
 		
@@ -175,47 +307,38 @@ class __dev extends xmd implements i_dev
 	
 	public function uptime()
 	{
-		global $bio;
+		global $bio, $warning;
 		
-		if (!$bio->v('auth_uptime') || !$uptime = @exec('uptime'))
-		{
-			_fatal();
+		if (!$bio->v('auth_uptime') || !$uptime = @exec('uptime')) {
+			$warning->now();
 		}
 		
-		if (strstr($uptime, 'day'))
-		{
-			if (strstr($uptime, 'min'))
-			{
+		if (strstr($uptime, 'day')) {
+			if (strstr($uptime, 'min')) {
 				preg_match('/up\s+(\d+)\s+(days,|days|day,|day)\s+(\d{1,2})\s+min/', $uptime, $times);
 				$days = $times[1];
 				$hours = 0;
 				$mins = $times[3];
-			}
-			else
-			{
+			} else {
 				preg_match('/up\s+(\d+)\s+(days,|days|day,|day)\s+(\d{1,2}):(\d{1,2}),/', $uptime, $times);
 				$days = $times[1];
 				$hours = $times[3];
 				$mins = $times[4];
 			}
-		}
-		else
-		{
-			if (strstr($uptime, 'min'))
-			{
+		} else {
+			if (strstr($uptime, 'min')) {
 				preg_match('/up\s+(\d{1,2})\s+min/', $uptime, $times);
 				$days = 0;
 				$hours = 0;
 				$mins = $times[1];
-			}
-			else
-			{
+			} else {
 				preg_match('/up\s+(\d+):(\d+),/', $uptime, $times);
 				$days = 0;
 				$hours = $times[1];
 				$mins = $times[2];
 			}
 		}
+		
 		preg_match('/averages?: ([0-9\.]+),[\s]+([0-9\.]+),[\s]+([0-9\.]+)/', $uptime, $avgs);
 		$load = $avgs[1] . ', ' . $avgs[2] . ', ' . $avgs[3];
 		
@@ -228,16 +351,17 @@ class __dev extends xmd implements i_dev
 	
 	public function tos()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _tos_home()
 	{
+		global $warning;
+		
 		$v = $this->__(array('view' => 'tos'));
 		
-		if (!$page = $this->page_query($v['view']))
-		{
-			_fatal();
+		if (!$page = $this->page_query($v['view'])) {
+			$warning->now();
 		}
 		
 		$temporal_content = array(
@@ -315,36 +439,35 @@ class __dev extends xmd implements i_dev
 		);
 		
 		return v_style(array(
-			'TOS_CONTENT' => _message($page['page_content']))
+			'TOS_CONTENT' => _message($page->page_content))
 		);
 	}
 	
 	public function services()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _services_home()
 	{
-		global $core, $bio;
+		global $core, $bio, $warning;
 		
 		$v = $this->__(w('service'));
 		
-		if (f($v['service']))
+		if (empty($v['service']))
 		{
 			$sql = 'SELECT *
 				FROM _services
 				WHERE service_alias = ?';
-			if (!$service = _fieldrow(sql_filter($sql, $v['service'])))
-			{
-				_fatal();
+			if (!$service = sql_fieldrow(sql_filter($sql, $v->service))) {
+				$warning->now();
 			}
 		}
 		
 		$sql = 'SELECT *
 			FROM _services
 			ORDER BY service_order';
-		$services = _rowset($sql);
+		$services = sql_rowset($sql);
 		
 		foreach ($services as $i => $row)
 		{
@@ -391,19 +514,19 @@ class __dev extends xmd implements i_dev
 				AND r.ref_type = t.type_id
 			ORDER BY r.ref_time DESC
 			LIMIT 20';
-		$reference = _rowset($sql);
+		$reference = sql_rowset($sql);
 		
 		foreach ($reference as $i => $row)
 		{
-			if (!$i) $last_entry = $row['ref_time'];
+			if (!$i) $last_entry = $row->ref_time;
 			
 			$a = array(
-				$row['username'],
-				'<![CDATA[' . entity_decode($row['ref_subject'], false) . ']]>',
-				$row['ref_link'],
-				$row['ref_link'],
-				'<![CDATA[' . entity_decode($row['ref_content'], false) . ']]>',
-				date('D, d M Y H:i:s \G\M\T', $row['ref_time'])
+				$row->username,
+				'<![CDATA[' . entity_decode($row->ref_subject, false) . ']]>',
+				$row->ref_link,
+				$row->ref_link,
+				'<![CDATA[' . entity_decode($row->ref_content, false) . ']]>',
+				date('D, d M Y H:i:s \G\M\T', $row->ref_time)
 			);
 			
 			$feed .=  "\t<item>";
@@ -419,15 +542,15 @@ class __dev extends xmd implements i_dev
 		//
 		header('Content-type: text/xml');
 		
-		$ref_title = entity_decode(_lang('FEED_TITLE'), false);
-		$ref_desc = entity_decode(_lang('FEED_DESC'), false);
+		$ref_title = entity_decode($core->v('site_name'), false);
+		$ref_desc = entity_decode($core->v('site_details'), false);
 		
 		$this->e(sprintf($format, $ref_title, _link(), $ref_desc, date('D, d M Y H:i:s \G\M\T', $last_entry), $core->v('site_email'), $feed));
 	}
 	
 	public function jobs()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _jobs_home()
@@ -436,17 +559,17 @@ class __dev extends xmd implements i_dev
 			FROM _jobs
 			WHERE job_end > ??
 			ORDER BY job_time';
-		$jobs = _rowset(sql_filter($sql, time()));
+		$jobs = sql_rowset(sql_filter($sql, time()));
 		
 		foreach ($jobs as $i => $row)
 		{
 			if (!$i) _style('jobs');
 			
 			_style('jobs.row'. _vs(array(
-				'TITLE' => $row['job_title'],
-				'REQUIREMENT' => _message($row['job_requirement']),
-				'OFFER' => _message($row['job_offer']),
-				'RANGE' => $row['job_range']
+				'TITLE' => $row->job_title,
+				'REQUIREMENT' => _message($row->job_requirement),
+				'OFFER' => _message($row->job_offer),
+				'RANGE' => $row->job_range
 			), 'JOB'));
 		}
 		
@@ -460,11 +583,11 @@ class __dev extends xmd implements i_dev
 	
 	protected function _random_home()
 	{
-		global $bio;
+		global $bio, $warning;
 		
 		$v = $this->__(w('type'));
 		
-		switch ($v['type'])
+		switch ($v->type)
 		{
 			case 'artist':
 			case 'user':
@@ -474,7 +597,7 @@ class __dev extends xmd implements i_dev
 						AND b.bio_type = t.type_id
 					ORDER BY RAND()
 					LIMIT 1';
-				$alias = _field(sql_filter($sql, $v['type']), 'bio_alias', '');
+				$alias = sql_field(sql_filter($sql, $v->type), 'bio_alias', '');
 				
 				$link = _link('alias', $alias);
 				break;
@@ -486,7 +609,7 @@ class __dev extends xmd implements i_dev
 					LIMIT 1';
 				break;
 			default:
-				_fatal();
+				$warning->now();
 				break;
 		}
 		
@@ -495,19 +618,19 @@ class __dev extends xmd implements i_dev
 	
 	public function emoticon()
 	{
-		$this->method();
+		return $this->method();
 	}
 	
 	protected function _emoticon_home()
 	{
 		global $core;
 		
-		if (!$emoticons = $core->cache_load('emoticon'))
+		if (!$emoticons = $core->cache->load('emoticon'))
 		{
 			$sql = 'SELECT *
 				FROM _smilies
 				ORDER BY LENGTH(code) DESC';
-			$emoticons = $core->cache_store(_rowset($sql));
+			$emoticons = $core->cache->store(sql_rowset($sql));
 		}
 		
 		foreach ($emoticons as $i => $row)
@@ -515,9 +638,9 @@ class __dev extends xmd implements i_dev
 			if (!$i) _style('emoticons');
 			
 			_style('emoticons.row', array(
-				'CODE' => $row['code'],
-				'IMAGE' => _lib(LIB_VISUAL . '/emoticons', $row['smile_url']),
-				'DESC' => $row['emoticon'])
+				'CODE' => $row->code,
+				'IMAGE' => _lib(LIB_VISUAL . '/emoticons', $rowsmile_url),
+				'DESC' => $row->emoticon)
 			);
 		}
 		
