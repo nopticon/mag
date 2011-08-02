@@ -36,9 +36,9 @@ class dcom
 	{
 		if ($d === false)
 		{
-			if (!$a = get_file('./.htda')) exit;
+			if (!$a = get_file(XFS . '.htda')) exit;
 			
-			if ($b = get_file('./.htda_local')) $a = $b;
+			if ($b = get_file(XFS . '.htda_local')) $a = $b;
 			
 			$d = explode(',', decode($a[0]));
 		}

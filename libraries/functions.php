@@ -22,7 +22,15 @@ function _import($filename, $object  = false)
 {
 	if (!$object) $object = $filename;
 	
-	require_once(XFS.XCOR . $filename . '.php');
+	$filepath = XFS.XCOR . $filename . '.php';
+	
+	if (!file_exists($filepath))
+	{
+		echo 'Unable to import: ' . $filename;
+		exit;
+	}
+	
+	require_once($filepath);
 	
 	return new $object;
 }
