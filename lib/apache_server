@@ -3,3 +3,8 @@ MAG
 
 Apache Virtualhost configuration
 
+/var/www/vhosts/bio/
+
+Public access
+
+/var/www/vhosts/bio/mag/assets/

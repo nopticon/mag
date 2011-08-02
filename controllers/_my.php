@@ -19,23 +19,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 if (!defined('XFS')) exit;
 
 /*
-
-### my/messages
-
-Conversaciones
-Mensajes en perfil, fotos
-Solicitud de amigos
-Noticias
-Eventos e invitaciones
-Concursos
-Nuevos artistas, fotos, musica y video
-Nuevos usuarios por preferencias
-Mensajes en foro (diario)
-Mensajes en artistas
-Mensajes en descargas
-Grupos de usuarios
-
----
+ * 
+ * Area de mensajes
+ * Mensajes sin publicar
+ * 
+ * my/messages
+ * 
+ * Conversaciones
+ * Mensajes en perfil, fotos
+ * Solicitud de amigos
+ * Noticias
+ * Eventos e invitaciones
+ * Concursos
+ * Nuevos artistas, fotos, musica y video
+ * Nuevos usuarios por preferencias
+ * Mensajes en foro, diario
+ * Mensajes para artistas
+ * Mensajes para descargas
+ * Grupos de usuarios
+ * 
+ *
 
 # FRIEND REQUESTS
 
