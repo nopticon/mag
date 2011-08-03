@@ -1,67 +1,35 @@
-/*
- * 
- * Area de mensajes
- * Mensajes sin publicar
- * 
- * my/messages
- * 
- * Conversaciones
- * Mensajes en perfil, fotos
- * Solicitud de amigos
- * Noticias
- * Eventos e invitaciones
- * Concursos
- * Nuevos artistas, fotos, musica y video
- * Nuevos usuarios por preferencias
- * Mensajes en foro, diario
- * Mensajes para artistas
- * Mensajes para descargas
- * Grupos de usuarios
- * 
- *
+
+Area de mensajes
+Mensajes sin publicar
+
+my/messages
+
+Conversaciones
+Mensajes en perfil, fotos
+Solicitud de amigos
+Noticias
+Eventos e invitaciones
+Concursos
+Nuevos artistas, fotos, musica y video
+Nuevos usuarios por preferencias
+Mensajes en foro, diario
+Mensajes para artistas
+Mensajes para descargas
+Grupos de usuarios
 
 # FRIEND REQUESTS
-
-SELECT mr.request_id, mr.request_message, mr.request_active, b.bio_id, b.bio_alias, b.bio_name
-	FROM _bio_request mr, _bio b
-	WHERE mr.request_from = b.bio_id
-		AND mr.request_block = 0
-		AND mr.private_id IN (
-			SELECT tl.list_item
-			FROM _today_list tl, _today t
-			WHERE t.today_id = tl.list_today
-				AND t.today_alias = 'frequest'
-				AND tl.list_uid = {UID}
-		)
-	ORDER BY mr.request_time DESC
-
 # EVENT INVITATIONS
 
-SELECT i.invite_id, i.invite_accept, i.invite_time, i.invite_message, b.bio_id, b.bio_alias, b.bio_name
-	FROM _events e, _events_invite i, _bio b
-	WHERE e.event_id = i.invite_event
-		AND i.invite_from = b.bio_id
-		AND i.invite_id IN (
-			SELECT tl.list_item
-			FROM _today t, _today_list
-			WHERE t.today_id = tl.list_today
-				AND t.today_alias = 'eventinvite'
-				AND tl.list_uid = {UID}
-		)
-	ORDER BY i.invite_time DESC
+URL PATTERN: $a.domain/$m/$p || domain/$a/$m/$p
 
-*/
+Document model
 
-
-
-
-
-
-
-/*
-// PROTOTYPE > $a.domain/$m/$p || domain/$a/$m/$p
-
-> BIO TIMELINE
+Home
+	Tabs
+		Blocks
+			Modules
+				Fields
+				Data
 
 TABS
 	home
@@ -75,13 +43,10 @@ MODULES
 	messages
 	videos
 	music
-	private
 	news
-
-DEFAULT
+	
 	fans
 	stats
 	auth
 	log
 	
-*/

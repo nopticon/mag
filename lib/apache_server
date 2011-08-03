@@ -10,7 +10,7 @@ Public access
 /var/www/vhosts/bio/mag/assets/
 
 ----------------------------------------------------------
-TEMP OLD HTACCESS CODE
+OLD HTACCESS CODE
 
 RewriteRule ^forum/([a-z]+)/?([0-9]+)/?$ http://mag.localhost/board/$1/s:$2/ [R=301,L]
 RewriteRule ^(topic|post)/([a-z0-9]+)/(s([0-9]+)/)?$ http://mag.localhost/board/$1/$2/s:$4/ [R=301,L]

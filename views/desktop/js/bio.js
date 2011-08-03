@@ -1,9 +1,6 @@
-<!-- INCLUDE js/grid.js -->
-<!-- INCLUDE js/jquery.inputlabel.js -->
-
-var EE = {
-	OK: '~[200]'
-}
+<!-- INCLUDE js/lib.grid.js -->
+<!-- INCLUDE js/lib.inputlabel.js -->
+<!-- INCLUDE js/lib.swf.js
 
 function home_browse_type()
 {

@@ -1,0 +1,595 @@
+@turbine
+	compress:1
+	debug: 0
+
+@constants
+	_: http:/
+	__: /mag.localhost/media/desktop
+	nav_bg: bottom no-repeat
+	fontface:Verdana, Arial, Helvetica, sans-serif
+
+body
+	margin:10px
+	padding:0
+	background:url($_$__/pattern.jpg) fixed #262624
+
+div, select
+	cursor:default
+
+p, div, span, input, textarea, select, a, optgroup
+	font-family:$fontface
+	font-size:11px
+	color:#d0ced1
+	text-decoration:none
+
+a
+	color:#c3c2c4
+
+a:hover
+	text-decoration:underline
+
+h(1-3)
+	margin:0 0 10px 0
+	padding:0
+	font-family:$fontface
+	font-weight:normal
+
+h1
+	color:#d0ced1
+	font-size:17px
+
+h2
+	color:copy(h1 color)
+	font-size:16px
+
+h3
+	color:copy(h1 color)
+	font-size:15px
+
+form, img
+	margin, padding, border:0
+
+img
+	vertical-align:middle
+
+input
+	border:0
+	background:#DDD
+	color:#111
+	padding:2px
+
+ul
+	list-style:none
+	margin, padding, border:0
+
+fieldset
+	border, margin:0
+	padding:5px
+	border-radius:5px
+
+fieldset dt
+	width:20%
+	margin:0
+	margin-right:5px
+	padding:1px
+	padding-right:6px
+	float, clear:left
+	text-align:right
+
+fieldset dd input
+	width:70%
+
+fieldset dl
+	padding:1px
+
+fieldset legend
+	display:none
+
+header
+	margin-bottom:15px
+
+header h1
+	width:30%
+
+header h1 a
+	display:block
+	width:268px
+	height:44px
+	background:url($_$__/logo-rk.gif) no-repeat
+	text-indent:-9000px
+
+header h1 a:hover
+	width:289px
+
+nav
+	margin-top:15px
+
+nav ul li
+	float:left
+	margin-bottom, margin-left:5px
+
+nav ul li a
+	float:left
+	width, height:70px
+	color:#EEE
+	text-align:center
+
+nav ul li a:hover
+	text-decoration:none
+	color:#BDA412
+
+#nav_today
+	background:url($_$__/m_today.png) $nav_bg
+
+#nav_radio
+	background:url($_$__/m_radio.png) $nav_bg
+
+#nav_artists
+	background:url($_$__/m_artists.png) $nav_bg
+
+#nav_events
+	background:url($_$__/m_events.png) $nav_bg
+
+#nav_board
+	background:url($_$__/m_board.png) $nav_bg
+
+#nav_community
+	background:url($_$__/m_community.png) $nav_bg
+
+#nav_partners
+	background:url($_$__/m_partner.png) $nav_bg
+
+#nav_create
+	background:url($_$__/m_create.png) $nav_bg
+
+section
+	width: 100%
+	.main
+		width:65%
+		padding:10px
+		margin-top:15px
+		border:1px solid #444
+	.about
+		margin-bottom:25px
+		float, text-align:right
+	.about li
+		float:left
+		margin-left:15px
+	.status
+		margin-left:15px
+	.status form
+		padding, margin:0
+		color:#eee
+	.status textarea
+		width:99%
+		color:#111
+	.status input
+		padding:5px
+		background:#61A926
+		color:#eee
+		font-weight:bold
+		text-align:right
+
+.t_rk
+	color:#BDA412
+
+.t_sponsor
+	color:#FF8C1A
+
+.wt2
+	width:24%
+
+.wt7
+	width:7%
+
+.w2
+	width:20%
+
+.w3
+	width:33%
+
+.w5
+	width:49%
+
+.w6
+	width:66%
+
+.w7
+	width:75%
+
+.w8
+	width:78%
+
+.w9
+	width:95%
+
+.w0
+	width:99%
+
+.m_mid
+	margin:15px
+
+.m_top_tiny
+	margin-top:5px
+
+.m_top_mid
+	margin-top:15px
+
+.m_top_big
+	margin-top:25px
+
+.m_btm_tiny
+	margin-bottom:5px
+
+.m_btm_mid
+	margin-bottom:15px
+
+.m_btm_big
+	margin-bottom:25px
+
+.m_mns_top
+	margin-top:-15px
+
+.float_left
+	float:left
+
+.float_right
+	float:right
+
+.a_left
+	text-align:left
+
+.a_right
+	text-align:right
+
+.a_center
+	text-align:center
+
+.eachpost
+	border-radius:5px
+	width:220px
+	display:block
+	background:rgba(0, 0, 0, 0.1)
+	color:#ccc
+	margin-top:10px
+	position:absolute
+	padding:3px
+	img
+		margin:5px
+	.a_right
+		margin-top:5px
+		color:#8b8b8b
+	.time
+		color:#8b8b8b
+	
+.comments
+	display:block
+	clear:both
+	margin:0 3%
+	h3 span
+		position:absolute
+		left:-9999px
+		text-align:left
+	blockquote p.dtposted a
+		padding-left:14px
+	h3
+		position:relative
+		float:right
+		width:20%
+		margin:1em 0 0 0
+		padding:3em 0 0 0
+		font-size:1em
+		line-height:1.2em
+		border-top:1px solid #4c5558
+		text-align:center
+	h3 strong
+		display:none
+		position:absolute
+		left:0
+		top:-0.6em
+		padding:0 0.2em 0 14px
+		font:300 1.5em/1em arial,sans-serif
+		color:#b0b0a6
+	h3 em
+		display:block
+		text-align:center
+		font-size:0.95em
+		font-style:normal
+		color:#d0ced1
+	h3 cite
+		display:block
+		font-style:normal
+		font-weight:900
+		margin:1em 0 1.5em 0
+	blockquote div
+		font-size:0.95em
+		line-height:1.8em
+		color:#d0ced1
+	blockquote p.dtposted
+		position:absolute
+		top:-0.6em
+		right:0
+		padding-left:0.5em
+		margin:0
+		font-size:0.85em
+		line-height:1em
+		color:#868670
+		text-align:right
+		background:#303536
+	blockquote blockquote
+		overflow:hidden
+		margin:1em 0
+		padding:0.2em 1.25em 0.2em 24px
+		background:#101010
+		color:#d0ced1
+		float:none
+		width:auto
+		border:0
+	blockquote
+		position:relative
+		float:left
+		width:74%
+		margin:1em 0 0 0
+		padding:1.5em 0
+		border-top:1px solid #4c5558
+	h3 em img
+		padding:1px
+
+.nowraptext a
+	color:#66CC33
+
+.boxes
+	border-radius:5px
+	width:220px
+	display:block
+	background:rgba(0, 0, 0, 0.2)
+	color:#ccc
+	margin-top:10px
+	padding:3px
+	float:left
+
+.boxes img
+	margin:5px
+
+.boxes_s
+	margin-left:24px
+
+.notice
+	color:#990000 !important
+
+.browser
+	width:50%
+	margin:0 auto
+	margin-bottom:25px
+	text-align:center
+	background:rgba(80, 80, 80, 0.4)
+	border-radius:5px
+	p
+		margin:0
+	a
+		color:#FF8C1A
+
+.error_block, .black_box, .dark_box
+	margin:0 auto
+	background-color:#20201f
+	padding:5px
+	border-bottom:1px solid #111111
+
+.error_block, .black_box
+	width:500px
+	text-align:center
+
+.error_block h2, .error_block h2 a, .black_box h2, .black_box h2 a, .dark_box h2, .dark_box h2 a
+	font-family:Arial, Helvetica, sans-serif !important
+	font-size:15px
+	text-transform:uppercase
+	color:#4c5558
+
+.black_line
+	background-color:#20201f
+	padding:5px
+
+.font_h2
+	font-family:Arial, Helvetica, sans-serif !important
+	font-size:15px
+	font-weight:bold
+	text-transform:uppercase
+	color:#4c5558
+
+.ul_style .ul_none
+	margin:0 0 0 10px
+
+.ul_style .ul_none li
+	padding:5px
+
+.legend
+	padding:5px
+	background-color:#4c5558
+
+.a_controls
+	background-color:#4c5558
+	a, ul li span
+		padding:5px
+		background-color:#4c5558
+		text-decoration:none
+		margin-left:5px
+	ul li span, ul li a
+		display:block
+	ul li:first-child span
+		margin-left:0
+	a:hover, ul li span
+		text-decoration:none
+		background-color:#5d8812
+	ul li
+		float:right
+	ul.left li
+		float:left
+
+.pagination
+	display:block
+	margin-bottom:20px
+	strong, a, span
+		background:#6DA10C
+		padding:5px
+		color:#222
+		margin-bottom:0px
+		margin-left:4px
+		border-radius:3px
+	span
+		background:#ccc
+		padding:0
+	strong, a:hover
+		background:#BDA412
+		text-decoration:none
+		font-weight:normal
+
+.post_comment
+	font-weight:normal
+	textarea, input
+		width:99%
+
+.submit
+	padding:5px
+	background:#5d8812
+	border:0
+	color:#d0ced1
+	font-weight:bold
+	width:auto !important
+
+.error
+	background-color:#800000
+	border:1px solid #990000
+
+.a_fix label
+	margin-top:4px
+	display:block
+
+.ul_none
+	list-style:none
+	margin:0
+	padding:0
+	border:0
+	img
+		border:1px solid #3d4445
+	.clear img
+		border:0 !important
+
+.none
+	background-color:transparent !important
+	border:0
+
+.uunique
+	color:#6C7868
+
+.nowrapcell
+	white-space:nowrap
+
+.nowraptext
+	overflow:auto
+
+.blankbottom
+	float:left
+	display:block
+	height:15px
+	margin-right:4px
+
+.z
+	display:none !important
+
+#poll
+	.caption
+		margin:5px 0 5px 0
+	.bar
+		display:block
+		border:1px solid #4c5558
+		height:8px
+	.bar div
+		display:block
+		height:8px
+		line-height:8px
+		background-color:#70a416
+		border-right:1px solid #4c5558
+	.a_right
+		margin-top:10px
+	.a_right a
+		color:#70a416
+
+.li_lines, .li_lines_1
+	border-top:1px solid #4c5558
+	&:first-child
+		border:0
+
+.item_block
+	border:0
+	ul
+		border:0
+	ul li
+		height:20px
+		margin-top:5px
+		padding:3px
+	ul li:hover
+		background-color:#3d4445
+	ul li:first-child, ul li.first_child
+		margin-top:0
+
+.item_block_1
+	margin-top:0
+	ul
+		margin-top:0
+	ul li
+		margin-top:5px
+		padding:3px
+	ul li:hover
+		background-color:#4c5558
+	ul li:first-child, ul li.first_child
+		margin-top:0
+
+.item_block_2
+	margin-top:0
+	ul
+		margin-top:0
+	ul li
+		margin-top:15px
+		padding:3px
+	ul li:hover
+		background-color:#4c5558
+	ul li:first-child, ul li.first_child
+		margin-top:0
+
+.item_block_3
+	margin-top:0
+	ul
+		margin-top:0
+	ul li
+		margin-top:3px
+		padding:3px
+	ul li:hover
+		background-color:#4c5558
+	ul li:first-child, ul li.first_child
+		margin-top:0
+
+.first_image
+	padding:0 !important
+	height:60px !important
+	img
+		width:100%
+		height:60px
+
+.float-holder:after
+	content:"."
+	display:block
+	clear:both
+	visibility:hidden
+	line-height, height:0
+
+.float-holder
+	display:inline-block
+
+html[xmlns] .float-holder
+	display:block
+
+* html .float-holder
+	height:1%
+
+* html .ie-widthfix
+	height:1%

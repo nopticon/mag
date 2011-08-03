@@ -1,0 +1,41 @@
+@turbine
+	compress:0
+
+#foo
+	&.bar
+		color:red
+
+#bar
+	&.foo, &camp, &:baz
+		color:green
+
+#bar, #baz
+	&.foo, &.asdf
+		&:whatever
+			color:green
+
+a(:hover, :active, #foo, .whatever, ddress)
+	color:blue
+
+a(:link, :visited)
+	text-decoration:underline
+
+div.post-(0-10)
+	color:yellow
+
+div.post-(5-2)
+	color:fuchsia
+
+#bar
+	&.post-(1-10)
+		color:pink
+
+div.post-(1-10)-
+	&bar
+		color:magenta
+
+div.(post, article)-(1-5)
+	&-even
+		color:red
+	&-odd
+		color:blue

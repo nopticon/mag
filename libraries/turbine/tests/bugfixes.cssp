@@ -1,0 +1,9 @@
+@turbine
+	plugins:bugfixes
+
+body
+	background:#CCCCFF
+
+h1:hover
+	color:red
+
