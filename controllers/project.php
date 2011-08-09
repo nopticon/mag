@@ -440,7 +440,7 @@ abstract class project
 		
 		foreach ($total as $period => &$object)
 		{
-			$this->bio_online_query($period, &$object, $today, $robots);
+			$this->bio_online_query($period, $object, $today, $robots);
 		}
 		
 		return $total;

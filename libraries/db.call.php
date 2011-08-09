@@ -122,12 +122,15 @@ function sql_field($sql, $field, $def = false)
 	$response = $database->fetchfield($field);
 	$database->freeresult($result);
 	
-	if ($response === false)
-	{
+	if ($response === false) {
 		$response = $def;
 	}
 	
-	return (object) $response;
+	if ($response !== false) {
+		$response = (object) $response;
+	}
+	
+	return $response;
 }
 
 function sql_fieldrow($sql, $result_type = MYSQL_ASSOC)
@@ -140,11 +143,11 @@ function sql_fieldrow($sql, $result_type = MYSQL_ASSOC)
 	if ($row = $database->fetchrow($result, $result_type))
 	{
 		$row['_numrows'] = $database->numrows($result);
-		$response = $row;
+		$response = (object) $row;
 	}
 	$database->freeresult($result);
 	
-	return (object) $response;
+	return $response;
 }
 
 function sql_rowset($sql, $a = false, $b = false, $g = false, $rt = MYSQL_ASSOC)
@@ -276,7 +279,7 @@ function sql_build($cmd, $a, $b = false)
 {
 	global $database;
 	
-	return $database->build_array($cmd, $a, $b);
+	return $database->build($cmd, $a, $b);
 }
 
 function sql_cache($sql, $sid = '', $private = true)

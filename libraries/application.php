@@ -23,16 +23,13 @@ $starttime = $starttime[1] + $starttime[0];
 
 error_reporting(E_ALL);
 
-if (@ini_get('register_globals'))
-{
-	foreach ($_REQUEST as $var_name => $void)
-	{
+if (@ini_get('register_globals')) {
+	foreach ($_REQUEST as $var_name => $void) {
 		unset(${$var_name});
 	}
 }
 
-if (!defined('REQC'))
-{
+if (!defined('REQC')) {
 	define('REQC', (strtolower(ini_get('request_order')) == 'gp'));
 }
 
@@ -46,8 +43,7 @@ $core = _import('core');
 $warning = _import('warning');
 $file = _import('filesystem');
 
-if (!defined('XRUN'))
-{
+if (!defined('XRUN')) {
 	$core->run();
 }
 

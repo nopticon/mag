@@ -34,28 +34,24 @@ class core
 			FROM _config';
 		$this->config = sql_rowset($sql, 'config_name', 'config_value');
 		
-		if ($this->v('site_disable'))
-		{
+		if ($this->v('site_disable')) {
 			exit('not_running');
 		}
 		
 		$address = $this->v('site_address');
 		$host_addr = array_key(explode('/', array_key(explode('://', $address), 1)), 0);
 		
-		if ($host_addr != get_host())
-		{
+		if ($host_addr != get_host()) {
 			$allow_hosts = get_file(XFS.XCOR . 'store/domain_alias');
 			
-			foreach ($allow_hosts as $row)
-			{
+			foreach ($allow_hosts as $row) {
 				if (substr($row, 0, 1) == '#') continue;
 				
 				$remote = (strpos($row, '*') === false);
 				$row = (!$remote) ? str_replace('*', '', $row) : $row;
 				$row = str_replace('www.', '', $row);
 				
-				if ($row == get_host())
-				{
+				if ($row == get_host()) {
 					$sub = str_replace($row, '', get_host());
 					$sub = (f($sub)) ? $sub . '.' : ($remote ? 'www.' : '');
 					
@@ -66,16 +62,14 @@ class core
 			}
 		}
 		
-		if (strpos($address, 'www.') !== false && strpos(get_host(), 'www.') === false && strpos($address, get_host()))
- 		{
+		if (strpos($address, 'www.') !== false && strpos(get_host(), 'www.') === false && strpos($address, get_host())) {
 			$a = $this->v('site_address') . str_replace(str_replace('www.', '', $address), '', _page());
 			redirect($a, false);
 		}
 		
 		$this->cache_dir = XFS.XCOR . 'cache/';
 		
-		if (is_remote() && @file_exists($this->cache_dir) && @is_writable($this->cache_dir) && @is_readable($this->cache_dir))
-		{
+		if (is_remote() && @file_exists($this->cache_dir) && @is_writable($this->cache_dir) && @is_readable($this->cache_dir)) {
 			$this->cache_f = true;
 		}
 		
@@ -92,23 +86,18 @@ class core
 	{
 		$a = (isset($this->config->$k)) ? $this->config->$k : false;
 		
-		if ($nr !== false && $v !== false)
-		{
+		if ($nr !== false && $v !== false) {
 			$this->config->$k = $v;
 			return $v;
 		}
 		
-		if ($v !== false)
-		{
+		if ($v !== false) {
 			$sql_update = array('config_value' => $v);
 			
-			if ($a !== false)
-			{
+			if ($a !== false) {
 				$sql = 'UPDATE _config SET ' . sql_build('UPDATE', $sql_update) . sql_filter('
 					WHERE config_name = ?', $k);
-			}
-			else
-			{
+			} else {
 				$sql_update['config_name'] = $k;
 				$sql = 'INSERT INTO _config' . sql_build('INSERT', $sql_update);
 			}
@@ -123,77 +112,64 @@ class core
 	{
 		global $bio, $core, $file, $warning;
 		
-		if (!$rewrite = enable_rewrite())
-		{
-			_fatal(499, '', '', 'Enable mod_rewrite on Apache.');
+		if (!$rewrite = enable_rewrite()) {
+			$warning->now('Enable mod_rewrite on Apache.');
 		}
 		
 		require_once(XFS.XCOR . 'modules.php');
 		
-		if ($mod === false)
-		{
+		if ($mod === false) {
 			$mod = request_var('module', '');
 		}
 		$mod = (!empty($mod)) ? $mod : 'home';
 		
-		if (!$_module = $core->cache->load('module_' . str_replace('/', '_', $mod)))
-		{
+		if (!$_module = $core->cache->load('module_' . str_replace('/', '_', $mod))) {
 			$sql = 'SELECT *
 				FROM _modules
 				WHERE module_alias = ?';
-			if (!$_module = $core->cache->store(sql_fieldrow(sql_filter($sql, $mod))))
-			{
-				$warning->fatal();
+			if (!$_module = $core->cache->store(sql_fieldrow(sql_filter($sql, $mod)))) {
+				$warning->now('no_module');
 			}
 		}
 		
-		$_module->module_path = XFS.XCOR . '_'. $_module->module_path . $_module->module_basename;
+		$_module->module_path = XFS.XMOD . $_module->module_path . $_module->module_basename;
 		
-		if (!@file_exists($_module->module_path))
-		{
-			$warning->fatal();
+		if (!@file_exists($_module->module_path)) {
+			$warning->now('no_path: ' . $_module->module_path);
 		}
 		
 		@require_once($_module->module_path);
 		
 		$_object = '__' . $mod;
-		if (!class_exists($_object))
-		{
-			$warning->fatal();
+		if (!class_exists($_object)) {
+			$warning->now();
 		}
 		$module = new $_object();
 		
 		$module->m($mod);
 		
-		if (@method_exists($module, 'install'))
-		{
+		if (@method_exists($module, 'install')) {
 			$module->_install();
 		}
 		
-		if (!defined('ULIB'))
-		{
+		if (!defined('ULIB')) {
 			define('ULIB', _link() . str_replace(w('../ ./'), '', LIB));
 		}
 		
-		if (empty($this->input))
-		{
+		if (empty($this->input)) {
 			$_input = array();
 			
-			if ($arg = request_var('args'))
-			{
-				foreach (explode('.', $arg) as $str_pair)
-				{
+			if ($arg = request_var('args')) {
+				foreach (explode('.', $arg) as $str_pair) {
 					$pair = explode(':', $str_pair);
 					
-					if (isset($pair[0]) && isset($pair[1]) && !empty($pair[0]))
-					{
+					if (isset($pair[0]) && isset($pair[1]) && !empty($pair[0])) {
 						$this->input[$pair[0]] = $pair[1];
 					}
 				}
 			}
 			
-			if (isset($_POST) && count($_POST))
-			{
+			if (isset($_POST) && count($_POST)) {
 				$_POST = _utf8($_POST);
 				$this->input = array_merge($this->input, $_POST);
 			}
@@ -201,13 +177,11 @@ class core
 		
 		$module->levels($this->input);
 		
-		if (!method_exists($module, $module->x(1)))
-		{
-			$warning->fatal();
+		if (!method_exists($module, $module->x(1))) {
+			$warning->now();
 		}
 		
-		if ($module->auth() && (!$module->x(1) || !in_array($module->x(1), $module->exclude)))
-		{
+		if ($module->auth() && (!$module->x(1) || !in_array($module->x(1), $module->exclude))) {
 			$module->signin();
 		}
 		
@@ -216,49 +190,41 @@ class core
 		$bio->start(true);
 		$bio->setup();
 		
-		if (!$module->auth_access() && $module->auth())
-		{
-			$warning->fatal();
+		if (!$module->auth_access() && $module->auth()) {
+			$warning->now();
 		}
 		
 		$module->navigation('home', '', '');
 		$module->navigation($module->m(), '');
 		
-		if ($module->x(1) != 'home' && @method_exists($module, 'init'))
-		{
+		if ($module->x(1) != 'home' && @method_exists($module, 'init')) {
 			$module->init();
 		}
 		
 		hook(array($module, $module->x(1)));
 		
-		if (!$module->_template())
-		{
+		if (!$module->_template()) {
 			$module->_template($mod);
 		}
 		
 		//
 		// Output template
 		$page_module = 'MODULE_' . $mod;
-		if ($bio->is_lang($page_module))
-		{
+		if ($bio->is_lang($page_module)) {
 			$module->page_title($page_module);
 		}
 		
 		$browser_upgrade = false;
-		if (!$core->v('skip_browser_detect') && ($list_browser = $file->read(XFS.XCOR . 'store/need_browser')))
-		{
+		if (!$core->v('skip_browser_detect') && ($list_browser = $file->read(XFS.XCOR . 'store/need_browser'))) {
 			$browser_list = w();
 			
-			foreach ($list_browser as $row)
-			{
+			foreach ($list_browser as $row) {
 				$e = explode(' :: ', $row);
 				$browser_list[$e[0]] = $e[1];
 			}
 			
-			foreach ($browser_list as $browser => $version)
-			{
-				if (_browser($browser) && _browser($browser, $version))
-				{
+			foreach ($browser_list as $browser => $version) {
+				if (_browser($browser) && _browser($browser, $version)) {
 					v_style(array(
 						'visual' => ULIB . LIB_VISUAL)
 					);
@@ -285,13 +251,11 @@ class core
 	
 	public function _sf($a = false)
 	{
-		if ($a !== false)
-		{
+		if ($a !== false) {
 			$this->sf[] = $a;
 		}
 		
-		if (!count($this->sf))
-		{
+		if (!count($this->sf)) {
 			return false;
 		}
 		
@@ -317,13 +281,11 @@ class fff
 	
 	public function __call($fun, $pars)
 	{
-		if (!count($pars))
-		{
+		if (!count($pars)) {
 			$pars = array(this);
 		}
 		
-		foreach ($pars as &$v)
-		{
+		foreach ($pars as &$v) {
 			if ($v === this)
 			{
 				$v = $this->val;
@@ -332,8 +294,7 @@ class fff
 		}
 		
 		$tmp = eval(sprintf('return defined("%1$s") ? constant("%1$s") : "%1$s";', $fun));
-		if ($tmp == 'x')
-		{
+		if ($tmp == 'x') {
 			return $this->val;
 		}
 		

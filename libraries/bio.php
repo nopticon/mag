@@ -20,25 +20,27 @@ if (!defined('XFS')) exit;
 
 class bio
 {
-	protected $cookie = array();
-	protected $queue = array();
-	protected $base = array();
-	protected $auth = array();
-	protected $lang = array();
+	protected $queue, $base;
+	protected $auth, $lang;
 	
 	protected $page, $browser, $ip;
-	protected $session, $date_format, $timezone, $dst;
+	protected $bio, $session, $date_format;
+	protected $timezone, $dst;
 	
 	public function __construct()
 	{
+		$this->queue = new stdClass;
+		$this->base = new stdClass;
+		
+		$this->uid = '';
 		$this->session = '';
+		
 		$this->page = _page();
 		$this->browser = v_server('HTTP_USER_AGENT');
 		$this->ip = htmlspecialchars(v_server('REMOTE_ADDR'));
 		
-		foreach (w('write replace remove') as $row)
-		{
-			$this->queue[$row] = w();
+		foreach (w('write replace remove') as $row) {
+			$this->queue->$row = w();
 		}
 		
 		return;
@@ -46,23 +48,20 @@ class bio
 	
 	public function select($value, $session = false)
 	{
-		if ($session)
-		{
+		if ($session) {
 			$sql = 'SELECT *
 				FROM _sessions s
 				INNER JOIN _bio b ON b.bio_id = s.session_bio_id
 				WHERE s.session_id = ?';
-		}
-		else
-		{
+		} else {
 			$sql = 'SELECT *
 				FROM _bio
 				WHERE bio_id = ?';
 		}
 		
-		$result = _fieldrow(sql_filter($sql, $value));
+		$result = sql_fieldrow(sql_filter($sql, $value));
 		
-		if (isset($result['bio_key'])) unset($result['bio_key']);
+		if (isset($result->bio_key)) unset($result->bio_key);
 		
 		$sql = 'SELECT *
 			FROM _bio_auth_property
@@ -71,7 +70,7 @@ class bio
 			INNER JOIN _bio_auth_field ON property_field = field_id
 			WHERE auth_bio = ?
 			ORDER BY field_alias';
-		$result['bio_auth'] = _rowset(sql_filter($sql, $result['bio_id']));
+		$result->bio_auth = sql_rowset(sql_filter($sql, $result->bio_id));
 		
 		return $result;
 	}
@@ -80,42 +79,33 @@ class bio
 	{
 		global $core;
 		
-		if (array_strpos($this->page, w('ext')) !== false)
-		{
+		if (array_strpos($this->page, w('ext')) !== false) {
 			$_update = false;
 		}
 		
-		$this->cookie = w();
-		if (isset($_COOKIE[$core->v('cookie_name') . '_sid']) || isset($_COOKIE[$core->v('cookie_name') . '_u']))
-		{
-			$this->cookie['u'] = request_var($core->v('cookie_name') . '_u', 0);
-			$this->session = request_var($core->v('cookie_name') . '_sid', '');
-		}
+		$this->uid = request_var($core->v('cookie_name') . '_u', 0);
+		$this->session = request_var($core->v('cookie_name') . '_sid', '');
 		
-		if (!empty($this->session) && ($this->base = $this->select($this->session, true)))
-		{
-			$s_ip = implode('.', array_slice(explode('.', $this->base['session_ip']), 0, 4));
+		if (!empty($this->session) && ($this->base = $this->select($this->session, true))) {
+			$s_ip = implode('.', array_slice(explode('.', $this->base->session_ip), 0, 4));
 			$b_ip = implode('.', array_slice(explode('.', $this->ip), 0, 4));
 			
-			if ($b_ip == $s_ip && $this->base['session_browser'] == $this->browser)
-			{
+			if ($b_ip == $s_ip && $this->base->session_browser == $this->browser) {
 				// Only update session a minute or so after last update or if page changes
-				if (time() - $this->base['session_time'] > 60 || $this->base['session_page'] != $this->page)
-				{
+				if (time() - $this->base->session_time > 60 || $this->base->session_page != $this->page) {
 					$sql_update = array('session_time' => time());
-					if ($_update)
-					{
+					if ($_update) {
 						$sql_update['session_page'] = $this->page;
 					}
 					
-					$sql = 'UPDATE _sessions SET ' . _build_array('UPDATE', $sql_update) . sql_filter('
+					$sql = 'UPDATE _sessions SET ' . sql_build('UPDATE', $sql_update) . sql_filter('
 						WHERE session_id = ?', $this->session);
-					_sql($sql);
+					sql_query($sql);
 				}
 				
 				if ($_update)
 				{
-					$this->base['session_page'] = $this->page;
+					$this->base->session_page = $this->page;
 				}
 				
 				if ($this->v('is_bio'))
@@ -168,30 +158,30 @@ class bio
 			$this->base = $this->select($this->cookie['u']);
 		}
 		
-		$this->base['session_last_visit'] = time();
+		$this->base->session_last_visit = time();
 		
-		if ($this->base['bio_id'] != 1)
+		if ($this->base->bio_id != 1)
 		{
 			$sql = 'SELECT session_time, session_id
 				FROM _sessions
 				WHERE session_bio_id = ?
 				ORDER BY session_time DESC
 				LIMIT 1';
-			if ($result = _fieldrow(sql_filter($sql, $this->base['bio_id'])))
+			if ($result = sql_fieldrow(sql_filter($sql, $this->base->bio_id)))
 			{
 				$this->base = array_merge($this->base, $result);
-				$this->session = $this->base['session_id'];
+				$this->session = $this->base->session_id;
 				unset($result);
   		}
 			
-			$this->base['session_last_visit'] = (isset($this->base['session_time']) && $this->base['session_time']) ? $this->base['session_time'] : (($this->base['bio_lastvisit']) ? $this->base['bio_lastvisit'] : time());
+			$this->base->session_last_visit = (isset($this->base->session_time) && $this->base->session_time) ? $this->base->session_time : (($this->base->bio_lastvisit) ? $this->base->bio_lastvisit : time());
 		}
 		
 		// Create or update the session
 		$sql_ary = array(
-			'session_bio_id' => $this->base['bio_id'],
+			'session_bio_id' => $this->base->bio_id,
 			'session_start' => time(),
-			'session_last_visit' => $this->base['session_last_visit'],
+			'session_last_visit' => $this->base->session_last_visit,
 			'session_time' => time(),
 			'session_browser' => (string) $this->browser,
 			'session_ip' => (string) $this->ip
@@ -200,7 +190,7 @@ class bio
 		if ($_update)
 		{
 			$sql_ary['session_page'] = (string) $this->page;
-			$this->base['session_page'] = $sql_ary['session_page'];
+			$this->base->session_page = $sql_ary['session_page'];
 		}
 		
 		$run_update = false;
@@ -208,17 +198,17 @@ class bio
 		{
 			$run_update = true;
 			
-			$sql = 'UPDATE _sessions SET ' . _build_array('UPDATE', $sql_ary) . sql_filter('
+			$sql = 'UPDATE _sessions SET ' . sql_build('UPDATE', $sql_ary) . sql_filter('
 				WHERE session_id = ?', $this->session);
-			_sql($sql);
+			sql_query($sql);
 		}
 		
-		if (!$this->session || ($run_update && !_affectedrows()))
+		if (!$this->session || ($run_update && !sql_affectedrows()))
 		{
-			$this->session = $this->base['session_id'] = $sql_ary['session_id'] = (string) md5(unique_id());
+			$this->session = $this->base->session_id = $sql_ary['session_id'] = (string) md5(unique_id());
 			
-			$sql = 'INSERT INTO _sessions' . _build_array('INSERT', $sql_ary);
-			_sql($sql);
+			$sql = 'INSERT INTO _sessions' . sql_build('INSERT', $sql_ary);
+			sql_query($sql);
 		}
 		
 		$this->set_cookie('u', $this->cookie['u'], (time() + 31536000));
@@ -276,21 +266,21 @@ class bio
 			WHERE session_time < ' . (time() - $core->v('session_length')) . '
 			GROUP BY session_bio_id, session_page
 			LIMIT 5';
-		$sessions = _rowset($sql);
+		$sessions = sql_rowset($sql);
 		
 		$del_bio_id = array();
 		$del_sessions = 0;
 		foreach ($sessions as $row)
 		{
-			if ($row['session_bio_id'] != 1)
+			if ($row->session_bio_id != 1)
 			{
 				$sql = 'UPDATE _bio
 					SET bio_lastvisit = ?, bio_lastpage = ?
 					WHERE bio_id = ?';
-				_sql(sql_filter($sql, $row['recent_time'], $row['session_page'], $row['session_bio_id']));
+				sql_query(sql_filter($sql, $row->recent_time, $row->session_page, $row->session_bio_id));
 			}
 			
-			$del_bio_id[] = $row['session_bio_id'];
+			$del_bio_id[] = $row->session_bio_id;
 			$del_sessions++;
 		}
 		
@@ -300,7 +290,7 @@ class bio
 			$sql = 'DELETE FROM _sessions
 				WHERE session_bio_id IN (??)
 					AND session_time < ?';
-			_sql(sql_filter($sql, implode(',', $del_bio_id), (time() - $core->v('session_length'))));
+			sql_query(sql_filter($sql, implode(',', $del_bio_id), (time() - $core->v('session_length'))));
 		}
 		
 		// Less than 5 sessions, update gc timer ... else we want gc
@@ -463,7 +453,7 @@ class bio
 					case 'bio':
 						if (!isset($this->auth_bio[$bio_id][$d]))
 						{
-							$this->auth_bio[$bio_id][$d] = ($this->base['bio_id'] > 1 && $this->base['bio_active']);
+							$this->auth_bio[$bio_id][$d] = ($this->base->bio_id > 1 && $this->base->bio_active);
 						}
 						
 						return $this->auth_bio[$bio_id][$d];
@@ -530,7 +520,7 @@ class bio
 					$this->base[$d] = $v;
 				}
 				
-				$response = (isset($this->base[$d])) ? $this->base[$d] : false;
+				$response = (isset($this->base->$d)) ? $this->base->$d : false;
 				break;
 			case 'session':
 				if ($v !== false)
@@ -557,7 +547,7 @@ class bio
 	{
 		global $style, $core;
 		
-		$this->base['bio_lang'] = $core->v('site_lang');
+		$this->base->bio_lang = $core->v('site_lang');
 		$this->date_format = $this->v('bio_dateformat');
 		$this->timezone = $this->v('bio_timezone') * 3600;
 		$this->dst = $this->v('bio_dst') * 3600;

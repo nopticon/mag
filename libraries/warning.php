@@ -24,6 +24,17 @@ class warning
 	{
 		return;
 	}
+	
+	public function now($message = false)
+	{
+		if ($message !== false) {
+			echo '<pre>';
+			var_dump($message);
+			echo '</pre>';
+		}
+		
+		exit;
+	}
 }
 
 ?>
