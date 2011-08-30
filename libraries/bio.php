@@ -18,17 +18,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class bio
-{
-	protected $queue, $base;
-	protected $auth, $lang;
+class bio {
+	protected $base;
+	protected $queue;
+	protected $auth;
+	protected $lang;
 	
-	protected $page, $browser, $ip;
-	protected $bio, $session, $date_format;
-	protected $timezone, $dst;
+	protected $page;
+	protected $browser;
+	protected $ip;
+	protected $bio;
+	protected $session;
+	protected $date_format;
+	protected $timezone;
+	protected $dst;
 	
-	public function __construct()
-	{
+	public function __construct() {
 		$this->queue = new stdClass;
 		$this->base = new stdClass;
 		
@@ -46,8 +51,7 @@ class bio
 		return;
 	}
 	
-	public function select($value, $session = false)
-	{
+	public function select($value, $session = false) {
 		if ($session) {
 			$sql = 'SELECT *
 				FROM _sessions s
@@ -75,8 +79,7 @@ class bio
 		return $result;
 	}
 	
-	public function start($_update = true)
-	{
+	public function start($_update = true) {
 		global $core;
 		
 		if (array_strpos($this->page, w('ext')) !== false) {
@@ -103,13 +106,11 @@ class bio
 					sql_query($sql);
 				}
 				
-				if ($_update)
-				{
+				if ($_update) {
 					$this->base->session_page = $this->page;
 				}
 				
-				if ($this->v('is_bio'))
-				{
+				if ($this->v('is_bio')) {
 					return true;
 				}
 			}
@@ -128,22 +129,19 @@ class bio
 	* garbage collection, (search)bot checking, banned user comparison. Basically
 	* though this method will result in a new session for a specific user.
 	*/
-	public function session_create($bio_id = false, $_update = true)
-	{
+	public function session_create($bio_id = false, $_update = true) {
 		global $core;
 		
 		$this->base = w();
 		
 		// Garbage collection. Remove old sessions updating user information
 		// if necessary. It means (potentially) 11 queries but only infrequently
-		if (time() > $core->v('session_last_gc') + $core->v('session_gc'))
-		{
+		if (time() > $core->v('session_last_gc') + $core->v('session_gc')) {
 			$this->session_gc();
 		}
 		
 		// If we've been passed a bio_id we'll grab data based on that
-		if ($bio_id !== false)
-		{
+		if ($bio_id !== false) {
 			$this->cookie['u'] = $bio_id;
 			$this->base = $this->select($this->cookie['u']);
 		}
@@ -152,23 +150,20 @@ class bio
 		// User does not exist
 		// User is inactive
 		// User is bot
-		if (!count($this->base) || !is_array($this->base))
-		{
+		if (!count($this->base) || !is_array($this->base)) {
 			$this->cookie['u'] = 1;
 			$this->base = $this->select($this->cookie['u']);
 		}
 		
 		$this->base->session_last_visit = time();
 		
-		if ($this->base->bio_id != 1)
-		{
+		if ($this->base->bio_id != 1) {
 			$sql = 'SELECT session_time, session_id
 				FROM _sessions
 				WHERE session_bio_id = ?
 				ORDER BY session_time DESC
 				LIMIT 1';
-			if ($result = sql_fieldrow(sql_filter($sql, $this->base->bio_id)))
-			{
+			if ($result = sql_fieldrow(sql_filter($sql, $this->base->bio_id))) {
 				$this->base = array_merge($this->base, $result);
 				$this->session = $this->base->session_id;
 				unset($result);
@@ -187,15 +182,13 @@ class bio
 			'session_ip' => (string) $this->ip
 		);
 		
-		if ($_update)
-		{
+		if ($_update) {
 			$sql_ary['session_page'] = (string) $this->page;
 			$this->base->session_page = $sql_ary['session_page'];
 		}
 		
 		$run_update = false;
-		if ($this->session)
-		{
+		if ($this->session) {
 			$run_update = true;
 			
 			$sql = 'UPDATE _sessions SET ' . sql_build('UPDATE', $sql_ary) . sql_filter('
@@ -203,8 +196,7 @@ class bio
 			sql_query($sql);
 		}
 		
-		if (!$this->session || ($run_update && !sql_affectedrows()))
-		{
+		if (!$this->session || ($run_update && !sql_affectedrows())) {
 			$this->session = $this->base->session_id = $sql_ary['session_id'] = (string) md5(unique_id());
 			
 			$sql = 'INSERT INTO _sessions' . sql_build('INSERT', $sql_ary);
@@ -222,15 +214,13 @@ class bio
 	 * 
 	 * Delete existing session, update last visit info first!
 	 */
-	public function session_kill()
-	{
+	public function session_kill() {
 		$sql = 'DELETE FROM _sessions
 			WHERE session_id = ?
 				AND session_bio_id = ?';
 		_sql(sql_filter($sql, $this->session, $this->base['bio_id']));
 		
-		if ($this->base['bio_id'] != 1)
-		{
+		if ($this->base['bio_id'] != 1) {
 			$sql = 'UPDATE _bio
 				SET bio_lastvisit = ?
 				WHERE bio_id = ?';
@@ -256,8 +246,7 @@ class bio
 	* limit. Due to the way in which we maintain session data we have to 
 	* ensure we update user data before those sessions are destroyed.
 	*/
-	public function session_gc()
-	{
+	public function session_gc() {
 		global $core;
 		
 		// Get expired sessions, only most recent for each user
@@ -270,10 +259,8 @@ class bio
 		
 		$del_bio_id = array();
 		$del_sessions = 0;
-		foreach ($sessions as $row)
-		{
-			if ($row->session_bio_id != 1)
-			{
+		foreach ($sessions as $row) {
+			if ($row->session_bio_id != 1) {
 				$sql = 'UPDATE _bio
 					SET bio_lastvisit = ?, bio_lastpage = ?
 					WHERE bio_id = ?';
@@ -284,8 +271,7 @@ class bio
 			$del_sessions++;
 		}
 		
-		if ($del_bio_id)
-		{
+		if ($del_bio_id) {
 			// Delete expired sessions
 			$sql = 'DELETE FROM _sessions
 				WHERE session_bio_id IN (??)
@@ -295,8 +281,7 @@ class bio
 		
 		// Less than 5 sessions, update gc timer ... else we want gc
 		// called again to delete other sessions
-		if ($del_sessions < 5)
-		{
+		if ($del_sessions < 5) {
 			$core->v('session_last_gc', time());
 		}
 
@@ -308,8 +293,7 @@ class bio
 	*
 	* Sets a cookie of the given name with the specified data for the given length of time.
 	*/
-	public function set_cookie($name, $cookiedata, $cookietime, $onlyhttp = false)
-	{
+	public function set_cookie($name, $cookiedata, $cookietime, $onlyhttp = false) {
 		global $core;
 		
 		$name = $core->v('cookie_name') . '_' . $name;
@@ -320,18 +304,15 @@ class bio
 		return true;
 	}
 	
-	public function browser()
-	{
+	public function browser() {
 		return $this->browser;
 	}
 	
-	public function auth_bio($bio)
-	{
+	public function auth_bio($bio) {
 		return ($bio !== false) ? $bio : $this->v('bio_id');
 	}
 	
-	public function auth_all($bio = false)
-	{
+	public function auth_all($bio = false) {
 		$sql = 'SELECT *
 			FROM _bio_auth a, _bio_auth_fields f
 			WGERE a.auth_bio = ?
@@ -340,36 +321,30 @@ class bio
 		$this->auth[$bio] = _rowset(sql_filter($sql, $bio_id), 'field_alias', 'auth_value');
 	}
 	
-	public function auth_verify($key = false, $bio = false)
-	{
+	public function auth_verify($key = false, $bio = false) {
 		$bio = $this->auth_bio($bio);
 		
-		if ($key !== false)
-		{
+		if ($key !== false) {
 			return (isset($this->auth[$bio][$key]));
 		}
 		
 		return (isset($this->auth[$bio]));
 	}
 	
-	public function auth_read($key, $bio = false)
-	{
+	public function auth_read($key, $bio = false) {
 		$bio = $this->auth_bio($bio);
 		
-		if (!$this->auth_verify($key, $bio))
-		{
+		if (!$this->auth_verify($key, $bio)) {
 			return false;
 		}
 		
 		return true;
 	}
 	
-	public function auth_write($key, $value, $bio = false)
-	{
+	public function auth_write($key, $value, $bio = false) {
 		$bio = $this->auth_bio($bio);
 		
-		if ($this->auth_verify($key, $bio))
-		{
+		if ($this->auth_verify($key, $bio)) {
 			return false;
 		}
 		
@@ -379,11 +354,8 @@ class bio
 		return true;
 	}
 	
-	public function auth_replace2($key, $value, $bio = false)
-	{
+	public function auth_replace2($key, $value, $bio = false) {
 		$bio = $this->auth_bio($bio);
-		
-		
 		
 		$this->auth_queue('replace', $key, $bio);
 		$this->auth[$key][$bio] = $value;
@@ -391,12 +363,10 @@ class bio
 		return true;
 	}
 	
-	public function auth_remove2($key, $bio = false)
-	{
+	public function auth_remove2($key, $bio = false) {
 		$bio = $this->auth_bio($bio);
 		
-		if (!$this->auth_verify($key, $bio))
-		{
+		if (!$this->auth_verify($key, $bio)) {
 			return false;
 		}
 		
@@ -406,17 +376,13 @@ class bio
 		return true;
 	}
 	
-	public function auth_queue()
-	{
+	public function auth_queue() {
 		
 	}
 	
-	public function auth_queue_process()
-	{
-		foreach ($this->queue as $i => $row)
-		{
-			switch ($i)
-			{
+	public function auth_queue_process() {
+		foreach ($this->queue as $i => $row) {
+			switch ($i) {
 				case 'create':
 					break;
 				case 'update':
@@ -427,12 +393,9 @@ class bio
 		}
 	}
 	
-	public function v($d = false, $v = false)
-	{
-		if ($d === false)
-		{
-			if (!$this->base)
-			{
+	public function v($d = false, $v = false) {
+		if ($d === false) {
+			if (!$this->base) {
 				return false;
 			}
 			
@@ -443,16 +406,13 @@ class bio
 		$key = str_replace($mode . '_', '', $d);
 		$response = false;
 		
-		switch ($mode)
-		{
+		switch ($mode) {
 			case 'is':
 				$bio_id = $this->v('bio_id');
 				
-				switch ($key)
-				{
+				switch ($key) {
 					case 'bio':
-						if (!isset($this->auth_bio[$bio_id][$d]))
-						{
+						if (!isset($this->auth_bio[$bio_id][$d])) {
 							$this->auth_bio[$bio_id][$d] = ($this->base->bio_id > 1 && $this->base->bio_active);
 						}
 						
@@ -465,8 +425,7 @@ class bio
 			case 'auth':
 				$bio_id = $this->v('bio_id');
 				
-				if (!isset($this->auth_bio[$bio_id]))
-				{
+				if (!isset($this->auth_bio[$bio_id])) {
 					$sql = 'SELECT *
 						FROM _bio_auth a, _bio_auth_fields f
 						WHERE a.auth_bio = ?
@@ -505,26 +464,22 @@ class bio
 				$response = (isset($this->auth_bio[$bio_id][$key])) ? true : false;
 				break;
 			case 'bio';
-				switch ($key)
-				{
+				switch ($key) {
 					case 'age':
-						if (!isset($this->base[$d]))
-						{
+						if (!isset($this->base[$d])) {
 							// TODO: Calculate age based on birthday
 						}
 						break;
 				}
 				
-				if ($v !== false)
-				{
+				if ($v !== false) {
 					$this->base[$d] = $v;
 				}
 				
 				$response = (isset($this->base->$d)) ? $this->base->$d : false;
 				break;
 			case 'session':
-				if ($v !== false)
-				{
+				if ($v !== false) {
 					$this->{$key} = $v;
 				}
 				
@@ -537,14 +492,12 @@ class bio
 		return $response;
 	}
 	
-	public function replace($a)
-	{
+	public function replace($a) {
 		$this->base = $a;
 		return true;
 	}
 	
-	public function setup($tpl = '')
-	{
+	public function setup($tpl = '') {
 		global $style, $core;
 		
 		$this->base->bio_lang = $core->v('site_lang');
@@ -561,20 +514,17 @@ class bio
 		return;
 	}
 	
-	public function load_lang($f, $d = false)
-	{
+	public function load_lang($f, $d = false) {
 		$lang = w();
 		
-		if ($d === false)
-		{
+		if ($d === false) {
 			global $core;
 			
 			$d = $core->v('site_lang');
 		}
 		
 		$filepath = XFS.XCOR . 'lang/' . $d . '/' . $f . '.php';
-		if (@file_exists($filepath))
-		{
+		if (@file_exists($filepath)) {
 			require_once($filepath);
 		}
 		
@@ -582,40 +532,33 @@ class bio
 		return true;
 	}
 	
-	public function _lang_check()
-	{
+	public function _lang_check() {
 		return (sizeof($this->lang));
 	}
 	
-	public function _lang()
-	{
+	public function _lang() {
 		$f = func_get_args();
-		if ($this->is_lang($f[0]))
-		{
+		if ($this->is_lang($f[0])) {
 			return array_construct($this->lang, array_map('strtoupper', $f));
 		}
 		
 		return $f[0];
 	}
 	
-	public function _lang_set($k, $v)
-	{
+	public function _lang_set($k, $v) {
 		$this->lang[strtoupper($k)] = $v;
 		return true;
 	}
 	
-	public function is_lang($k)
-	{
-		if (is_array($k))
-		{
+	public function is_lang($k) {
+		if (is_array($k)) {
 			return false;
 		}
 		
 		return isset($this->lang[strtoupper($k)]);
 	}
 	
-	public function time_diff($timestamp, $detailed = false, $n = 0)
-	{
+	public function time_diff($timestamp, $detailed = false, $n = 0) {
 		// If the difference is positive "ago" - negative "away"
 		$now = time();
 		$action = ($timestamp >= $now) ? 'away' : 'ago';
@@ -630,11 +573,9 @@ class bio
 		
 		$i = count($lengths);
 		$time = '';
-		while ($i >= $n)
-		{
+		while ($i >= $n) {
 			$item = $lengths[$i - 1];
-			if ($diff < $item)
-			{
+			if ($diff < $item) {
 				$i--;
 				continue;
 			}
@@ -643,8 +584,7 @@ class bio
 			$diff -= ($val * $item);
 			$result[] = $val . $periods[($i - 1)];
 			
-			if (!$detailed)
-			{
+			if (!$detailed) {
 				$i = 0;
 			}
 			$i--;
@@ -653,43 +593,33 @@ class bio
 		return (count($result)) ? $result : false;
 	}
 	
-	public function format_date($gmepoch, $format = false, $forcedate = false)
-	{
+	public function format_date($gmepoch, $format = false, $forcedate = false) {
 		static $lang_dates, $midnight;
 		
-		if (empty($lang_dates))
-		{
-			foreach ($this->lang['datetime'] as $match => $replace)
-			{
+		if (empty($lang_dates)) {
+			foreach ($this->lang['datetime'] as $match => $replace) {
 				$lang_dates[$match] = $replace;
 			}
 		}
 		
 		$format = (!$format) ? $this->date_format : $format;
 		
-		if (!$midnight)
-		{
+		if (!$midnight) {
 			list($d, $m, $y) = explode(' ', gmdate('j n Y', time() + $this->timezone + $this->dst));
 			$midnight = gmmktime(0, 0, 0, $m, $d, $y) - $this->timezone - $this->dst;
 		}
 		
-		if ((strpos($format, '\M') === false && strpos($format, 'M') !== false) || (strpos($format, '\r') === false && strpos($format, 'r') !== false))
-		{
+		if ((strpos($format, '\M') === false && strpos($format, 'M') !== false) || (strpos($format, '\r') === false && strpos($format, 'r') !== false)) {
 			$lang_dates['May'] = $this->lang['datetime']['May_short'];
 		}
 		
-		if ($forcedate != false)
-		{
+		if ($forcedate != false) {
 			$a = $this->time_diff($gmepoch, 1, 2);
-			if ($a !== false)
-			{
-				if (count($a) < 4)
-				{
+			if ($a !== false) {
+				if (count($a) < 4) {
 					return implode(' ', $a);
 				}
-			}
-			else
-			{
+			} else {
 				return $this->_lang('AGO_LESS_MIN');
 			}
 		}
@@ -697,12 +627,10 @@ class bio
 		return strtr(@gmdate(str_replace('|', '', $format), $gmepoch + $this->timezone + $this->dst), $lang_dates);
 	}
 	
-	public function _groups()
-	{
+	public function _groups() {
 		global $core;
 		
-		if (!$groups = $core->cache_load('groups'))
-		{
+		if (!$groups = $core->cache_load('groups')) {
 			$sql = 'SELECT *
 				FROM _groups
 				ORDER BY group_name';
@@ -711,12 +639,10 @@ class bio
 		return $groups;
 	}
 	
-	public function auth_founder($bio)
-	{
+	public function auth_founder($bio) {
 		global $core;
 		
-		if (!$founders = $core->cache_load('founders'))
-		{
+		if (!$founders = $core->cache_load('founders')) {
 			// TODO: Make SQL to get founders profiles
 			
 			$sql = 'SELECT b.bio_id
@@ -729,21 +655,17 @@ class bio
 		return (is_array($founders) && in_array($uid, array_keys($founders)));
 	}
 	
-	public function auth_groups($uid = false)
-	{
-		if ($uid === false)
-		{
+	public function auth_groups($uid = false) {
+		if ($uid === false) {
 			$uid = $this->v('bio_id');
 		}
 		
 		$groups = w();
-		if ($this->auth_founder($uid))
-		{
+		if ($this->auth_founder($uid)) {
 			$groups = array_keys($this->_groups());
 		}
 		
-		if (!count($groups))
-		{
+		if (!count($groups)) {
 			$sql = 'SELECT g.group_id
 				FROM _groups g, _groups_members gm
 				WHERE g.group_id = gm.member_group
@@ -754,12 +676,10 @@ class bio
 		return _implode(',', $groups);
 	}
 	
-	public function auth_list()
-	{
+	public function auth_list() {
 		global $core;
 		
-		if (!$fields = $core->cache_load('auth_fields'))
-		{
+		if (!$fields = $core->cache_load('auth_fields')) {
 			$sql = 'SELECT *
 				FROM _bio_auth_field
 				ORDER BY field_alias';
@@ -769,32 +689,26 @@ class bio
 		return $fields;
 	}
 	
-	public function auth($k, $v = -1, $uid = false)
-	{
+	public function auth($k, $v = -1, $uid = false) {
 		global $bio;
 		
-		if ($uid === false)
-		{
+		if ($uid === false) {
 			$uid = $bio->v('bio_id');
 		}
 		
-		if ($v !== -1)
-		{
+		if ($v !== -1) {
 			$this->auth[$uid][$k] = $v;
 		}
 		
 		return (isset($this->auth[$uid][$k])) ? $this->auth[$uid][$k] : false;
 	}
 	
-	public function auth_replace($orig, $repl, $uid = false)
-	{
-		if (!$this->auth_get($repl, $uid))
-		{
+	public function auth_replace($orig, $repl, $uid = false) {
+		if (!$this->auth_get($repl, $uid)) {
 			return false;
 		}
 		
-		if ($uid === false)
-		{
+		if ($uid === false) {
 			$uid = $this->v('bio_id');
 		}
 		
@@ -805,15 +719,12 @@ class bio
 		return $this->auth_get($orig, $uid);
 	}
 	
-	public function auth_get($name, $uid = false, $global = false)
-	{
-		if ($uid === false)
-		{
+	public function auth_get($name, $uid = false, $global = false) {
+		if ($uid === false) {
 			$uid = $this->v('bio_id');
 		}
 		
-		if ($this->auth_founder($uid))
-		{
+		if ($this->auth_founder($uid)) {
 			return true;
 		}
 		
@@ -821,8 +732,7 @@ class bio
 		$auth_fields = $this->auth_list();
 		
 		// Get all auth for uid
-		if (!isset($this->auth[$uid]))
-		{
+		if (!isset($this->auth[$uid])) {
 			$this->auth[$uid] = w();
 			
 			$sql = 'SELECT *
@@ -830,10 +740,8 @@ class bio
 				WHERE auth_bio = ?';
 			$auth = _rowset(sql_filter($sql, $uid));
 			
-			foreach ($auth as $row)
-			{
-				if (!isset($row['auth_field']))
-				{
+			foreach ($auth as $row) {
+				if (!isset($row['auth_field'])) {
 					continue;
 				}
 				$this->auth[$uid][$auth_fields[$row['auth_field']]['field_alias']] = true;
@@ -843,25 +751,20 @@ class bio
 		$name = _alias($name, w('-'));
 		
 		$response = false;
-		if (isset($this->auth[$uid][$name]))
-		{
+		if (isset($this->auth[$uid][$name])) {
 			$response = true;
 		}
 		
-		if ($response === false)
-		{
+		if ($response === false) {
 			$field_found = false;
-			foreach ($auth_fields as $row)
-			{
-				if ($name === $row['field_alias'])
-				{
+			foreach ($auth_fields as $row) {
+				if ($name === $row['field_alias']) {
 					$field_found = true;
 					break;
 				}
 			}
 			
-			if (!$field_found)
-			{
+			if (!$field_found) {
 				global $core;
 				
 				$sql_insert = array(
@@ -873,8 +776,7 @@ class bio
 				
 				$core->cache_unload();
 				
-				if ($global)
-				{
+				if ($global) {
 					$response = true;
 				}
 			}
@@ -883,25 +785,20 @@ class bio
 		return $response;
 	}
 	
-	public function auth_update($f, $v = false, $uid = false)
-	{
+	public function auth_update($f, $v = false, $uid = false) {
 		global $core;
 		
-		if ($uid === false)
-		{
+		if ($uid === false) {
 			$uid = $this->v('bio_id');
 		}
 		
 		$field = $this->auth_field($f);
-		if ($field !== false)
-		{
+		if ($field !== false) {
 			$cv = isset($this->auth[$uid][$field['field_alias']]);
 			
-			switch ($v)
-			{
+			switch ($v) {
 				case true:
-					if ($cv)
-					{
+					if ($cv) {
 						return;
 					}
 					
@@ -915,8 +812,7 @@ class bio
 					$this->auth[$uid][$field['field_alias']] = true;
 					break;
 				case false:
-					if (!$cv)
-					{
+					if (!$cv) {
 						return;
 					}
 					
@@ -935,20 +831,16 @@ class bio
 		return;
 	}
 	
-	public function auth_remove($f, $uid = false)
-	{
+	public function auth_remove($f, $uid = false) {
 		global $core;
 		
-		if ($uid === false)
-		{
+		if ($uid === false) {
 			$uid = $this->v('bio_id');
 		}
 		
 		$field = $this->auth_field($f);
-		if ($field !== false)
-		{
-			if (!isset($this->auth[$uid][$field['field_alias']]))
-			{
+		if ($field !== false) {
+			if (!isset($this->auth[$uid][$field['field_alias']])) {
 				return;
 			}
 			
@@ -964,15 +856,13 @@ class bio
 		return;
 	}
 	
-	public function auth_field($f)
-	{
+	public function auth_field($f) {
 		$ff = (is_numb($f)) ? 'id' : 'alias';
 		
 		$sql = 'SELECT *
 			FROM _bio_auth_fields
 			WHERE field_?? = ?';
-		if (!$field = _fieldrow(sql_filter($sql, $ff, $f)))
-		{
+		if (!$field = _fieldrow(sql_filter($sql, $ff, $f))) {
 			return false;
 		}
 		return $field;

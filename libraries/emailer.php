@@ -18,8 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class emailer
-{
+class emailer {
 	private $message;
 	private $subject;
 	private $extra_headers;
@@ -30,14 +29,12 @@ class emailer
 	
 	private $template = array();
 	
-	public function __construct()
-	{
+	public function __construct() {
 		return $this->reset();
 	}
 	
 	// Resets all the data (address, template file, etc etc to default
-	public function reset()
-	{
+	public function reset() {
 		$this->reply_to = '';
 		$this->from = '';
 		$this->vars = '';
@@ -47,19 +44,16 @@ class emailer
 		$this->format = 'html';
 	}
 	
-	public function init($from, $template = '', $vars = array())
-	{
+	public function init($from, $template = '', $vars = array()) {
 		$this->from = trim($from);
 		
 		$template_parts = explode(':', $template);
 		
-		if (isset($template_parts[0]))
-		{
+		if (isset($template_parts[0])) {
 			$this->use_template($template_parts[0]);
 		}
 		
-		if (isset($template_parts[1]))
-		{
+		if (isset($template_parts[1])) {
 			$this->format = $template_parts[1];
 		}
 		
@@ -69,38 +63,31 @@ class emailer
 	}
 	
 	// Sets an email address to send to
-	public function email_address($address)
-	{
+	public function email_address($address) {
 		$this->addresses['to'] = trim($address);
 	}
 
-	public function cc($address)
-	{
+	public function cc($address) {
 		$this->addresses['cc'][] = trim($address);
 	}
 
-	public function bcc($address)
-	{
+	public function bcc($address) {
 		$this->addresses['bcc'][] = trim($address);
 	}
 
-	public function replyto($address)
-	{
+	public function replyto($address) {
 		$this->reply_to = trim($address);
 	}
 
-	public function subject($subject = '')
-	{
+	public function subject($subject = '') {
 		$this->subject = trim(preg_replace('#[\n\r]+#s', '', $subject));
 	}
 	
-	public function extra_headers($headers)
-	{
+	public function extra_headers($headers) {
 		$this->extra_headers .= trim($headers) . "\n";
 	}
 
-	public function use_template($template)
-	{
+	public function use_template($template) {
 		global $bio, $core, $database;
 		
 		$template_parts = array_map('trim', explode('/', $template));
@@ -108,17 +95,14 @@ class emailer
 		$template_file = (isset($template_parts[0])) ? $template_parts[0] : 'default';
 		$template_lang = ($bio->v('bio_lang')) ? $bio->v('bio_lang') : $core->v('site_lang');
 		
-		if (!isset($this->template[$template_lang][$template_file]))
-		{
+		if (!isset($this->template[$template_lang][$template_file])) {
 			// Load template
-			if (!$contents = $core->cache->load('email_' . $template_lang . '_' . $template_file))
-			{
+			if (!$contents = $core->cache->load('email_' . $template_lang . '_' . $template_file)) {
 				$sql = 'SELECT *
 					FROM _email_template
 					WHERE email_template = ?
 						AND email_lang = ?';
-				if (!$contents = $core->cache->store(_rowset($sql, $template_file, $template_lang)))
-				{
+				if (!$contents = $core->cache->store(_rowset($sql, $template_file, $template_lang))) {
 					$this->use_template();
 				}
 			}
@@ -131,24 +115,21 @@ class emailer
 		return true;
 	}
 
-	public function send()
-	{
+	public function send() {
 		global $core, $bio;
 		
 		// Escape all quotes, else the eval will fail.
 		$this->message = str_replace ("'", "\'", $this->message);
 		$this->message = preg_replace('#\{([a-z0-9\-_]*?)\}#is', "' . $\\1 . '", $this->message);
 		
-		foreach ($this->vars as $k => $v)
-		{
+		foreach ($this->vars as $k => $v) {
 			${$k} = $v;
 		}
 
 		eval("\$this->msg = '$this->msg';");
 
 		// Clear vars
-		foreach ($this->vars as $k => $v)
-		{
+		foreach ($this->vars as $k => $v) {
 			unset($$k);
 		}
 
@@ -156,28 +137,21 @@ class emailer
 		// do this here because the subject may contain a variable
 		$drop_header = '';
 		$match = array();
-		if (preg_match('#^(Subject:(.*?))$#m', $this->message, $match))
-		{
+		if (preg_match('#^(Subject:(.*?))$#m', $this->message, $match)) {
 			$this->subject = (trim($match[2]) != '') ? trim($match[2]) : (($this->subject != '') ? $this->subject : 'No Subject');
 			$drop_header .= '[\r\n]*?' . preg_quote($match[1], '#');
-		}
-		else
-		{
+		} else {
 			$this->subject = (($this->subject != '') ? $this->subject : 'No Subject');
 		}
 
-		if (preg_match('#^(Charset:(.*?))$#m', $this->message, $match))
-		{
+		if (preg_match('#^(Charset:(.*?))$#m', $this->message, $match)) {
 			$this->encoding = (trim($match[2]) != '') ? trim($match[2]) : _lang('ENCODING');
 			$drop_header .= '[\r\n]*?' . preg_quote($match[1], '#');
-		}
-		else
-		{
+		} else {
 			$this->encoding = _lang('ENCODING');
 		}
 
-		if ($drop_header != '')
-		{
+		if ($drop_header != '') {
 			$this->message = trim(preg_replace('#' . $drop_header . '#s', '', $this->message));
 		}
 
@@ -186,21 +160,18 @@ class emailer
 		$cc = (isset($this->addresses['cc']) && count($this->addresses['cc'])) ? implode(', ', $this->addresses['cc']) : '';
 		$bcc = (isset($this->addresses['bcc']) && count($this->addresses['bcc'])) ? implode(', ', $this->addresses['bcc']) : '';
 		
-		if (empty($this->from))
-		{
+		if (empty($this->from)) {
 			$this->from = $core->v('site_email');
 		}
 
 		// Build header
 		$headers = array();
 		
-		if (!empty($this->reply_to))
-		{
+		if (!empty($this->reply_to)) {
 			$headers[] = 'Reply-to: ' . $this->reply_to;
 		}
 		
-		if (!empty($this->from))
-		{
+		if (!empty($this->from)) {
 			$headers[] = 'From: ' . $this->from;
 		}
 		
@@ -215,20 +186,17 @@ class emailer
 		
 		$this->extra_headers = implode("\n", $headers);
 		
-		
 		$this->extra_headers = $this->extra_headers . (($cc != '') ? "Cc: $cc\n" : '')  . (($bcc != '') ? "Bcc: $bcc\n" : ''); 
 
 		// Send message ... removed $this->encode() from subject for time being
 		$empty_to_header = ($to == '') ? true : false;
 		$to = ($to == '') ? 'Undisclosed-recipients:;' : $to;
 		
-		if ($this->htmle)
-		{
+		if ($this->htmle) {
 			$this->msg = entity_decode($this->msg);
 		}
 		
-		if ($core->v('mail_use_smtp'))
-		{
+		if ($core->v('mail_use_smtp')) {
 			require_once(XFS.XCOR . 'mail.smtp.php');
 			$mail = new PHPMailer(true);
 			
@@ -243,23 +211,18 @@ class emailer
 				$mail->SMTPAuth = TRUE;
 				$mail->AddAddress($to);
 				
-				if ($this->reply_to != '')
-				{
+				if ($this->reply_to != '') {
 					$mail->AddReplyTo($this->reply_to);
 				}
 				
-				if (isset($this->addresses['cc']) && count($this->addresses['cc']))
-				{
-					foreach ($this->addresses['cc'] as $row)
-					{
+				if (isset($this->addresses['cc']) && count($this->addresses['cc'])) {
+					foreach ($this->addresses['cc'] as $row) {
 						$mail->AddCC($row);
 					}
 				}
 				
-				if (isset($this->addresses['bcc']) && count($this->addresses['bcc']))
-				{
-					foreach ($this->addresses['bcc'] as $row)
-					{
+				if (isset($this->addresses['bcc']) && count($this->addresses['bcc'])) {
+					foreach ($this->addresses['bcc'] as $row) {
 						$mail->AddBCC($row);
 					}
 				}
@@ -298,10 +261,8 @@ class emailer
 	// from php.net and modified. There is an alternative encoding method which 
 	// may produce lesd output but it's questionable as to its worth in this 
 	// scenario IMO
-	private function encode($str)
-	{
-		if ($this->encoding == '')
-		{
+	private function encode($str) {
+		if ($this->encoding == '') {
 			return $str;
 		}
 
@@ -326,14 +287,12 @@ class emailer
 	//
 	// Attach files via MIME.
 	//
-	private function attachFile($filename, $mimetype = "application/octet-stream", $szFromAddress, $szFilenameToDisplay)
-	{
+	private function attachFile($filename, $mimetype = "application/octet-stream", $szFromAddress, $szFilenameToDisplay) {
 		$mime_boundary = "--==================_846811060==_";
 
 		$this->msg = '--' . $mime_boundary . "\nContent-Type: text/plain;\n\tcharset=\"" . _lang('ENCODING') . "\"\n\n" . $this->msg;
 
-		if ($mime_filename)
-		{
+		if ($mime_filename) {
 			$filename = $mime_filename;
 			$encoded = $this->encode_file($filename);
 		}
@@ -346,8 +305,7 @@ class emailer
 		$this->mimeOut .= "Content-Transfer-Encoding: quoted-printable\n";
 		$this->mimeOut .= "Content-Disposition: attachment;\n\tfilename=\"$szFilenameToDisplay\"\n\n";
 
-		if ( $mimetype == "message/rfc822" )
-		{
+		if ($mimetype == 'message/rfc822') {
 			$this->mimeOut .= "From: ".$szFromAddress."\n";
 			$this->mimeOut .= "To: ".$this->emailAddress."\n";
 			$this->mimeOut .= "Date: ".date("D, d M Y H:i:s") . " UT\n";
@@ -364,12 +322,10 @@ class emailer
 		// added -- to notify email client attachment is done
 	}
 
-	private function getMimeHeaders($filename, $mime_filename = '')
-	{
+	private function getMimeHeaders($filename, $mime_filename = '') {
 		$mime_boundary = "--==================_846811060==_";
 
-		if ($mime_filename)
-		{
+		if ($mime_filename) {
 			$filename = $mime_filename;
 		}
 
@@ -384,22 +340,17 @@ class emailer
 	//
    // Split string by RFC 2045 semantics (76 chars per line, end with \r\n).
 	//
-	private function myChunkSplit($str)
-	{
+	private function myChunkSplit($str) {
 		$stmp = $str;
 		$len = strlen($stmp);
 		$out = "";
 
-		while ($len > 0)
-		{
-			if ($len >= 76)
-			{
+		while ($len > 0) {
+			if ($len >= 76) {
 				$out .= substr($stmp, 0, 76) . "\r\n";
 				$stmp = substr($stmp, 76);
 				$len = $len - 76;
-			}
-			else
-			{
+			} else {
 				$out .= $stmp . "\r\n";
 				$stmp = "";
 				$len = 0;
@@ -411,14 +362,12 @@ class emailer
 	//
    // Split the specified file up into a string and return it
 	//
-	private function encode_file($sourcefile)
-	{
-		if (is_readable(@realpath($sourcefile)))
-		{
+	private function encode_file($sourcefile) {
+		if (is_readable(@realpath($sourcefile))) {
 			$fd = fopen($sourcefile, "r");
 			$contents = fread($fd, filesize($sourcefile));
-	      $encoded = $this->myChunkSplit(base64_encode($contents));
-	      fclose($fd);
+			$encoded = $this->myChunkSplit(base64_encode($contents));
+			fclose($fd);
 		}
 
 		return $encoded;

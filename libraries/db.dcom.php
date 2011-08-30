@@ -20,8 +20,7 @@ if (!defined('XFS')) exit;
 
 require_once(XFS.XCOR . 'db.call.php');
 
-class dcom
-{
+class dcom {
 	protected $connect;
 	protected $result;
 	protected $history;
@@ -32,10 +31,8 @@ class dcom
 	
 	protected $_access = array();
 	
-	final protected function access($d)
-	{
-		if ($d === false)
-		{
+	final protected function access($d) {
+		if ($d === false) {
 			if (!$a = get_file(XFS . '.htda')) exit;
 			
 			if ($b = get_file(XFS . '.htda_local')) $a = $b;
@@ -43,8 +40,7 @@ class dcom
 			$d = explode(',', decode($a[0]));
 		}
 		
-		foreach (w('server login secret database') as $i => $k)
-		{
+		foreach (w('server login secret database') as $i => $k) {
 			$this->_access[$k] = decode($d[$i]);
 		}
 		unset($d);

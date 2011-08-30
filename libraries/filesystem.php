@@ -18,27 +18,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class filesystem
-{
+class filesystem {
 	public $socket;
 	
-	public function __construct()
-	{
+	public function __construct() {
 		return;
 	}
 	
-	public function read()
-	{
+	public function read() {
 		return;
 	}
 	
-	public function write()
-	{
+	public function write() {
 		return;
 	}
 	
-	public function write_line($path, $data, $mode = 'a+')
-	{
+	public function write_line($path, $data, $mode = 'a+') {
 		$socket = @fopen($path, $mode);
 		fwrite($socket, $data . "\n");
 		fclose($socket);
@@ -46,43 +41,34 @@ class filesystem
 		return $data;
 	}
 	
-	public function open_socket($path = false, $callback = 'opendir')
-	{
-		if ($path !== false)
-		{
+	public function open_socket($path = false, $callback = 'opendir') {
+		if ($path !== false) {
 			$this->socket = @$callback($path);
 		}
 		
 		return $this->socket;
 	}
 	
-	public function read_dir($path, $filter = false, $sd = false)
-	{
-		if (substr($path, -1) != '/')
-		{
+	public function read_dir($path, $filter = false, $sd = false) {
+		if (substr($path, -1) != '/') {
 			$path .= '/';
 		}
 		
-		if (!$this->open_socket($path))
-		{
+		if (!$this->open_socket($path)) {
 			return false;
 		}
 		
 		$r = w();
-		while (false !== ($row = @readdir($this->socket)))
-		{
+		while (false !== ($row = @readdir($this->socket))) {
 			if ($row == '.' || $row == '..') {
 				continue;
 			}
 			
-			if (is_dir($path . $row))
-			{
+			if (is_dir($path . $row)) {
 				if ($sd === 'files') continue;
 				
 				$r[$f] = $this->read_dir($path . $row . '/', $filter. $sd);
-			}
-			else
-			{
+			} else {
 				if (($sd === 'dir') || ($filter !== false && !preg_match('#' . $filter . '#', trim($f)))) continue;
 				
 				$r[] = $f;
@@ -90,17 +76,14 @@ class filesystem
 		}
 		@closedir($fp);
 		
-		if (count($r))
-		{
+		if (count($r)) {
 			array_multisort($r);
 		}
 		return $r;
 	}
 	
-	public function close_socket($callback = 'closedir')
-	{
-		if ($this->socket)
-		{
+	public function close_socket($callback = 'closedir') {
+		if ($this->socket) {
 			@$callback($this->socket);
 		}
 		

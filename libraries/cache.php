@@ -18,56 +18,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class cache
-{
+class cache {
 	protected $allow;
 	protected $folder;
 	protected $last;
 	
-	public function __construct()
-	{
+	public function __construct() {
 		$this->last = '';
 		$this->allow = false;
 		$this->folder = XFS.XCOR . 'cache/';
 		
-		if (is_remote() && @file_exists($this->folder) && @is_readable($this->folder) && @is_writable($this->folder))
-		{
+		if (is_remote() && @file_exists($this->folder) && @is_readable($this->folder) && @is_writable($this->folder)) {
 			$this->allow = true;
 		}
 		
 		return;
 	}
 	
-	public function encrypt($str)
-	{
+	public function encrypt($str) {
 		return sha1($str);
 	}
 	
-	public function allowed()
-	{
+	public function allowed() {
 		return $this->allow;
 	}
 	
-	public function load($v, $force = false)
-	{
-		if (!$this->allow && !$force)
-		{
+	public function load($v, $force = false) {
+		if (!$this->allow && !$force) {
 			return;
 		}
 		
 		$filepath = $this->folder . $this->encrypt($v);
 		$this->last = $v;
 		
-		if (!@file_exists($filepath))
-		{
+		if (!@file_exists($filepath)) {
 			return false;
 		}
 		
 		// Cache expiration time
-		if (time() - @filemtime($filepath) < 3600)
-		{
-			if ($plain = get_file($filepath))
-			{
+		if (time() - @filemtime($filepath) < 3600) {
+			if ($plain = get_file($filepath)) {
 				return json_decode($plain[0], true);
 			}
 		}
@@ -75,43 +65,33 @@ class cache
 		return $this->unload($v);
 	}
 	
-	public function unload()
-	{
-		if (!$this->allow)
-		{
+	public function unload() {
+		if (!$this->allow) {
 			return;
 		}
 		
 		$files = w();
-		if ($a = func_get_args())
-		{
-			foreach ($a as $row)
-			{
+		if ($a = func_get_args()) {
+			foreach ($a as $row) {
 				if (!f($row)) continue;
 				
 				$files[] = $this->encrypt($row);
 			}
-		}
-		else
-		{
+		} else {
 			$files = _dirlist($this->folder, '^([a-z0-9]+)$', 'files');
 		}
 		
-		foreach ($files as $row)
-		{
+		foreach ($files as $row) {
 			$row = $this->folder . $row;
-			if (@file_exists($row))
-			{
+			if (@file_exists($row)) {
 				@unlink($row);
 			}
 		}
 		return false;
 	}
 	
-	public function store($v, $k = false, $force = false)
-	{
-		if (!$this->allow && !$force)
-		{
+	public function store($v, $k = false, $force = false) {
+		if (!$this->allow && !$force) {
 			return $v;
 		}
 		
@@ -122,10 +102,8 @@ class cache
 		$this->unload($k);
 		$filepath = $this->folder . $this->encrypt($k);
 		
-		if ($fp = @fopen($filepath, 'w'))
-		{
-			if (@flock($fp, LOCK_EX))
-			{
+		if ($fp = @fopen($filepath, 'w')) {
+			if (@flock($fp, LOCK_EX)) {
 				fputs($fp, json_encode($v));
 				@flock($fp, LOCK_UN);
 			}

@@ -18,22 +18,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class css_parse
-{
+class css_parse {
 	private $css = array();
 	
-	public function __construct()
-	{
+	public function __construct() {
 		return;
 	}
 	
 	//
 	// NOTE: Can not parse correctly CSS expressions, give it a try, maybe works in some of them...
 	//
-	public function parse($filename)
-	{
-		if (!$css_content = @file($filename))
-		{
+	public function parse($filename) {
+		if (!$css_content = @file($filename)) {
 			return false;
 		}
 		
@@ -43,13 +39,11 @@ class css_parse
 		
 		// TODO: Process multiple selectors in one line separated by commas.
 		
-		foreach ($matches[3] as $i => $row)
-		{
+		foreach ($matches[3] as $i => $row) {
 			$prop = array_filter(array_map('trim', explode(';', $row)), 'f');
 			
 			$props = array();
-			foreach ($prop as $line)
-			{
+			foreach ($prop as $line) {
 				list($k, $v) = array_map('trim', explode(':', $line));
 				$props[$k] = $v;
 			}
@@ -60,33 +54,26 @@ class css_parse
 		return;
 	}
 	
-	public function build()
-	{
+	public function build() {
 		return;
 	}
 	
-	public function display()
-	{
+	public function display() {
 		_pre($this->css);
 	}
 	
-	public function property_get($selector, $property)
-	{
-		if (!isset($this->css[$selector]))
-		{
+	public function property_get($selector, $property) {
+		if (!isset($this->css[$selector])) {
 			return false;
 		}
 		
-		if (!is_array($property))
-		{
+		if (!is_array($property)) {
 			$property = array($property);
 		}
 		
 		$response = array();
-		foreach ($property as $row)
-		{
-			if (isset($this->css[$selector][$row]))
-			{
+		foreach ($property as $row) {
+			if (isset($this->css[$selector][$row])) {
 				$response[$row] = $this->css[$selector][$row];
 			}
 		}
@@ -95,19 +82,15 @@ class css_parse
 		return ($count_r) ? (($count_r == 1) ? $response[$property[0]] : $response) : false;
 	}
 	
-	public function property_add($selector, $property, $value = false, $w = true)
-	{
+	public function property_add($selector, $property, $value = false, $w = true) {
 		$this->selector_add($selector);
 		
-		if ($value !== false && !is_array($property))
-		{
+		if ($value !== false && !is_array($property)) {
 			$property = array($property => $value);
 		}
 		
-		foreach ($property as $k => $v)
-		{
-			if (!isset($this->css[$selector][$k]) || $w === true)
-			{
+		foreach ($property as $k => $v) {
+			if (!isset($this->css[$selector][$k]) || $w === true) {
 				$this->css[$selector][$k] = $v;
 			}
 		}
@@ -115,58 +98,46 @@ class css_parse
 		return true;
 	}
 	
-	public function property_modify($selector, $property, $value = false, $w = true)
-	{
+	public function property_modify($selector, $property, $value = false, $w = true) {
 		$this->property_add($selector, $property, $value, $w);
 	}
 	
-	public function property_remove($selector, $property)
-	{
-		if (!isset($this->css[$selector]))
-		{
+	public function property_remove($selector, $property) {
+		if (!isset($this->css[$selector])) {
 			return false;
 		}
 		
-		if (!is_array($property))
-		{
+		if (!is_array($property)) {
 			$property = array($property);
 		}
 		
-		foreach ($property as $row)
-		{
-			if (isset($this->css[$selector][$row]))
-			{
+		foreach ($property as $row) {
+			if (isset($this->css[$selector][$row])) {
 				unset($this->css[$selector][$row]);
 			}
 		}
 		
-		if (!count($this->css[$selector]))
-		{
+		if (!count($this->css[$selector])) {
 			unset($this->css[$selector]);
 		}
 		
 		return true;
 	}
 	
-	public function selector_get($selector)
-	{
-		if (!isset($this->css[$selector]))
-		{
+	public function selector_get($selector) {
+		if (!isset($this->css[$selector])) {
 			return false;
 		}
 		
-		if (!count($this->css[$selector]))
-		{
+		if (!count($this->css[$selector])) {
 			return false;
 		}
 		
 		return $this->css[$selector];
 	}
 	
-	public function selector_add($selector)
-	{
-		if (isset($this->css[$selector]))
-		{
+	public function selector_add($selector) {
+		if (isset($this->css[$selector])) {
 			return false;
 		}
 		
@@ -174,40 +145,31 @@ class css_parse
 		return true;
 	}
 	
-	public function selector_modify($selector, $new_selector, $similar = false, $w = true)
-	{
-		if (!isset($this->css[$selector]))
-		{
+	public function selector_modify($selector, $new_selector, $similar = false, $w = true) {
+		if (!isset($this->css[$selector])) {
 			return false;
 		}
 		
-		if (!$w && isset($this->css[$new_selector]))
-		{
+		if (!$w && isset($this->css[$new_selector])) {
 			return false;
 		}
 		
-		if (!count($this->css[$selector]))
-		{
+		if (!count($this->css[$selector])) {
 			return false;
 		}
 		
 		// TODO: Comma separated selectors
 		
-		if ($similar !== false)
-		{
-			foreach ($this->css as $k => $v)
-			{
-				if (preg_match('#^(' . $selector . ')[ ]?(.*?)$#is', $k, $k2))
-				{
+		if ($similar !== false) {
+			foreach ($this->css as $k => $v) {
+				if (preg_match('#^(' . $selector . ')[ ]?(.*?)$#is', $k, $k2)) {
 					$kselector = $new_selector . ((f($k2[2])) ? ' ' . $k2[2] : '');
 					
 					$this->css[$kselector] = $this->css[$k];
 					unset($this->css[$k]);
 				}
 			}
-		}
-		else
-		{
+		} else {
 			$this->css[$new_selector] = $this->css[$selector];
 			unset($this->css[$selector]);
 		}
@@ -215,31 +177,21 @@ class css_parse
 		return true;
 	}
 	
-	public function selector_remove($selector, $similar = false)
-	{
-		if (!is_array($selector))
-		{
+	public function selector_remove($selector, $similar = false) {
+		if (!is_array($selector)) {
 			$selector = array($selector);
 		}
 		
-		if ($similar === false)
-		{
-			foreach ($selector as $row)
-			{
-				if (isset($this->css[$row]))
-				{
+		if ($similar === false) {
+			foreach ($selector as $row) {
+				if (isset($this->css[$row])) {
 					unset($this->css[$row]);
 				}
 			}
-		}
-		else
-		{
-			foreach ($this->css as $k => $v)
-			{
-				foreach ($selector as $row)
-				{
-					if (preg_match('#^(' . preg_quote($row, '#') . ')[ ]?(.*?)$#is', $k, $k2))
-					{
+		} else {
+			foreach ($this->css as $k => $v) {
+				foreach ($selector as $row) {
+					if (preg_match('#^(' . preg_quote($row, '#') . ')[ ]?(.*?)$#is', $k, $k2)) {
 						$kselector = $row . ((f($k2[2])) ? ' ' . $k2[2] : '');
 						unset($this->css[$kselector]);
 					}

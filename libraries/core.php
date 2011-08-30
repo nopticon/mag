@@ -18,8 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class core
-{
+class core {
 	public $email;
 	public $cache;
 	
@@ -28,8 +27,7 @@ class core
 	protected $config;
 	protected $sf;
 	
-	public function __construct()
-	{
+	public function __construct() {
 		$sql = 'SELECT *
 			FROM _config';
 		$this->config = sql_rowset($sql, 'config_name', 'config_value');
@@ -82,8 +80,7 @@ class core
 		return;
 	}
 	
-	public function v($k, $v = false, $nr = false)
-	{
+	public function v($k, $v = false, $nr = false) {
 		$a = (isset($this->config->$k)) ? $this->config->$k : false;
 		
 		if ($nr !== false && $v !== false) {
@@ -108,8 +105,7 @@ class core
 		return $a;
 	}
 	
-	public function run($mod = false)
-	{
+	public function run($mod = false) {
 		global $bio, $core, $file, $warning;
 		
 		if (!$rewrite = enable_rewrite()) {
@@ -244,13 +240,11 @@ class core
 	}
 	
 	// Used by template system $A[]
-	public function auth($a)
-	{
+	public function auth($a) {
 		return _auth_get($a);
 	}
 	
-	public function _sf($a = false)
-	{
+	public function _sf($a = false) {
 		if ($a !== false) {
 			$this->sf[] = $a;
 		}
@@ -272,22 +266,18 @@ By using __call, we can use php as using jQuery.
 define('this', mt_rand());
 define('echo', '_echo');
 
-class fff
-{
-	public function __construct($a = null)
-	{
+class fff {
+	public function __construct($a = null) {
 		$this->val = isset($a) ? $a : null;
 	}
 	
-	public function __call($fun, $pars)
-	{
+	public function __call($fun, $pars) {
 		if (!count($pars)) {
 			$pars = array(this);
 		}
 		
 		foreach ($pars as &$v) {
-			if ($v === this)
-			{
+			if ($v === this) {
 				$v = $this->val;
 				break;
 			}

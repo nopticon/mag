@@ -18,14 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-function _import($filename, $object  = false)
-{
+function _import($filename, $object  = false) {
 	if (!$object) $object = $filename;
 	
 	$filepath = XFS.XCOR . $filename . '.php';
 	
-	if (!file_exists($filepath))
-	{
+	if (!file_exists($filepath)) {
 		echo 'Unable to import: ' . $filename;
 		exit;
 	}
@@ -35,12 +33,10 @@ function _import($filename, $object  = false)
 	return new $object;
 }
 
-function html_encode($str, $multibyte = false)
-{
+function html_encode($str, $multibyte = false) {
 	$result = trim(htmlentities(str_replace(array("\r\n", "\r", '\xFF'), array("\n", "\n", ' '), $str)));
 	$result = (get_magic_quotes_gpc()) ? stripslashes($result) : $result;
-	if ($multibyte)
-	{
+	if ($multibyte) {
 		$result = preg_replace('#&amp;(\#\d+;)#', '&\1', $result);
 	}
 	$result = preg_replace('#&amp;((.*?);)#', '&\1', $result);
@@ -48,72 +44,55 @@ function html_encode($str, $multibyte = false)
 	return $result;
 }
 
-function set_var(&$result, $var, $type, $multibyte = false, $regex = '')
-{
+function set_var(&$result, $var, $type, $multibyte = false, $regex = '') {
 	settype($var, $type);
 	$result = $var;
 	
-	if ($type == 'string')
-	{
+	if ($type == 'string') {
 		$result = html_encode($result, $multibyte);
 	}
 }
 
-function request_var($var_name, $default = '', $multibyte = false, $regex = '')
-{
-	if (REQC)
-	{
+function request_var($var_name, $default = '', $multibyte = false, $regex = '') {
+	if (REQC) {
 		global $core;
 		
-		if (strstr($var_name, $core->v('cookie_name')) && isset($_COOKIE[$var_name]))
-		{
+		if (strstr($var_name, $core->v('cookie_name')) && isset($_COOKIE[$var_name])) {
 			$_REQUEST[$var_name] = $_COOKIE[$var_name];
 		}
 	}
 	
-	if (!isset($_REQUEST[$var_name]) || (is_array($_REQUEST[$var_name]) && !is_array($default)) || (is_array($default) && !is_array($_REQUEST[$var_name])))
-	{
+	if (!isset($_REQUEST[$var_name]) || (is_array($_REQUEST[$var_name]) && !is_array($default)) || (is_array($default) && !is_array($_REQUEST[$var_name]))) {
 		return (is_array($default)) ? w() : $default;
 	}
 	
 	$var = $_REQUEST[$var_name];
-	if (!is_array($default))
-	{
+	if (!is_array($default)) {
 		$type = gettype($default);
 		$var = ($var);
-	}
-	else
-	{
+	} else {
 		list($key_type, $type) = each($default);
 		$type = gettype($type);
 		$key_type = gettype($key_type);
 	}
 	
-	if (is_array($var))
-	{
+	if (is_array($var)) {
 		$_var = $var;
 		$var = w();
 
-		foreach ($_var as $k => $v)
-		{
-			if (is_array($v))
-			{
-				foreach ($v as $_k => $_v)
-				{
+		foreach ($_var as $k => $v) {
+			if (is_array($v)) {
+				foreach ($v as $_k => $_v) {
 					set_var($k, $k, $key_type);
 					set_var($_k, $_k, $key_type);
 					set_var($var[$k][$_k], $_v, $type, $multibyte);
 				}
-			}
-			else
-			{
+			} else {
 				set_var($k, $k, $key_type);
 				set_var($var[$k], $v, $type, $multibyte);
 			}
 		}
-	}
-	else
-	{
+	} else {
 		set_var($var, $var, $type, $multibyte);
 	}
 	
@@ -126,43 +105,28 @@ http://www.php.net/manual/en/language.oop5.overloading.php#93072
 
 By using __call, we can use php as using jQuery.
 */
-function __($a = null)
-{
-	if (isset($a))
-	{
+function __($a = null) {
+	if (isset($a)) {
 		return new fff($a);
-	}
-	else
-	{
-		if (!isset($GLOABALS['__']))
-		{
+	} else {
+		if (!isset($GLOABALS['__'])) {
 			$GLOABALS['__'] = new fff();
-		}
-		else
-		{
+		} else {
 			$GLOABALS['__']->val = null;
 		}
 		return $GLOABALS['__'];
 	}
 }
 
-function _utf8($a, $e = false)
-{
-	if (is_array($a))
-	{
-		foreach ($a as $k => $v)
-		{
+function _utf8($a, $e = false) {
+	if (is_array($a)) {
+		foreach ($a as $k => $v) {
 			$a[$k] = _utf8($v, $e);
 		}
-	}
-	else
-	{
-		if ($e !== false)
-		{
+	} else {
+		if ($e !== false) {
 			$a = utf8_encode($a);
-		}
-		else
-		{
+		} else {
 			$a = utf8_decode($a);
 		}
 	}
@@ -170,34 +134,27 @@ function _utf8($a, $e = false)
 	return $a;
 }
 
-function _pre($a, $d = false)
-{
+function _pre($a, $d = false) {
 	echo '<pre>';
 	print_r($a);
 	echo '</pre>';
 	
-	if ($d === true)
-	{
+	if ($d === true) {
 		exit;
 	}
 }
 
-function email_format($email)
-{
-	//if (preg_match('/^[a-z0-9\.\-_\+]+@[a-z0-9\-_]+\.([a-z0-9\-_]+\.)*?[a-z]+$/is', $email))
-	if (preg_match('/^[a-z0-9&\'\.\-_\+]+@[a-z0-9\-]+\.([a-z0-9\-]+\.)*?[a-z]+$/is', $email))
-	{
+function email_format($email) {
+	if (preg_match('/^[a-z0-9&\'\.\-_\+]+@[a-z0-9\-]+\.([a-z0-9\-]+\.)*?[a-z]+$/is', $email)) {
 		return true;
 	}
 	return false;
 }
 
-function enable_rewrite()
-{
+function enable_rewrite() {
 	global $core;
 	
-	if (!$rewrite = $core->cache->load('rewrite_enabled'))
-	{
+	if (!$rewrite = $core->cache->load('rewrite_enabled')) {
 		ob_start();
 		phpinfo(INFO_MODULES);
 		$contents = ob_get_contents();
@@ -210,17 +167,13 @@ function enable_rewrite()
 	return $rewrite;
 }
 
-function _tbrowser($tpl = '')
-{
-	if (!f($tpl))
-	{
+function _tbrowser($tpl = '') {
+	if (!f($tpl)) {
 		$a = _browser();
 		$_a = array($a['type'] . '-' . $a['platform'] . '-' . $a['browser'] . '-' . $a['version'], $a['type'] . '-' . $a['platform'] . '-' . $a['browser'], $a['type'] . '-' . $a['platform'], $a['type']);
 		
-		foreach ($a as $row)
-		{
-			if (@file_exists(XFS . XHTM . $row))
-			{
+		foreach ($a as $row) {
+			if (@file_exists(XFS . XHTM . $row)) {
 				$tpl = $row;
 				break;
 			}
@@ -233,8 +186,7 @@ function _tbrowser($tpl = '')
 }
 
 //function msg_handler($errno, $msg_text, $errfile, $errline)
-function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno = 0)
-{
+function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno = 0) {
 	global $core, $file, $warning;
 	
 	sql_close();
@@ -243,8 +195,7 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 	
 	$warning = '<b>%s</b>: in file <b>%s</b> on line <b>%s</b>: <b>%s</b><br>';
 	
-	switch ($code)
-	{
+	switch ($code) {
 		case 504:
 		case 505:
 			echo sprintf($warning, 'PHP Notice', $errfile, $errline, $errmsg);
@@ -253,38 +204,33 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 			exit('USER_ERROR: ' . $errmsg);
 			break;
 		default:
-			$error_path = XFS . XHTM . _tbrowser() . '/warnings/%s.htm';
+			$error_path = XFS.XHTM . _tbrowser() . '/warnings/%s.htm';
 			$sql_message = 'SQL ERROR @ %s # %s<br /><br />' . "\n" . ' %s<br /><br />' . "\n";
 			
-			if ($errno)
-			{
+			if ($errno) {
 				$code .= '-' . $errno;
 			}
 
 			$filepath = sprintf($error_path, $code . ((is_ghost()) ? '-ghost' : ''));
-			if (!@file_exists($filepath))
-			{
+			if (!@file_exists($filepath)) {
 				$filepath = sprintf($error_path, 'default');
 			}
 			
 			$v_host = get_protocol() . get_host();
 			
 			// SQL error
-			if ($code == 507)
-			{
+			if ($code == 507) {
 				$sql_time = date('r');
 				$sql_format = str_replace(array("\n", "\t"), array('<br />', '&nbsp;&nbsp;&nbsp;'), $errmsg['sql']);
 				$sql_message = sprintf($sql_message, get_host(), $sql_time, _page());
 				
-				if (!empty($errmsg['message']))
-				{
+				if (!empty($errmsg['message'])) {
 					$sql_message .= $errmsg['message'] . '<br /><br />' . "\n";
 				}
 				$sql_message .= $sql_format;
 				
 				$errmsg = '';
-				if (!is_remote())
-				{
+				if (!is_remote()) {
 					$errmsg = '<br /><br />' . $sql_message;
 				}
 				$sql_message = _utf8($sql_message);
@@ -294,8 +240,7 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 				}
 				
 				// Send report to server admins @ XFS.XCOR . store/server_admin
-				if (count($report_to))
-				{
+				if (count($report_to)) {
 					/*
 					$core->email->init($report_to[0]);
 					$core->email->subject('PHP/SQL error @ ' . get_host());
@@ -323,8 +268,7 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 				'405' => '405 Method Not Allowed',
 			);
 			
-			if (!isset($header_code[$code]))
-			{
+			if (!isset($header_code[$code])) {
 				$code = 0;
 			}
 			header('HTTP/1.1 ' . $header_code[$code]);
@@ -337,12 +281,10 @@ function _fatal($code = 404, $errfile = '', $errline = '', $errmsg = '', $errno 
 	return false;
 }
 
-function msg_handler($errno, $msg_text, $errfile, $errline)
-{
+function msg_handler($errno, $msg_text, $errfile, $errline) {
 	global $bio;
 	
-	switch ($errno)
-	{
+	switch ($errno) {
 		case E_NOTICE:
 		case E_WARNING:
 			_fatal(504, $errfile, $errline, $msg_text, $errno);
@@ -360,24 +302,19 @@ function msg_handler($errno, $msg_text, $errfile, $errline)
 	return;
 }
 
-function gfatal($c = 404)
-{
+function gfatal($c = 404) {
 	if (!is_ghost()) _fatal($c);
 }
 
-function hook($name, $args = array(), $arr = false)
-{
-	switch ($name)
-	{
+function hook($name, $args = array(), $arr = false) {
+	switch ($name) {
 		case 'isset':
 			eval('$a = ' . $name . '($args' . ((is_array($args)) ? '[0]' . $args[1] : '') . ');');
 			return $a;
 			break;
 		case 'in_array':
-			if (is_array($args[1]))
-			{
-				if (hook('isset', array($args[1][0], $args[1][1])))
-				{
+			if (is_array($args[1])) {
+				if (hook('isset', array($args[1][0], $args[1][1]))) {
 					eval('$a = ' . $name . '($args[0], $args[1][0]' . $args[1][1] . ');');
 				}
 			} else {
@@ -392,17 +329,14 @@ function hook($name, $args = array(), $arr = false)
 	return $f($name, $args);
 }
 
-function netsock($host, $param = '', $port = 80, $advanced = false, $useragent = false)
-{
-	if (!$fp = @fsockopen($host, $port, $errno, $errstr, 10))
-	{
+function netsock($host, $param = '', $port = 80, $advanced = false, $useragent = false) {
+	if (!$fp = @fsockopen($host, $port, $errno, $errstr, 10)) {
 		return false;
 	}
 	
 	$call = 'GET ' . $param . " HTTP/1.1\r\n";
 	
-	if ($useragent !== false)
-	{
+	if ($useragent !== false) {
 		$call.= 'User-Agent: ' . $useragent . "\r\n";
 	}
 	
@@ -410,14 +344,12 @@ function netsock($host, $param = '', $port = 80, $advanced = false, $useragent =
 	
 	$response = '';
 	@fputs($fp, $call);
-	while (!feof($fp))
-	{
+	while (!feof($fp)) {
 		$response .= @fgets($fp, 8192);
 	}
 	@fclose($fp);
 	
-	if ($advanced)
-	{
+	if ($advanced) {
 		$response = parse_http_response($response);
 	} else {
 		$response = ltrim(substr($response, strpos($response, "\r\n\r\n")));
@@ -426,8 +358,7 @@ function netsock($host, $param = '', $port = 80, $advanced = false, $useragent =
 	return $response;
 }
 
-function parse_http_response($content)
-{
+function parse_http_response($content) {
 	if (!f($content)) return false;
 	
 	// split into array, headers and content.
@@ -446,21 +377,18 @@ function parse_http_response($content)
 	
 	if (!validate_http_response($headers)) return false;
 	
-	if (in_array('Transfer-Encoding: chunked', $headers))
-	{
+	if (in_array('Transfer-Encoding: chunked', $headers)) {
 		return trim(unchunk_http_response($body));
 	}	
 	return trim($body);
 }
 
-function validate_http_response($headers)
-{
+function validate_http_response($headers) {
 	if (!is_array($headers) || count($headers) < 1) return false;
 	
 	$headers = trim(strtolower($headers[0]));
 	
-	switch($headers)
-	{
+	switch ($headers) {
 		case 'http/1.0 100 ok':
 		case 'http/1.0 200 ok':
 		case 'http/1.1 100 ok':
@@ -472,8 +400,7 @@ function validate_http_response($headers)
 	return false;
 }
 
-function unchunk_http_response($str)
-{
+function unchunk_http_response($str) {
 	if (!is_string($str) || strlen($str) < 1) return false;
 	
 	$eol = "\r\n";
@@ -481,8 +408,7 @@ function unchunk_http_response($str)
 	$tmp = $str;
 	$str = '';
 	
-	do
-	{
+	do {
 		$tmp = ltrim($tmp);
 		$pos = strpos($tmp, $eol);
 		if ($pos === false) { return false; }
@@ -508,54 +434,43 @@ function unchunk_http_response($str)
 //
 // Used Functions: hex2asc()
 //
-function hex2asc($str)
-{
+function hex2asc($str) {
 	$str2 = '';
-	for ($n = 0, $end = strlen($str); $n < $end; $n += 2)
-	{
+	for ($n = 0, $end = strlen($str); $n < $end; $n += 2) {
 		$str2 .=  pack('C', hexdec(substr($str, $n, 2)));
 	}
 	
 	return $str2;
 }
 
-function encode($str)
-{
+function encode($str) {
 	return bin2hex(base64_encode($str));
 }
 
-function decode($str)
-{
+function decode($str) {
 	return base64_decode(hex2asc($str));
 }
 
-function f($s)
-{
+function f($s) {
 	return !empty($s);
 }
 
-function array_strpos($haystack, $needle)
-{
+function array_strpos($haystack, $needle) {
 	if (!is_array($needle) || !f($haystack)) return false;
 	
-	foreach ($needle as $row)
-	{
+	foreach ($needle as $row) {
 		if ($pos = strpos($haystack, $row) !== false) return $pos;
 	}
 	return false;
 }
 
-function array_key($a, $k)
-{
+function array_key($a, $k) {
 	return (isset($a[$k])) ? $a[$k] : false;
 }
 
-function strpos_pad(&$haystack, $needle, $remove_needle = false)
-{
-	if ($pos = strpos(' ' . $haystack, $needle) !== false)
-	{
-		if ($remove_needle)
-		{
+function strpos_pad(&$haystack, $needle, $remove_needle = false) {
+	if ($pos = strpos(' ' . $haystack, $needle) !== false) {
+		if ($remove_needle) {
 			$haystack = str_replace($needle, '', $haystack);
 		}
 		
@@ -565,40 +480,31 @@ function strpos_pad(&$haystack, $needle, $remove_needle = false)
 	return false;
 }
 
-function array_isset($a, $f)
-{
-	foreach ($f as $fk => $fv)
-	{
-		if (!isset($a[$fk]))
-		{
+function array_isset($a, $f) {
+	foreach ($f as $fk => $fv) {
+		if (!isset($a[$fk])) {
 			$a[$fk] = $fv;
 		}
 	}
 	return $a;
 }
 
-function array_compare($needle, $haystack, $match_all = true)
-{
-	if (!is_array($needle) || count($haystack) > count($needle))
-	{
+function array_compare($needle, $haystack, $match_all = true) {
+	if (!is_array($needle) || count($haystack) > count($needle)) {
 		return false;
 	}
 	
 	$count = 0;
 	$result = false;
-	foreach ($needle as $k => $v)
-	{
-		if (!isset($haystack[$k]))
-		{
-			if ($match_all)
-			{
+	foreach ($needle as $k => $v) {
+		if (!isset($haystack[$k])) {
+			if ($match_all) {
 				return false;
 			}
 			continue;
 		}
 		
-		if (is_array($v))
-		{
+		if (is_array($v)) {
 			$result = array_compare($v, $haystack[$k], $match_all);
 		}
 		
@@ -609,31 +515,24 @@ function array_compare($needle, $haystack, $match_all = true)
 	return $result;
 }
 
-function array_row($a)
-{
+function array_row($a) {
 	$w = w();
-	foreach ($a as $k => $v)
-	{
-		if (!is_numb($k))
-		{
+	foreach ($a as $k => $v) {
+		if (!is_numb($k)) {
 			$w[$k] = $v;
 		}
 	}
 	return $w;
 }
 
-function _array_keys($ary, $d = array())
-{
-	if (!is_array($ary))
-	{
+function _array_keys($ary, $d = array()) {
+	if (!is_array($ary)) {
 		$ary = w($ary);
 	}
 	
 	$a = w();
-	foreach ($ary as $k => $v)
-	{
-		if (!is_string($k))
-		{
+	foreach ($ary as $k => $v) {
+		if (!is_string($k)) {
 			$k = $v;
 			$v = $d;
 		}
@@ -643,24 +542,19 @@ function _array_keys($ary, $d = array())
 	return $a;
 }
 
-function array_subkey($a, $k)
-{
+function array_subkey($a, $k) {
 	$list = w();
-	foreach ($a as $row)
-	{
+	foreach ($a as $row) {
 		$list[] = $row[$k];
 	}
 	return $list;
 }
 
-function array_empty($a)
-{
+function array_empty($a) {
 	$response = true;
 	
-	foreach ($a as $k => $v)
-	{
-		if (!f($v) && $response)
-		{
+	foreach ($a as $k => $v) {
+		if (!f($v) && $response) {
 			$response = false;
 			break;
 		}
@@ -669,14 +563,11 @@ function array_empty($a)
 	return !$response;
 }
 
-function array_least_key($a)
-{
+function array_least_key($a) {
 	$response = false;
 	
-	foreach ($a as $k => $v)
-	{
-		if (f($v))
-		{
+	foreach ($a as $k => $v) {
+		if (f($v)) {
 			$response = $k;
 			break;
 		}
@@ -685,41 +576,30 @@ function array_least_key($a)
 	return $response;
 }
 
-function array_alias($arr, $alias, $map = false)
-{
-	if (!is_array($arr) || !is_array($alias))
-	{
+function array_alias($arr, $alias, $map = false) {
+	if (!is_array($arr) || !is_array($alias)) {
 		return false;
 	}
 	
-	if (count($arr[0]) != count($alias))
-	{
+	if (count($arr[0]) != count($alias)) {
 		return false;
 	}
 	
 	$a = w();
-	foreach ($arr as $k => $v)
-	{
+	foreach ($arr as $k => $v) {
 		$a[$k] = w();
 		
-		foreach ($v as $k2 => $v2)
-		{
-			if (isset($alias[$k2]))
-			{
+		foreach ($v as $k2 => $v2) {
+			if (isset($alias[$k2])) {
 				$k2 = $alias[$k2];
 			}
 			
-			if ($map !== false & isset($map[$k2]))
-			{
-				if (is_array($map[$k2]))
-				{
-					foreach ($map[$k2] as $f)
-					{
+			if ($map !== false & isset($map[$k2])) {
+				if (is_array($map[$k2])) {
+					foreach ($map[$k2] as $f) {
 						$v2 = $f($v2);
 					}
-				}
-				else
-				{
+				} else {
 					$v2 = $map[$k2]($v2);
 				}
 			}
@@ -731,18 +611,15 @@ function array_alias($arr, $alias, $map = false)
 	return $a;
 }
 
-function array_push_before(&$src, $in, $pos, $force = true)
-{
+function array_push_before(&$src, $in, $pos, $force = true) {
 	return _array_push($src, $in, $pos, 'before', $force);
 }
 
-function array_push_after(&$src, $in, $pos, $force = true)
-{
+function array_push_after(&$src, $in, $pos, $force = true) {
 	return _array_push($src, $in, $pos, 'after', $force);
 }
 
-function _array_push(&$src, $in, $pos, $mode = 'after', $force = true)
-{
+function _array_push(&$src, $in, $pos, $mode = 'after', $force = true) {
 	static $ik;
 	
 	$before = ($mode == 'before');
@@ -750,35 +627,27 @@ function _array_push(&$src, $in, $pos, $mode = 'after', $force = true)
 	
 	if (!isset($ik)) $ik = 0;
 	
-	if (!is_array($in))
-	{
+	if (!is_array($in)) {
 		$in = array($ik => $in);
 		$ik++;
 	}
 	
-	if (is_int($pos) && !$force)
-	{
+	if (is_int($pos) && !$force) {
 		$posd = ($after) ? 1 : 0;
 		$src_size = count($src);
 		
-		if ($pos > $ik)
-		{
+		if ($pos > $ik) {
 			$pos = $ik - 1;
 		}
 		
 		$src = array_merge(array_slice($src, 0, $pos + $posd), $in, array_slice($src, $pos + $posd));
-	}
-	else
-	{
+	} else {
 		$r = array();
-		foreach ($src as $k => $v)
-		{
+		foreach ($src as $k => $v) {
 			if ($after) $r[$k] = $v;
 			
-			if ($k == $pos)
-			{
-				foreach ($in as $k2 => $v2)
-				{
+			if ($k == $pos) {
+				foreach ($in as $k2 => $v2) {
 					$r[$k2] = $v2;
 				}
  			}
@@ -791,26 +660,22 @@ function _array_push(&$src, $in, $pos, $mode = 'after', $force = true)
 	$slice = array_slice($in, -1);
 	$last_v = array_key(array_keys($slice), 0);
 	
-	if (is_string($last_v))
-	{
+	if (is_string($last_v)) {
 		return $last_v;
 	}
 	
 	return array_search(array_key(array_values($slice), 0), $src);
 }
 
-function string_to_array_assoc($rows, $keys)
-{
+function string_to_array_assoc($rows, $keys) {
 	$a = w();
 	$i = 0;
 	
-	foreach ($rows as $k => $v)
-	{
+	foreach ($rows as $k => $v) {
 		$d = array($k, $v);
 		
 		$a[$i] = w();
-		foreach ($keys as $j => $key)
-		{
+		foreach ($keys as $j => $key) {
 			$a[$i][$key] = $d[$j];
 		}
 		$i++;
@@ -818,27 +683,22 @@ function string_to_array_assoc($rows, $keys)
 	return $a;
 }
 
-function preg_array($pattern, $ary)
-{
+function preg_array($pattern, $ary) {
 	$a = w();
-	foreach ($ary as $each)
-	{
+	foreach ($ary as $each) {
 		$a[] = sprintf($pattern, $each);
 	}
 	
 	return $a;
 }
 
-function array_construct($arr, $k, $i = 0)
-{
-	if (!is_array($arr) || count($k) == $i)
-	{
+function array_construct($arr, $k, $i = 0) {
+	if (!is_array($arr) || count($k) == $i) {
 		return $arr;
 	}
 	
 	$r = (isset($k[$i]) && isset($arr[$k[$i]])) ? $arr[$k[$i]] : false;
-	if (is_array($r))
-	{
+	if (is_array($r)) {
 		$i++;
 		$r = array_construct($r, $k, $i);
 	}
@@ -846,57 +706,46 @@ function array_construct($arr, $k, $i = 0)
 	return $r;
 }
 
-function _implode($glue, $pieces, $empty = false)
-{
-	if (!is_array($pieces) || !count($pieces))
-	{
+function _implode($glue, $pieces, $empty = false) {
+	if (!is_array($pieces) || !count($pieces)) {
 		return -1;
 	}
 	
-	foreach ($pieces as $i => $v)
-	{
+	foreach ($pieces as $i => $v) {
 		if (!f($v) && !$empty) unset($pieces[$i]);
 	}
 	
-	if (!count($pieces))
-	{
+	if (!count($pieces)) {
 		return -1;
 	}
 	
 	return implode($glue, $pieces);
 }
 
-function _implode_and($glue, $last_glue, $pieces, $empty = false)
-{
+function _implode_and($glue, $last_glue, $pieces, $empty = false) {
 	$response = _implode($glue, $pieces, $empty);
 	
 	$last = strrpos($response, $glue);
-	if ($last !== false)
-	{
+	if ($last !== false) {
 		$response = substr_replace($response, $last_glue, $last, count($glue) + 1);
 	}
 	
 	return $response;
 }
 
-function entity_decode($s, $compat = true)
-{
-	if ($compat)
-	{
+function entity_decode($s, $compat = true) {
+	if ($compat) {
 		return html_entity_decode($s, ENT_COMPAT, 'UTF-8');
 	}
 	return html_entity_decode($s);
 }
 
-function w($a = '', $d = false)
-{
+function w($a = '', $d = false) {
 	if (!f($a) || !is_string($a)) return array();
 	
 	$e = explode(' ', $a);
-	if ($d !== false)
-	{
-		foreach ($e as $i => $v)
-		{
+	if ($d !== false) {
+		foreach ($e as $i => $v) {
 			$e[$v] = $d;
 			unset($e[$i]);
 		}
