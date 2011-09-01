@@ -244,7 +244,7 @@ class __sign extends xmd implements i_sign
 				'country' => $v->country,
 				'birth' => $v->birth
 			);
-			sql_query('INSERT INTO _bio' . sql_build('INSERT', prefix('user', $sql_insert)));
+			sql_put('_bio', prefix('user', $sql_insert));
 		}
 		
 		// GeoIP

@@ -18,10 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-class __create extends xmd
-{
-	public function __construct()
-	{
+class __create extends xmd {
+	public function __construct() {
 		parent::__construct();
 		
 		$this->_m(_array_keys(w('news event artist people')));
@@ -29,27 +27,22 @@ class __create extends xmd
 		$this->load('objects');
 	}
 	
-	public function home()
-	{
+	public function home() {
 		// TODO: List methods
 		_fatal();
 	}
 	
-	public function news()
-	{
+	public function news() {
 		return $this->method();
 	}
 	
-	protected function _news_home()
-	{
-		if (_button())
-		{
+	protected function _news_home() {
+		if (_button()) {
 			global $bio;
 			
 			$v = $this->__(w('subject excerpt content'));
 			
-			if (!f($v['subject']) || !f($v['content']))
-			{
+			if (!f($v['subject']) || !f($v['content'])) {
 				$this->_error('#EMPTY_FIELDS');
 			}
 			
@@ -59,8 +52,7 @@ class __create extends xmd
 			$sql = 'SELECT news_id
 				FROM _news
 				WHERE news_alias = ?';
-			if (_fieldrow(sql_filter($sql, $v['alias'])))
-			{
+			if (_fieldrow(sql_filter($sql, $v['alias']))) {
 				$this->_error('ALIAS_EXISTS');
 			}
 			
@@ -72,8 +64,7 @@ class __create extends xmd
 			$this->objects->merge($v, (object) $add);
 			$v = $this->objects->all();
 			
-			$sql = 'INSERT INTO _news' . _build_array('INSERT', prefix('news', $v));
-			$v['id'] = _sql_nextid($sql);
+			sql_put('_news', prefix('news', $v));
 			
 			redirect(_link('news', array('x1' => 'read', 'i' => $v->alias)));
 		}
@@ -81,59 +72,49 @@ class __create extends xmd
 		return;
 	}
 	
-	public function event()
-	{
+	public function event() {
 		return $this->method();
 	}
 	
-	protected function _event_home()
-	{
+	protected function _event_home() {
 		global $warning;
 		
 		$v = $this->__(array('e_title', 'e_text', 'e_time' => array(0), 'e_artists' => array(0)));
 		
 		$v_check = array('e_title' => 'INVALID_NAME', 'e_cat' => 'INVALID_CATEGORY');
-		foreach ($v_check as $vk => $vv)
-		{
+		foreach ($v_check as $vk => $vv) {
 			if (empty($v->$vk)) $warning->set($vv);
 		}
 		
-		if (!$warning->exist)
-		{
+		if (!$warning->exist) {
 			$v['e_alias'] = _alias($v['e_title']);
 			
-			if (empty($v['e_alias']))
-			{
+			if (empty($v['e_alias'])) {
 				$arning->set('INVALID_ALIAS');
 			}
 		}
 		
-		if (!$warning->exist)
-		{
+		if (!$warning->exist) {
 			$sql = 'SELECT cat_id
 				FROM _events_category
 				WHERE cat_id = ?';
-			if (!sql_fieldrow(sql_filter($sql, $v->e_cat)))
-			{
+			if (!sql_fieldrow(sql_filter($sql, $v->e_cat))) {
 				$this->warning->set('invalid_category');
 			}
 		}
 		
-		if (!$this->warning->exist)
-		{
+		if (!$this->warning->exist) {
 			$core->require('upload');
 			$core->upload->init();
 			
 			$f = $core->upload->process(LIB . 'tmp/', $_FILES['e_flyer'], w('jpg'), max_upload_size());
 			
-			if ($f === false && count($core->upload->warning))
-			{
+			if ($f === false && count($core->upload->warning)) {
 				$this->warning->set($core->upload->warning);
 			}
 		}
 		
-		if (!$this->warning->exist())
-		{
+		if (!$this->warning->exist()) {
 			$sql_insert = array(
 				'alias' => $v['e_alias'],
 				'subject' => str_normalize($v['e_title']),
@@ -145,25 +126,20 @@ class __create extends xmd
 				'end' => $e_end,
 				'images' => 0
 			);
-			sql_query('INSERT INTO _events' . sql_build('INSERT', prefix('event', $sql_insert)));
-			
+			sql_put('_events', prefix('event', $sql_insert));
 			$v['e_id'] = sql_nextid();
 			
-			if (is_array($v->e_artists))
-			{
-				foreach ($v['e_artists'] as $row)
-				{
+			if (is_array($v->e_artists)) {
+				foreach ($v['e_artists'] as $row) {
 					$sql_insert = array(
 						'id' => (int) $v['e_id'],
 						'artist' => (int) $row
 					);
-					$sql = 'INSERT INTO _events_artists' . _build_array('INSERT', prefix('event', $sql_insert));
-					_sql($sql);
+					sql_put('_events_artists', prefix('event', $sql_insert));
 				}
 			}
 			
-			foreach ($f as $row)
-			{
+			foreach ($f as $row) {
 				$f2 = $upload->resize($row, LIB . 'tmp', LIB . 'events/future/', $v['e_id'], array(600, 400), false, false, true);
 				if ($f2 === false) continue;
 				
@@ -175,60 +151,48 @@ class __create extends xmd
 		return;
 	}
 	
-	public function artist()
-	{
+	public function artist() {
 		return $this->method();
 	}
 	
-	protected function _artist_home()
-	{
+	protected function _artist_home() {
 		$v = array_merge($v, $this->__(array('a_name', 'a_website', 'a_email', 'a_genre' => array(0), 'a_country' => 0)));
 		
 		$v_check = array('a_name' => 'INVALID_NAME', 'a_email' => 'INVALID_EMAIL', 'a_genre' => 'INVALID_GENRE');
-		foreach ($v_check as $vk => $vv)
-		{
+		foreach ($v_check as $vk => $vv) {
 			if (!f($v[$vk])) $this->error($vv);
 		}
 		
-		if (!$this->errors())
-		{
+		if (!$this->errors()) {
 			$v['a_alias'] = _alias($v['a_name']);
 			
-			if (f($v['a_alias']))
-			{
+			if (f($v['a_alias'])) {
 				$sql = 'SELECT a_approved
 					FROM _artists
 					WHERE a_alias = ?';
-				if ($a_approved = _field(sql_filter($sql, $v['a_alias']), 'a_approved'))
-				{
+				if ($a_approved = _field(sql_filter($sql, $v['a_alias']), 'a_approved')) {
 					$a_msg = ($a_approved) ? 'EXISTS' : 'PENDING';
 					$this->error('ARTIST_' . $a_msg);
 				}
-			}
-			else
-			{
+			} else {
 				$this->error('INVALID_ALIAS');
 			}
 		}
 		
-		if (!$this->errors() && !check_email($v['a_email']))
-		{
+		if (!$this->errors() && !check_email($v['a_email'])) {
 			$this->error('INVALID_EMAIL');
 		}
 		
-		if (!$this->errors())
-		{
+		if (!$this->errors()) {
 			$sql = 'SELECT country_id
 				FROM _countries
 				WHERE country_id = ?';
-			if (!_fieldrow(sql_filter($sql, $v['a_country'])))
-			{
+			if (!_fieldrow(sql_filter($sql, $v['a_country']))) {
 				$this->error('INVALID_COUNTRY');
 			}
 		}
 		
-		if (!$this->errors())
-		{
+		if (!$this->errors()) {
 			$sql = 'SELECT type_id
 				FROM _alias_type
 				WHERE type_alias = ?';
@@ -252,29 +216,25 @@ class __create extends xmd
 				'lyrics' => 0,
 				'images' => 0
 			);
-			$sql = 'INSERT INTO _artists' . _build_array('INSERT', prefix('a', $sql_insert));
-			_sql($sql);
+			sql_put('_artists', prefix('a', $sql_insert));
 			
 			$sql_insert = array(
 				'name' => $v['a_alias'],
 				'enable' => 0,
 				'type' => $alias_type
 			);
-			$sql = 'INSERT INTO _alias' . _build_array('INSERT', prefix('alias', $sql_insert));
-			_sql($sql);
+			sql_put('_alias', prefix('alias', $sql_insert));
 			
 			redirect(_link('alias', array('alias' => $v['a_alias'])));
 		}
 		return;
 	}
 	
-	public function people()
-	{
+	public function people() {
 		return $this->method();
 	}
 	
-	protected function _people_home()
-	{
+	protected function _people_home() {
 		return;
 	}
 }

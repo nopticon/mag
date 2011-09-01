@@ -215,8 +215,7 @@ class __home extends xmd implements i_home
 			'text' => _prepare($v['status']),
 			'ip' => $bio->v('session_ip')
 		);
-		$sql = 'INSERT _bio_status' . _build_array('INSERT', prefix('status', $sql_insert));
-		_sql($sql);
+		sql_put('_bio_status', prefix('status', $sql_insert));
 		
 		$response = array(
 			'time' => $sql_insert['time'],
@@ -271,8 +270,7 @@ class __home extends xmd implements i_home
 				'ref' => $ref['ref_id'],
 				'uid' => $bio->v('bio_id')
 			);
-			$sql = 'INSERT INTO _reference_likes' . _build_array('INSERT', prefix('like', $sql_insert));
-			_sql($sql);
+			sql_put('_reference_likes', prefix('like', $sql_insert));
 		}
 		
 		return $this->e('~OK');

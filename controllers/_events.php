@@ -507,8 +507,7 @@ class __events extends xmd implements i_events
 				'star_event' => $v['event'],
 				'star_uid' => $bio->v('bio_id')
 			);
-			$sql = 'INSERT INTO _events_star' . _build_array('INSERT', $sql_insert);
-			_sql($sql);
+			sql_put('_events_star', $sql_insert);
 			
 			$response = 'EVENT_STAR_ADD';
 		}
@@ -571,8 +570,7 @@ class __events extends xmd implements i_events
 				'attend_option' => $v['option'],
 				'attend_time' => time()
 			);
-			$sql = 'INSERT INTO _events_attend' . _build_array('INSERT', $sql_insert);
-			_sql($sql);
+			sql_put('_events_attend', $sql_insert);
 		}
 		
 		return $this->e('~OK');

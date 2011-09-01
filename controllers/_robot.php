@@ -215,23 +215,20 @@ class __robot extends xmd implements i_robot
 				'history_bio' => $row->bio_id,
 				'history_time' => time(),
 			);
-			sql_query('INSERT INTO _newsletter_history' . sql_build('INSERT', $sql_history));
+			sql_put('_newsletter_history', $sql_history);
 			
 			sleep(2);
 			
 			$i++;
 		}
 		
-		if ($i)
-		{
+		if ($i) {
 			$email['email_last'] += $i;
 			
 			$sql = 'UPDATE _newsletter SET newsletter_last = ?
 				WHERE newsletter_id = ?';
 			sql_query(sql_filter($sql, $newsletter->newsletter_last, $newsletter->newsletter_id));
-		}
-		else
-		{
+		} else {
 			$sql = 'UPDATE _newsletter SET newsletter_active = ?, newsletter_end = ?
 				WHERE newsletter_id = ?';
 			sql_query(sql_filter($sql, 0, time(), $newsletter->newsletter_id));

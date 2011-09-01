@@ -24,31 +24,26 @@ board /board/
 */
 if (!defined('XFS')) exit;
 
-interface i_board
-{
+interface i_board {
 	public function home();
 	public function publish();
 	public function topic();
 }
 
-class __board extends xmd implements i_board
-{
-	public function __construct()
-	{
+class __board extends xmd implements i_board {
+	public function __construct() {
 		parent::__construct();
 		
 		$this->auth(false);
 		$this->_m(_array_keys(w('publish topic')));
 	}
 	
-	public function home()
-	{
+	public function home() {
 		global $core, $bio;
 		
 		$v = $this->__(array('f', 's' => 0));
 		
-		if (!empty($v->f))
-		{
+		if (!empty($v->f)) {
 			$sql = 'SELECT *
 				FROM _board_forums
 				WHERE forum_alias = ?';
@@ -94,10 +89,8 @@ class __board extends xmd implements i_board
 				LIMIT ??';
 			$popular = sql_rowset(sql_filter($sql, $forum->forum_id, $core->v('topics_popular')));
 			
-			foreach ($topics as $i => $row)
-			{
-				if (!$i)
-				{
+			foreach ($topics as $i => $row) {
+				if (!$i) {
 					$pagination = _pagination(_link('board', $forum->forum_alias), 's:%d', $forum->forum_topics, $core->v('topics_per_page'), $v->s);
 					
 					_style('topics', array_merge($pagination, array(
@@ -113,8 +106,7 @@ class __board extends xmd implements i_board
 				), 'TOPIC'));
 			}
 			
-			foreach ($popular as $i => $row)
-			{
+			foreach ($popular as $i => $row) {
 				if (!$i) _style('popular');
 				
 				_style('popular.row', _vs(array(
@@ -124,8 +116,7 @@ class __board extends xmd implements i_board
 				)), 'TOPIC');
 			}
 			
-			if (!$forum->forum_locked && $this->auth_forum($forum, 'create'))
-			{
+			if (!$forum->forum_locked && $this->auth_forum($forum, 'create')) {
 				_style('create', array(
 					'U_POST_ACTION' => _link($this->m(), $forum->forum_alias))
 				);
@@ -145,8 +136,7 @@ class __board extends xmd implements i_board
 			
 			$this->monetize();
 			
-			if (is_ghost())
-			{
+			if (is_ghost()) {
 				return;
 			}
 		}
@@ -161,8 +151,7 @@ class __board extends xmd implements i_board
 			ORDER BY f.cat_id, f.forum_order';
 		$forums = sql_rowset($sql);
 		
-		foreach ($forums as $i => $row)
-		{
+		foreach ($forums as $i => $row) {
 			if (!$i) _style('forums');
 			
 			_style('forums.row',	array(
@@ -182,13 +171,11 @@ class __board extends xmd implements i_board
 		return;
 	}
 	
-	public function topic()
-	{
+	public function topic() {
 		return $this->method();
 	}
 	
-	protected function _topic_home()
-	{
+	protected function _topic_home() {
 		global $bio;
 		
 		$v = $this->__(_array_keys(w('t p s'), 0));
@@ -252,8 +239,7 @@ class __board extends xmd implements i_board
 			_style('publish');
 		}
 		
-		foreach ($posts as $i => $row)
-		{
+		foreach ($posts as $i => $row) {
 			if (!$i) _style('posts', _pagination(_link('board', array('topic', $v->t, 's%d')), ($topic_data->topic_replies + 1), $core->v('posts_per_page'), $start));
 			
 			$_row = array(
@@ -304,13 +290,11 @@ class __board extends xmd implements i_board
 	// (First post is a big conversation! :P)
 	//
 	
-	public function publish()
-	{
+	public function publish() {
 		return $this->method();
 	}
 	
-	protected function _publish_home()
-	{
+	protected function _publish_home() {
 		global $bio;
 		
 		$v = $this->__(w('address key subject content playing f 0 p 0'));
@@ -336,9 +320,7 @@ class __board extends xmd implements i_board
 			}
 			
 			$v->subject = _subject($v->subject);
-		}
-		else
-		{
+		} else {
 			$sql = 'SELECT *
 				FROM _board_posts
 				WHERE post_id = ?';
@@ -354,8 +336,7 @@ class __board extends xmd implements i_board
 			}
 		}
 		
-		if ($v->forum)
-		{
+		if ($v->forum) {
 			if ($forum->forum_locked && !$this->auth_forum($forum, 'create')) {
 				$warning->now();
 			}
@@ -380,8 +361,7 @@ class __board extends xmd implements i_board
 				'time' => time(),
 				'active' => $bio->v('bio_confirmed')
 			);
-			$sql = 'INSERT INTO _board_topics' . sql_build('INSERT', prefix('topic', $sql_insert));
-			$v->topic_next = sql_nextid($sql);
+			$v->topic_next = sql_put('_board_topics', prefix('topic', $sql_insert));
 			
 			// Insert post
 			$sql_insert = array(
@@ -394,15 +374,12 @@ class __board extends xmd implements i_board
 				'message' => $v->content,
 				'playing' => $v->playing
 			);
-			$sql = 'INSERT INTO _board_posts' . sql_build('INSERT', prefix('post', $sql_insert));
-			$v->post_next = sql_nextid($sql);
+			$v->post_next = sql_put('_board_posts', prefix('post', $sql_insert));
 			
 			if ($v->topic_next && $v->post_next) {
 				$sql_commit = true;
 			}
-		}
-		else
-		{
+		} else {
 			$sql_insert = array(
 				'forum' => $topic->topic_forum,
 				'topic' => $topic->topic_id,
@@ -413,8 +390,7 @@ class __board extends xmd implements i_board
 				'message' => $v->content,
 				'playing' => $v->playing
 			);
-			$sql = 'INSERT INTO _board_posts' . sql_build('INSERT', prefix('post', $sql_insert));
-			$v->post_next = sql_nextid($sql);
+			$v->post_next = sql_put('_board_posts', prefix('post', $sql_insert));
 			
 			$sql_update = w();
 			
@@ -427,18 +403,15 @@ class __board extends xmd implements i_board
 			}
 		}
 		
-		if (!$sql_commit)
-		{
+		if (!$sql_commit) {
 			sql_transaction('rollback');
 			$this->_error('ROLLBACK_MESSAGE');
 		}
 		
 		sql_transaction('commit');
 		
-		if (is_ghost() && $v->post)
-		{
-			if ($bio->v('bio_confirmed'))
-			{
+		if (is_ghost() && $v->post) {
+			if ($bio->v('bio_confirmed')) {
 				$response = array(
 					'show' => 1,
 					'parent' => $v->post,
@@ -451,9 +424,7 @@ class __board extends xmd implements i_board
 						'name' => $bio->v('bio_name')
 					)
 				);
-			}
-			else
-			{
+			} else {
 				$response = array(
 					'show' => 0,
 					'legend' => _lang('PUBLISH_TOPIC_GUEST')

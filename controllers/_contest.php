@@ -18,25 +18,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 if (!defined('XFS')) exit;
 
-interface i_contest
-{
+interface i_contest {
 	public function home();
 	public function view();
 	public function in();
 }
 
-class __contest extends xmd implements i_contest
-{
-	public function __construct()
-	{
+class __contest extends xmd implements i_contest {
+	public function __construct() {
 		parent::__construct();
 		
 		$this->_m(_array_keys(w('view')));
 		$this->auth(false);
 	}
 	
-	public function home()
-	{
+	public function home() {
 		$now = time();
 		
 		$sql = 'SELECT *
@@ -46,8 +42,7 @@ class __contest extends xmd implements i_contest
 			ORDER BY contest_start';
 		$contest = sql_rowset(sql_filter($sql, $now, $now));
 		
-		foreach ($contest as $i => $row)
-		{
+		foreach ($contest as $i => $row) {
 			if (!$i) _style('contest');
 			
 			_style('contest.row', array(
@@ -60,46 +55,39 @@ class __contest extends xmd implements i_contest
 		return;
 	}
 	
-	public function view()
-	{
+	public function view() {
 		return $this->method();
 	}
 	
-	protected function _view_home()
-	{
+	protected function _view_home() {
 		global $core, $bio;
 		
 		$v = $this->__(w('alias'));
-		if (!f($v['alias']))
-		{
+		if (!f($v['alias'])) {
 			_fatal();
 		}
 		
 		$sql = 'SELECT *
 			FROM _contest
 			WHERE contest_alias = ?';
-		if (!$contest = _fieldrow(sql_filter($sql, $v['alias'])))
-		{
+		if (!$contest = _fieldrow(sql_filter($sql, $v['alias']))) {
 			_fatal();
 		}
 		
 		$contest['expired'] = (time() > $contest['contest_end']);
 		
 		$is_contestant = false;
-		if ($bio->v('auth_member'))
-		{
+		if ($bio->v('auth_member')) {
 			$sql = 'SELECT contestant_id
 				FROM _contest_contestant
 				WHERE contestant_contest = ?
 					AND contestant_uid = ?';
-			if (_fieldrow(sql_filter($sql, $contest['contest_id'], $bio->v('bio_id'))))
-			{
+			if (_fieldrow(sql_filter($sql, $contest['contest_id'], $bio->v('bio_id')))) {
 				$is_contestant = true;
 			}
 		}
 		
-		if ($bio->v('auth_contest_view_stock'))
-		{
+		if ($bio->v('auth_contest_view_stock')) {
 			$sql = 'SELECT *
 				FROM _contest_stock
 				WHERE stock_contest = ?
@@ -113,8 +101,7 @@ class __contest extends xmd implements i_contest
 				ORDER BY b.bio_alias';
 			$contestants = _rowset(sql_filter($sql, $contest['contest_id']));
 			
-			foreach ($contestants as $i => $row)
-			{
+			foreach ($contestants as $i => $row) {
 				if (!$i) _style('contestants');
 				
 				_style('contestants.row', array(
@@ -123,15 +110,11 @@ class __contest extends xmd implements i_contest
 			}
 		}
 		
-		if ($contest['expired'])
-		{
-			if ($contest['contest_auto_win'] && !$contest['contest_has_win'])
-			{
+		if ($contest['expired']) {
+			if ($contest['contest_auto_win'] && !$contest['contest_has_win']) {
 				
 			}
-		}
-		else
-		{
+		} else {
 			
 		}
 		
@@ -149,8 +132,7 @@ class __contest extends xmd implements i_contest
 			ORDER BY c.contestant_stock';
 		$contestant = _rowset(sql_filter($sql, $content['contest_id']), 'contestant_stock', false, true);
 		
-		foreach ($stock as $i => $row)
-		{
+		foreach ($stock as $i => $row) {
 			if (!$i) _style('stock');
 			
 			_style('stock.row', array(
@@ -158,10 +140,8 @@ class __contest extends xmd implements i_contest
 				'VALUE' => $row['stock_value'])
 			);
 			
-			if ($v['expired'] && isset($contestant[$row['stock_id']]))
-			{
-				foreach ($contestant[$row['stock_id']] as $j => $row_contestant)
-				{
+			if ($v['expired'] && isset($contestant[$row['stock_id']])) {
+				foreach ($contestant[$row['stock_id']] as $j => $row_contestant) {
 					if (!$j) _style('stock.row.contestant');
 					
 					_style('stock.row.contestant.uid', array(
@@ -180,13 +160,11 @@ class __contest extends xmd implements i_contest
 		return;
 	}
 	
-	public function in()
-	{
+	public function in() {
 		return $this->method();
 	}
 	
-	protected function _in_home()
-	{
+	protected function _in_home() {
 		return;
 	}
 }

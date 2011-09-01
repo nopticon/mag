@@ -191,6 +191,7 @@ abstract class project
 			$sql = 'UPDATE _stats SET stat_' . $field_stat . ' = stat_' . $field_stat . ' + 1
 				WHERE stat_id = ?';
 			$sql = sql_filter($sql, $stat->stat_id);
+			sql_run($sql);
 		}
 		else
 		{
@@ -206,9 +207,8 @@ abstract class project
 				);
 			}
 			
-			$sql = 'INSERT INTO _stats' . sql_build('INSERT', $sql_insert);
+			sql_put('_stats', $sql_insert);
 		}
-		sql_query($sql);
 		
 		return;
 	}
@@ -608,8 +608,7 @@ function _rainbow_create($uid)
 		'uid' => $uid,
 		'time' => time()
 	);
-	$sql = 'INSERT INTO _rainbow' . sql_build('INSERT', prefix('rainbow', $sql_insert));
-	sql_query($sql);
+	sql_put('_rainbow', prefix('rainbow', $sql_insert));
 	
 	return $key;
 }

@@ -87,6 +87,182 @@ function sql_filter() {
 	return str_replace('[!]', '%', hook('sprintf', $args));
 }
 
+function sql_run() {
+	global $database;
+	
+	$queries = func_get_args();
+	$result = array();
+	$run = array();
+	
+	if (is_array($queries[0])) {
+		$run = $queries[0];
+	} else {
+		$run = $queries;
+	}
+	
+	foreach ($run as $query) {
+		$result[] = $database->query($query);
+	}
+	
+	return $result;
+}
+
+function sql_get($select, $table, $attr = array()) {
+	global $database;
+	
+	if (!is_array($select)) {
+		$select = w($select);
+	}
+	
+	$attr_def = array(
+		'where' => false,
+		'order' => false,
+		'start' => 0,
+		'end' => 0,
+		'default' => false,
+		'type' => MYSQL_ASSOC,
+		'single' => false,
+		'group' => false,
+		'complex' => false
+	);
+	foreach ($attr_def as $name => $value) {
+		if (!isset($attr[$name])) {
+			$attr[$name] = $value;
+		}
+	}
+	
+	$attr = (object) $attr;
+	$field_count = count($select);
+	
+	$fields = '';
+	$field_name = '';
+	$field_default = '';
+	
+	foreach ($select as $field) {
+		if (strpos(':', $field) !== false) {
+			$field_part = explode(':', $field);
+			
+			$field = $field_part[0] . ' AS ' . $field_part[1];
+			
+			if ($field_count == 1) {
+				$field_name = $field_part[1];
+			} 
+		} elseif ($field_count == 1) {
+			$field_name = $field;
+		}
+		
+		$fields .= (($fields) ? ', ' : '') . $field;
+	}
+	
+	$sql = array(
+		'SELECT ' . $fields,
+		'FROM ' . $table
+	);
+	
+	if ($attr->where !== false) {
+		$sql[] = 'WHERE' . $attr->where;
+	}
+	
+	if ($attr->order !== false) {
+		$sql[] = 'ORDER BY ' . $attr->order;
+	}
+	
+	if ($attr->start) {
+		$sql[] = 'LIMIT ' . $attr->start . (($attr->end) ? ', ' . $attr->end : '');
+	}
+	
+	$sql = implode("\n", $sql);
+	$result = $database->query($sql);
+	
+	if (!$size = sql_size()) {
+		return false;
+	}
+	
+	$data = false;
+	switch ($size) {
+		case 0:
+			return false;
+		case 1:
+			switch ($field_count) {
+				case 1:
+					$fetch = $database->fetchfield($field_name);
+					$database->freeresult($result);
+					
+					$data = ($fetch !== false) ? (object) $fetch : $attr->default;
+					break;
+				default:
+					$fetch = $database->fetchrow($result, $attr->type);
+					$database->freeresult($result);
+					
+					$data = ($fetch !== false) ? (object) $fetch : false;
+					break;
+			}
+			break;
+		default:
+			$rows = array();
+			while ($row = $database->fetchrow($result, $attr->type)) {
+				$z = ($attr->group === false) ? (object) $row : $row[$attr->group];
+				
+				if ($attr->single === false) {
+					$rows[] = $z;
+				} else {
+					if ($attr->complex) {
+						$rows[$row[$attr->single]][] = $z;
+					} else {
+						$rows[$row[$attr->single]] = $z;
+					}
+				}
+			}
+			$database->free();
+			
+			$data = $rows;
+			break;
+	}
+	
+	return $data;
+}
+
+function sql_put($table, $assoc) {
+	global $database;
+	
+	$sql = 'INSERT INTO ' . $table . sql_build('INSERT', $assoc);
+	if (!$result = $database->query($sql)) {
+		return false;
+	}
+	
+	return $database->nextid();
+}
+
+function sql_size() {
+	
+}
+
+function sql_id($sql = false) {
+	global $database;
+	
+	if ($sql !== false) {
+		$database->query($sql);
+	}
+	
+	return $database->nextid();
+}
+
+function sql_close() {
+	global $database;
+	
+	if (isset($database)) {
+		$database->close();
+		
+		return true;
+	}
+	
+	return false;
+}
+
+/*
+ * Deprecated functions, will be removed soon.
+ */
+
 function sql_query($sql) {
 	global $database;
 	
@@ -185,18 +361,6 @@ function _rowset_style_row($row, $style, $prefix = '') {
 	}
 	
 	return _style($style . '.row', $f);
-}
-
-function sql_close() {
-	global $database;
-	
-	if (isset($database)) {
-		$database->close();
-		
-		return true;
-	}
-	
-	return false;
 }
 
 function sql_queries() {

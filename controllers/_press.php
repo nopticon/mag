@@ -104,8 +104,7 @@ class __press extends xmd implements i_press
 			$v->lastvisit = mktime(0, 0, 0, $vs[1], $vs[0], $vs[2]);
 			$v->active = 1;
 			
-			$sql = 'INSERT INTO _press' . sql_build('INSERT', prefix('email', $v));
-			sql_query($sql);
+			sql_put('_press', prefix('email', $v));
 			
 			$warning->now('ok');
 		}
@@ -190,7 +189,7 @@ class __press extends xmd implements i_press
 				'last' => 0
 			);
 			
-			$sql = 'UPDATE _press SET ' . sql_build('INSERT', prefix('press', $sql_update)) . sql_filter('
+			$sql = 'UPDATE _press SET ' . sql_build('UPDATE', prefix('press', $sql_update)) . sql_filter('
 				WHERE press_id = ?', $v->id);
 			sql_query($sql);
 			

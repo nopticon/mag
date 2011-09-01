@@ -68,8 +68,7 @@ class __update extends xmd implements i_update
 				'time' => $row['post_time'],
 				'author' => $row['poster_id']
 			);
-			$sql = 'INSERT INTO _reference' . _build_array('INSERT', prefix('ref', $sql_insert));
-			_sql($sql);
+			sql_put('_reference', prefix('ref', $sql_insert));
 		}
 		
 		return $this->e('~OK:' . count($news));
@@ -116,7 +115,7 @@ class __update extends xmd implements i_update
 			
 			if (!$field_id)
 			{
-				$insert = array(
+				$sql_insert = array(
 					'field_alias' => $row['a_field'],
 					'field_name' => $row['a_field'],
 					'field_display' => $row['a_field'],
@@ -130,10 +129,7 @@ class __update extends xmd implements i_update
 					'field_function' => '',
 					'field_js' => ''
 				);
-				$sql = 'INSERT INTO _bio_fields' . _build_array('INSERT', $insert);
-				_sql($sql);
-				
-				$field_id = _nextid();
+				$field_id = sql_put('_bio_fields', $sql_insert);
 			}
 			
 			$sql = 'UPDATE _bio_store SET a_field = ?
@@ -169,13 +165,12 @@ class __update extends xmd implements i_update
 		
 		foreach ($artists as $row)
 		{
-			$insert = array(
+			$sql_insert = array(
 				's_name' => $row['a_alias'],
 				's_type' => 1,
 				's_enable' => 1
 			);
-			$sql = 'INSERT INTO _subdomains' . _build_array('INSERT', $insert);
-			_sql($sql);
+			sql_put('_subdomains', $sql_insert);
 		}
 		
 		return $this->e('~OK');
@@ -264,8 +259,7 @@ class __update extends xmd implements i_update
 				'bio_recovery' => '',
 				'bio_fails' => 0
 			);
-			$sql = 'INSERT INTO _bio' . _build_array('INSERT', $sql_insert);
-			$bio_id = _sql_nextid($sql);
+			$bio_id = sql_put('_bio', $sql_insert);
 			
 			foreach ($current_fields as $current_field => $new_field)
 			{
@@ -276,8 +270,7 @@ class __update extends xmd implements i_update
 						'field' => $store_fields[$new_field],
 						'value' => $row['user_' . $current_field]
 					);
-					$sql = 'INSERT INTO _bio_store' . _build_array('INSERT', prefix('store', $sql_insert));
-					_sql($sql);
+					sql_put('_bio_store', prefix('store', $sql_insert));
 				}
 			}
 			
@@ -287,8 +280,7 @@ class __update extends xmd implements i_update
 					'bio' => $bio_id,
 					'receive' => $row['user_send_mass']
 				);
-				$sql = 'INSERT INTO _bio_newsletter' . _build_array('INSERT', prefix('newsletter', $sql_insert));
-				_sql($sql);
+				sql_put('_bio_newsletter', prefix('newsletter', $sql_insert));
 			}
 		}
 		
@@ -307,8 +299,7 @@ class __update extends xmd implements i_update
 				'time' => $row['friend_time'],
 				'message' => ''
 			);
-			$sql = 'INSERT INTO _bio_friends' . _build_array('INSERT', prefix('friend', $sql_insert));
-			_sql($sql);
+		 sql_put('_bio_friends', prefix('friend', $sql_insert));
 		}
 		*/
 		
