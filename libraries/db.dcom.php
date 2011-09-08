@@ -20,7 +20,7 @@ if (!defined('XFS')) exit;
 
 require_once(XFS.XCOR . 'db.call.php');
 
-class dcom {
+abstract class dcom {
 	protected $connect;
 	protected $result;
 	protected $history;
