@@ -62,6 +62,8 @@ function request_var($var_name, $default = '', $multibyte = false, $regex = '') 
 		}
 	}
 	
+	// TODO: Parse $_FILES format, (files:name)
+	
 	if (!isset($_REQUEST[$var_name]) || (is_array($_REQUEST[$var_name]) && !is_array($default)) || (is_array($default) && !is_array($_REQUEST[$var_name]))) {
 		return (is_array($default)) ? w() : $default;
 	}
