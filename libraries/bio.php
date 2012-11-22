@@ -318,7 +318,7 @@ class bio {
 			WGERE a.auth_bio = ?
 				AND a.auth_field = f.field_id
 			ORDER BY f.field_name';
-		$this->auth[$bio] = _rowset(sql_filter($sql, $bio_id), 'field_alias', 'auth_value');
+		$this->auth[$bio] = sql_rowset(sql_filter($sql, $bio_id), 'field_alias', 'auth_value');
 	}
 	
 	public function auth_verify($key = false, $bio = false) {
@@ -431,7 +431,7 @@ class bio {
 						WHERE a.auth_bio = ?
 							AND a.auth_field = f.field_id
 						ORDER BY f.field_name';
-					$this->auth_bio[$bio_id] = _rowset(sql_filter($sql, $bio_id), 'field_alias', 'auth_value');
+					$this->auth_bio[$bio_id] = sql_rowset(sql_filter($sql, $bio_id), 'field_alias', 'auth_value');
 				}
 				
 				/*
@@ -634,7 +634,7 @@ class bio {
 			$sql = 'SELECT *
 				FROM _groups
 				ORDER BY group_name';
-			$groups = $core->cache_store(_rowset($sql, 'group_id'));
+			$groups = $core->cache_store(sql_rowset($sql, 'group_id'));
 		}
 		return $groups;
 	}
@@ -649,7 +649,7 @@ class bio {
 				FROM _bio b
 				INNER JOIN _bio_profile p ON b.bio_id = p.profile_bio 
 				WHERE bio_active = ?';
-			$founders = $core->cache_store(_rowset(sql_filter($sql, 1), 'bio_id'));
+			$founders = $core->cache_store(sql_rowset(sql_filter($sql, 1), 'bio_id'));
 		}
 		
 		return (is_array($founders) && in_array($uid, array_keys($founders)));
@@ -670,7 +670,7 @@ class bio {
 				FROM _groups g, _groups_members gm
 				WHERE g.group_id = gm.member_group
 					AND gm.member_uid = ?';
-			$groups = _rowset(sql_filter($sql, $uid), false, 'group_id');
+			$groups = sql_rowset(sql_filter($sql, $uid), false, 'group_id');
 		}
 		
 		return _implode(',', $groups);
@@ -683,7 +683,7 @@ class bio {
 			$sql = 'SELECT *
 				FROM _bio_auth_field
 				ORDER BY field_alias';
-			$fields = $core->cache_store(_rowset($sql, 'field_id'));
+			$fields = $core->cache_store(sql_rowset($sql, 'field_id'));
 		}
 		
 		return $fields;
@@ -738,7 +738,7 @@ class bio {
 			$sql = 'SELECT *
 				FROM _bio_auth
 				WHERE auth_bio = ?';
-			$auth = _rowset(sql_filter($sql, $uid));
+			$auth = sql_rowset(sql_filter($sql, $uid));
 			
 			foreach ($auth as $row) {
 				if (!isset($row['auth_field'])) {
