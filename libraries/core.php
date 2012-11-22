@@ -155,7 +155,7 @@ class core {
 		if (empty($this->input)) {
 			$_input = array();
 			
-			if ($arg = request_var('args')) {
+			if ($arg = request_var('args', '')) {
 				foreach (explode('.', $arg) as $str_pair) {
 					$pair = explode(':', $str_pair);
 					
